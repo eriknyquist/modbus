@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "modbus.h"
+#include <unistd.h>
+#include <modbus.h>
 #include <errno.h>
 
 #define MB_BITRATE 9600
@@ -10,7 +11,7 @@
 #define MB_PARITY 'N'
 #define MB_SLAVE_ADDRESS 10
 
-#define MB_REG_BASE 6
+#define MB_REG_BASE 40005
 #define MB_REG_COUNT 4
 
 void fail (modbus_t *ctx)
@@ -25,6 +26,8 @@ int main ( int argc, char *argv[] )
 	modbus_t *ctx;
   	uint16_t tab_reg[MB_REG_BASE + MB_REG_COUNT];
 	int n, i;
+
+	signal(SIGINT, fail(ctx));
 
 	if (argc != 2)
 	{
@@ -52,16 +55,26 @@ int main ( int argc, char *argv[] )
 		fail(ctx);
 	}
 
-	n = modbus_read_registers(ctx, MB_REG_BASE, MB_REG_COUNT, tab_reg+MB_REG_BASE);
+	printf("Freq.     Current   Voltage   Motor RPM \n");
 
-	if (n <= 0)
+	while(1)
 	{
-		fprintf(stderr, "Unable to read modbus registers\n");
-		fail(ctx);
-	}
+		n = modbus_read_registers(ctx, MB_REG_BASE, MB_REG_COUNT, tab_reg+MB_REG_BASE);
 
-	for (i = MB_REG_BASE; i < MB_REG_BASE + n; i++)
-	{
-		printf ( "[%d]: %d\n", i, tab_reg[i]);
+		if (n <= 0)
+		{
+			fprintf(stderr, "Unable to read modbus registers\n");
+			fail(ctx);
+		}
+
+		printf("\r");
+
+		for (i = MB_REG_BASE; i < MB_REG_BASE + n; i++)
+		{
+			printf ( "%10d", tab_reg[i]);
+		}
+
+		fflush(stdout);
+		sleep(1);
 	}
 }
