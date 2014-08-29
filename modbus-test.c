@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <modbus.h>
 #include <errno.h>
+#include <string.h>
 
 #define MB_BITRATE 9600
 #define MB_DATABITS 8
@@ -39,19 +40,19 @@ int main ( int argc, char *argv[] )
 
 	if (ctx == NULL)
 	{
-		fprintf(stderr, "Unable to create the libmodbus context on serial port %s\n", argv[1]);
+		fprintf(stderr, "Unable to create the libmodbus context on serial port %s\n%s\n", argv[1], strerror(errno));
 		return -1;
 	}
 
 	if (modbus_set_slave(ctx, MB_SLAVE_ADDRESS))
 	{
-		fprintf(stderr, "Failed to set modbus slave address\n");
+		fprintf(stderr, "Failed to set modbus slave address\n%s\n", strerror(errno));
 		fail(ctx);
 	}  
 
 	if (modbus_connect(ctx))
 	{
-		fprintf(stderr, "Unable to connect to modbus server");
+		fprintf(stderr, "Unable to connect to modbus serveri\n%s\n", strerror(errno));
 		fail(ctx);
 	}
 
@@ -63,7 +64,7 @@ int main ( int argc, char *argv[] )
 
 		if (n <= 0)
 		{
-			fprintf(stderr, "Unable to read modbus registers\n");
+			fprintf(stderr, "Unable to read modbus registers\n%s\n", strerror(errno));
 			fail(ctx);
 		}
 
