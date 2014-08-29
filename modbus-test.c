@@ -4,11 +4,11 @@
 #include "modbus.h"
 #include <errno.h>
 
-#define MB_BITRATE 19200
+#define MB_BITRATE 9600
 #define MB_DATABITS 8
-#define MB_STOPBITS 1
+#define MB_STOPBITS 2
 #define MB_PARITY 'N'
-#define MB_SLAVE_ADDRESS 1
+#define MB_SLAVE_ADDRESS 10
 
 #define MB_REG_BASE 6
 #define MB_REG_COUNT 4
