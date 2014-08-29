@@ -57,7 +57,7 @@ int main ( int argc, char *argv[] )
 
 	if (argc != 2)
 	{
-		fprintf(stderr, "Syntax: %s serial_device\n", argv[0]);
+		fprintf(stderr, "Usage: ./%s <serial_device>\n", argv[0]);
 		return -1;
 	}
 
@@ -83,7 +83,7 @@ int main ( int argc, char *argv[] )
 
 	printf("Freq.     Current   Voltage   Motor RPM \n");
 
-	lastupdate = getms();
+	lastupdate = (getms() - delaytime);
 	while(1)
 	{
 		if ((getms() - lastupdate) >= delaytime)
@@ -107,6 +107,6 @@ int main ( int argc, char *argv[] )
 			lastupdate = getms();
 		}
 
-		if (gotsigint) fail(ctx);
+		if (gotsigint) fail(ctx); 
 	}
 }
