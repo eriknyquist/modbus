@@ -7,15 +7,21 @@
 #include <errno.h>
 #include <string.h>
 
+/* Frequency at which the input
+   registers will be read */
 #define UPDATE_FREQUENCY_HZ 10
+
 #define MB_BITRATE 9600
 #define MB_DATABITS 8
 #define MB_STOPBITS 2
 #define MB_PARITY 'N'
-#define MB_SLAVE_ADDRESS 10
+#define MB_SLAVE_ADDRESS 10 
 
+/* modbus input register, start of address space to read */
 #define READ_BASE 5
-#define READ_COUNT 4
+
+/* number of registers to read */
+#define READ_COUNT 4 
 
 uint8_t gotsigint = 0;
 
@@ -46,10 +52,11 @@ int main ( int argc, char *argv[] )
 	uint16_t *tab_registers;
 	modbus_t *ctx;
 	
-
+	/* Allocate space to store register reads */
 	tab_registers = (uint16_t *) malloc(READ_COUNT * sizeof(uint16_t));
 	memset(tab_registers, 0, READ_COUNT * sizeof(uint16_t));
 
+	/* Catch sigint (Ctrl-C) */
 	signal(SIGINT, siginthandler);
 
 	if (argc != 2)
@@ -74,12 +81,13 @@ int main ( int argc, char *argv[] )
 
 	if (modbus_connect(ctx))
 	{
-		fprintf(stderr, "Unable to connect to modbus serveri\n%s\n", strerror(errno));
+		fprintf(stderr, "Unable to connect to modbus server\n%s\n", strerror(errno));
 		fail(ctx);
 	}
 
 	printf("         Freq.     Current   Voltage   RPM \n");
 
+	/* initialise like this so we get a print immediately */
 	lastupdate = (getms() - delaytime);
 	while(1)
 	{
@@ -102,7 +110,9 @@ int main ( int argc, char *argv[] )
 			fflush(stdout);
 			lastupdate = getms();
 		}
-
+		
+		/* if we caught sigint, close modbus
+		   connections & exit gracefully */
 		if (gotsigint) fail(ctx); 
 	}
 }
