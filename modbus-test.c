@@ -48,6 +48,7 @@ int main ( int argc, char *argv[] )
 {
 	double delaytime = 1000 / UPDATE_FREQUENCY_HZ;
 	double lastupdate;
+	const char *serialport;
   	int n, i;
 	uint16_t *tab_registers;
 	modbus_t *ctx;
@@ -65,11 +66,21 @@ int main ( int argc, char *argv[] )
 		return -1;
 	}
 
-	ctx = modbus_new_rtu(argv[1], MB_BITRATE, MB_PARITY, MB_DATABITS, MB_STOPBITS);
+	serialport = argv[1];	
+
+	if (access(serialport, F_OK) != 0)
+	{
+		printf("Error accessing '%s':\n%s\n", serialport, strerror(errno));
+		exit(-1);
+	}
+
+	ctx = modbus_new_rtu(serialport, MB_BITRATE, MB_PARITY, MB_DATABITS, MB_STOPBITS);
 
 	if (ctx == NULL)
 	{
-		fprintf(stderr, "Unable to create the libmodbus context on serial port %s\n%s\n", argv[1], strerror(errno));
+		fprintf(stderr, "Unable to create the libmodbus context on serial port %s\n%s\n",
+			argv[1], 
+			strerror(errno));
 		return -1;
 	}
 
@@ -97,7 +108,8 @@ int main ( int argc, char *argv[] )
 
 			if (n <= 0)
 			{
-				fprintf(stderr, "Unable to read modbus registers\n%s\n", strerror(errno));
+				fprintf(stderr, "Unable to read modbus registers\n%s\n",
+					strerror(errno));
 				fail(ctx);
 			}
 
