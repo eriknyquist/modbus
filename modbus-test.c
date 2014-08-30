@@ -7,15 +7,12 @@
 #include <errno.h>
 #include <string.h>
 
+#define UPDATE_FREQUENCY_HZ 10
 #define MB_BITRATE 9600
 #define MB_DATABITS 8
 #define MB_STOPBITS 2
 #define MB_PARITY 'N'
 #define MB_SLAVE_ADDRESS 10
-#define UPDATE_FREQUENCY_HZ 10
-
-#define ADDRESS_START 0
-#define ADDRESS_END 99
 
 #define READ_BASE 5
 #define READ_COUNT 4
@@ -45,13 +42,13 @@ int main ( int argc, char *argv[] )
 {
 	double delaytime = 1000 / UPDATE_FREQUENCY_HZ;
 	double lastupdate;
-  	int nb, n, i;
+  	int n, i;
 	uint16_t *tab_registers;
 	modbus_t *ctx;
+	
 
-	nb = ADDRESS_END - ADDRESS_START;
-	tab_registers = (uint16_t *) malloc(nb * sizeof(uint16_t));
-	memset(tab_registers, 0, nb * sizeof(uint16_t));
+	tab_registers = (uint16_t *) malloc(READ_COUNT * sizeof(uint16_t));
+	memset(tab_registers, 0, READ_COUNT * sizeof(uint16_t));
 
 	signal(SIGINT, siginthandler);
 
@@ -81,14 +78,14 @@ int main ( int argc, char *argv[] )
 		fail(ctx);
 	}
 
-	printf("Freq.     Current   Voltage   Motor RPM \n");
+	printf("         Freq.     Current   Voltage   RPM \n");
 
 	lastupdate = (getms() - delaytime);
 	while(1)
 	{
 		if ((getms() - lastupdate) >= delaytime)
 		{
-			n = modbus_read_registers(ctx, READ_BASE, READ_COUNT, tab_registers);
+			n = modbus_read_input_registers(ctx, READ_BASE, READ_COUNT, tab_registers);
 
 			if (n <= 0)
 			{
@@ -97,8 +94,7 @@ int main ( int argc, char *argv[] )
 			}
 
 			printf("\r");
-
-			for (i = READ_BASE; i < READ_COUNT; i++)
+			for (i = 0; i < READ_COUNT; i++)
 			{
 				printf ( "%10d", tab_registers[i]);
 			}
