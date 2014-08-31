@@ -1,11 +1,9 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <unistd.h>
-#include <modbus.h>
-#include <time.h>
-#include <errno.h>
 #include <string.h>
+#include <stdlib.h>
+#include <modbus.h>
 #include "abb_modbus.h"
 #include "common.h"
 
