@@ -14,6 +14,14 @@
 #define MB_PARITY 'N'
 #define MB_SLAVE_ADDRESS 10
 
+float scalefactors[4] =
+{
+        FREQ_RESOLUTION_HZ,
+        CURRENT_RESOLUTION_A,
+        VOLTAGE_RESOLUTION_V,
+        MOTORSPEED_RESOLUTION_RPM
+};
+
 void fail (modbus_t *mbp)
 {
 	modbus_close(mbp);
@@ -57,4 +65,21 @@ void abb_modbus_init (char *serialport, modbus_t *modbusport)
 		fprintf(stderr, "Unable to connect to modbus server\n%s\n", strerror(errno));
 		fail(modbusport);
 	}
+}
+
+void update (uint16_t *inputs_raw, float *inputs_scaled, modbus_t *mbp)
+{
+        int n, i;
+        n = modbus_read_input_registers(mbp, READ_BASE, READ_COUNT, inputs_raw);
+
+        if (n <= 0)
+        {
+                fprintf(stderr, "Unable to read modbus registers\n%s\n", strerror(errno));
+                fail(mbp);
+        }
+
+        for (i = 0; i < READ_COUNT; i++)
+        {
+                inputs_scaled[i] = inputs_raw[i] * scalefactors[i];
+        }
 }
