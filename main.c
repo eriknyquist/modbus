@@ -9,7 +9,7 @@
 #include "abb_modbus.h"
 #include "common.h"
 
-uint8_t gotsigint = 0;
+static uint8_t gotsigint = 0;
 static modbus_t *modbusport;
 
 void siginthandler()
@@ -34,7 +34,8 @@ int main ( int argc, char *argv[] )
 	double delaytime = 1000 / UPDATE_FREQUENCY_HZ;
 	double lastupdate;
   	int n, i;
-	struct values *registers;
+	struct values *registers, r;
+	registers = &r;
 
 	/* Allocate space to store register reads */
 	registers->inputs_raw = (uint16_t *) malloc(READ_COUNT * sizeof(uint16_t));
