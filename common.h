@@ -12,9 +12,16 @@
 #define MOTORSPEED_RESOLUTION_RPM 1
 
 /* modbus input register, start of address space to read */
-#define READ_BASE 5
+#define INPUT_REG_READ_BASE 5
 
 /* number of registers to read */
-#define READ_COUNT 4
+#define INPUT_REG_READ_COUNT 4
+
+#define BANNER \
+"         \
+Freq.(Hz)       \
+Current(A)      \
+Voltage(V)      \
+Motor Speed(RPM)\n"
 
 #endif

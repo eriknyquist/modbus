@@ -14,6 +14,9 @@
 #define MB_PARITY 'N'
 #define MB_SLAVE_ADDRESS 10
 
+double delaytime;
+static double lastupdate;
+
 float scalefactors[4] =
 {
         FREQ_RESOLUTION_HZ,
@@ -22,10 +25,11 @@ float scalefactors[4] =
         MOTORSPEED_RESOLUTION_RPM
 };
 
-void fail (modbus_t *mbp)
+void fail (char * errstr, modbus_t *modbusport)
 {
-	modbus_close(mbp);
-	modbus_free(mbp);
+	fprintf(stderr, "\n%s\n%s\n", errstr, strerror(errno));
+	modbus_close(modbusport);
+	modbus_free(modbusport);
 	exit(-1);
 }
 
@@ -36,8 +40,10 @@ double getms ()
 	return (time.tv_sec + (time.tv_usec / 1000000.0)) * 1000.0;
 }
 
-void abb_modbus_init (char *serialport, modbus_t *modbusport)
+modbus_t *abb_modbus_init (char *serialport)
 {
+	modbus_t *modbusport;
+
 	if (access(serialport, F_OK) != 0)
 	{
 		printf("Error accessing '%s':\n%s\n", serialport, strerror(errno));
@@ -56,30 +62,53 @@ void abb_modbus_init (char *serialport, modbus_t *modbusport)
 
 	if (modbus_set_slave(modbusport, MB_SLAVE_ADDRESS))
 	{
-		fprintf(stderr, "Failed to set modbus slave address\n%s\n", strerror(errno));
-		fail(modbusport);
+		fail("Failed to set modbus slave address", modbusport);
 	}  
 
 	if (modbus_connect(modbusport))
 	{
-		fprintf(stderr, "Unable to connect to modbus server\n%s\n", strerror(errno));
-		fail(modbusport);
+		fail("Unable to connect to modbus server", modbusport);
 	}
+
+	delaytime = 1000 / UPDATE_FREQUENCY_HZ;
+	lastupdate = (getms() - delaytime);
+	return modbusport;
 }
 
-void update (uint16_t *inputs_raw, float *inputs_scaled, modbus_t *mbp)
+void abb_read_input_registers (uint16_t *inputs_raw, float *inputs_scaled, modbus_t *modbusport)
 {
         int n, i;
-        n = modbus_read_input_registers(mbp, READ_BASE, READ_COUNT, inputs_raw);
+        n = modbus_read_input_registers(modbusport, INPUT_REG_READ_BASE, INPUT_REG_READ_COUNT, inputs_raw);
 
         if (n <= 0)
         {
-                fprintf(stderr, "Unable to read modbus registers\n%s\n", strerror(errno));
-                fail(mbp);
+                fail("Unable to read modbus registers", modbusport);
         }
 
-        for (i = 0; i < READ_COUNT; i++)
+        for (i = 0; i < INPUT_REG_READ_COUNT; i++)
         {
                 inputs_scaled[i] = inputs_raw[i] * scalefactors[i];
         }
+}
+
+int abb_update_input_registers (uint16_t *inputs_raw, float *inputs_scaled, modbus_t *modbusport)
+{
+	int i;
+	if ((getms() - lastupdate) >= delaytime)
+	{
+		abb_read_input_registers(inputs_raw, inputs_scaled, modbusport);
+
+		/* ---debug--- */
+		printf("\r");
+		for (i = 0; i < INPUT_REG_READ_COUNT; i++)
+		{
+			printf ( "%16f", (inputs_scaled[i]));
+		}
+		fflush(stdout);
+		/* ----------- */
+
+		lastupdate = getms();
+		return 1;
+	}
+	return 0;
 }
