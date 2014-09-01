@@ -98,15 +98,6 @@ int abb_update_input_registers (uint16_t *inputs_raw, float *inputs_scaled, modb
 	{
 		abb_read_input_registers(inputs_raw, inputs_scaled, modbusport);
 
-		/* ---debug--- */
-		printf("\r");
-		for (i = 0; i < INPUT_REG_READ_COUNT; i++)
-		{
-			printf ( "%16.2f", (inputs_scaled[i]));
-		}
-		fflush(stdout);
-		/* ----------- */
-
 		lastupdate = getms();
 		return 1;
 	}

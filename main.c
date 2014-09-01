@@ -49,7 +49,19 @@ int main ( int argc, char *argv[] )
 
 	while(1)
 	{
-		ret = abb_update_input_registers(registers->inputs_raw, registers->inputs_scaled, modbusport);	
+		ret = abb_update_input_registers(registers->inputs_raw, registers->inputs_scaled, modbusport);
+		if (ret)
+		{
+			/* ---debug--- */
+                	printf("\r");
+                	for (i = 0; i < INPUT_REG_READ_COUNT; i++)
+                	{
+                        	printf ( "%16.2f", (registers->inputs_scaled[i]));
+                	}
+                	fflush(stdout);
+                	/* ----------- */
+
+		}	
 		/* if we caught sigint, close modbus
 		   connections & exit gracefully */
 		if (gotsigint) fail("Closing modbus connections & exiting.", modbusport); 
