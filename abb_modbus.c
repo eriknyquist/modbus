@@ -78,7 +78,7 @@ modbus_t *abb_modbus_init (char *serialport)
 void abb_read_input_registers (uint16_t *inputs_raw, float *inputs_scaled, modbus_t *modbusport)
 {
         int n, i;
-        n = modbus_read_input_registers(modbusport, INPUT_REG_READ_BASE, INPUT_REG_READ_COUNT, inputs_raw);
+        n = modbus_read_registers(modbusport, INPUT_REG_READ_BASE, INPUT_REG_READ_COUNT, inputs_raw);
 
         if (n <= 0)
         {
@@ -102,7 +102,7 @@ int abb_update_input_registers (uint16_t *inputs_raw, float *inputs_scaled, modb
 		printf("\r");
 		for (i = 0; i < INPUT_REG_READ_COUNT; i++)
 		{
-			printf ( "%16f", (inputs_scaled[i]));
+			printf ( "%16.2f", (inputs_scaled[i]));
 		}
 		fflush(stdout);
 		/* ----------- */

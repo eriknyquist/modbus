@@ -43,7 +43,7 @@ int main ( int argc, char *argv[] )
 	/* Catch sigint (Ctrl-C) */
 	signal(SIGINT, siginthandler);
 
-	modbusport = abb_modbus_init(argv[0]);	
+	modbusport = abb_modbus_init(argv[1]);	
 
 	write(1, BANNER, strlen(BANNER));
 
