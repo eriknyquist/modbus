@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <modbus.h>
-#include <time.h>
 #include <errno.h>
 #include <string.h>
 #include "common.h"
+#include "abb_time.h"
 
 #define MB_BITRATE 9600
 #define MB_DATABITS 8
@@ -34,13 +34,6 @@ void fail (char * errstr, modbus_t *modbusport)
 		modbus_free(modbusport);
 	}
 	exit(-1);
-}
-
-double getms ()
-{
-	struct timeval time;
-	gettimeofday (&time, NULL);
-	return (time.tv_sec + (time.tv_usec / 1000000.0)) * 1000.0;
 }
 
 modbus_t *abb_modbus_init (char *serialport)

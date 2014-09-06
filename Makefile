@@ -1,4 +1,4 @@
-FILES := main.c abb_modbus.c
+FILES := main.c abb_modbus.c abb_time.c
 MODBUS_H = /usr/include/modbus
 
 abb_modbus: ${FILES}
