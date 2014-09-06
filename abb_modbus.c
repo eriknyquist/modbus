@@ -28,8 +28,11 @@ float scalefactors[4] =
 void fail (char * errstr, modbus_t *modbusport)
 {
 	fprintf(stderr, "\n%s\n%s\n", errstr, strerror(errno));
-	modbus_close(modbusport);
-	modbus_free(modbusport);
+	if (modbusport != NULL)
+	{
+		modbus_close(modbusport);
+		modbus_free(modbusport);
+	}
 	exit(-1);
 }
 
@@ -75,28 +78,22 @@ modbus_t *abb_modbus_init (char *serialport)
 	return modbusport;
 }
 
-void abb_read_input_registers (uint16_t *inputs_raw, float *inputs_scaled, modbus_t *modbusport)
-{
-        int n, i;
-        n = modbus_read_registers(modbusport, INPUT_REG_READ_BASE, INPUT_REG_READ_COUNT, inputs_raw);
-
-        if (n <= 0)
-        {
-                fail("Unable to read modbus registers", modbusport);
-        }
-
-        for (i = 0; i < INPUT_REG_READ_COUNT; i++)
-        {
-                inputs_scaled[i] = inputs_raw[i] * scalefactors[i];
-        }
-}
-
 int abb_update_input_registers (uint16_t *inputs_raw, float *inputs_scaled, modbus_t *modbusport)
 {
-	int i;
+	int n, i;
 	if ((getms() - lastupdate) >= delaytime)
 	{
-		abb_read_input_registers(inputs_raw, inputs_scaled, modbusport);
+		n = modbus_read_registers(modbusport, REG_READ_BASE, REG_READ_COUNT, inputs_raw);
+
+		if (n <= 0)
+		{
+			fail("Unable to read modbus registers", modbusport);
+		}
+
+		for (i = 0; i < REG_READ_COUNT; i++)
+		{
+			inputs_scaled[i] = (float) (inputs_raw[i] * scalefactors[i]);
+		}
 
 		lastupdate = getms();
 		return 1;
