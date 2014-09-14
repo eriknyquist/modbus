@@ -8,11 +8,11 @@
 #define errExit(msg)    do { perror(msg); exit(EXIT_FAILURE); \
                                } while (0)
 #define CLOCKID CLOCK_MONOTONIC
-#define SIG SIGALRM
+#define SIG SIGUSR1
 
 uint8_t gotsig = 0; 
 
-static void handler(void)
+static void handler(int signum)
 {
 	gotsig = 1; 
 }
