@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <string.h>
 #include "common.h"
+#include "abb_pch550_modbus.h"
 #include "abb_pch550_time.h"
 
 #define MB_BITRATE 9600
@@ -15,13 +16,6 @@
 #define MB_SLAVE_ADDRESS 10
 
 double delaytime;
-
-typedef struct element
-{
-	uint16_t value_raw;
-	float value_scaled;
-	char *desc;
-} element;
 
 element sv[REG_READ_COUNT];
 element *pv[REG_READ_COUNT];
