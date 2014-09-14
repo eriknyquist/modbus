@@ -1,6 +1,8 @@
 #ifndef COMMON_H_
 #define COMMON_H_
 
+/* signal to use for timer */
+#define SIG SIGUSR1
 
 /* Frequency at which the input
    registers will be read */

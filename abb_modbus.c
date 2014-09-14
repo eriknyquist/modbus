@@ -15,7 +15,6 @@
 #define MB_SLAVE_ADDRESS 10
 
 double delaytime;
-static double lastupdate;
 
 typedef struct element
 {
@@ -90,31 +89,23 @@ modbus_t *abb_modbus_init (char *serialport)
 		pv[i]->desc = descriptors[i];
 	}
 	
-	delaytime = 1000 / UPDATE_FREQUENCY_HZ;
-	lastupdate = (getms() - delaytime);
 	return modbusport;
 }
 
 int abb_update_input_registers (uint16_t *inputs_raw, modbus_t *modbusport)
 {
 	int n, i;
-	if ((getms() - lastupdate) >= delaytime)
+
+	n = modbus_read_registers(modbusport, REG_READ_BASE, REG_READ_COUNT, inputs_raw);
+
+	if (n <= 0)
 	{
-		n = modbus_read_registers(modbusport, REG_READ_BASE, REG_READ_COUNT, inputs_raw);
-
-		if (n <= 0)
-		{
-			fail("Unable to read modbus registers", modbusport);
-		}
-
-		for (i = 0; i < REG_READ_COUNT; i++)
-		{
-			pv[i]->value_raw = inputs_raw[i];
-			pv[i]->value_scaled = (float) inputs_raw[i] * scalefactors[i];
-		}
-
-		lastupdate = getms();
-		return 1;
+		fail("Unable to read modbus registers", modbusport);
 	}
-	return 0;
+
+	for (i = 0; i < REG_READ_COUNT; i++)
+	{
+		pv[i]->value_raw = inputs_raw[i];
+		pv[i]->value_scaled = (float) inputs_raw[i] * scalefactors[i];
+	}
 }
