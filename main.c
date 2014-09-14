@@ -8,17 +8,12 @@
 #include "common.h"
 
 static uint8_t gotsigint = 0;
+uint16_t *inputs_raw;
 
 void siginthandler()
 {
 	gotsigint = 1;
 }
-
-struct values
-{
-	uint16_t *inputs_raw;
-	float *inputs_scaled;
-};
 
 int main (int argc, char *argv[])
 {
@@ -30,15 +25,10 @@ int main (int argc, char *argv[])
 
 	modbus_t *modbusport;
   	int i;
-	struct values *registers, r;
-	registers = &r;
 
-	/* Allocate space to store register reads */
-	registers->inputs_raw = (uint16_t *) malloc(REG_READ_COUNT * sizeof(uint16_t));
-	memset(registers->inputs_raw, 0, REG_READ_COUNT * sizeof(uint16_t));
-
-	registers->inputs_scaled = (float *) malloc(REG_READ_COUNT * sizeof(float));
-	memset(registers->inputs_scaled, 0, REG_READ_COUNT * sizeof(float));
+	/* Allocate space to store raw register reads */
+	inputs_raw = (uint16_t *) malloc(REG_READ_COUNT * sizeof(uint16_t));
+	memset(inputs_raw, 0, REG_READ_COUNT * sizeof(uint16_t));
 
 	/* Catch sigint (Ctrl-C) */
 	signal(SIGINT, siginthandler);
@@ -49,14 +39,8 @@ int main (int argc, char *argv[])
 
 	while(1)
 	{
-		if (abb_update_input_registers(registers->inputs_raw, registers->inputs_scaled, modbusport))
+		if (abb_update_input_registers(inputs_raw, modbusport))
 		{
-                	printf("\r");
-                	for (i = 0; i < REG_READ_COUNT; i++)
-                	{
-                        	printf ( "%16.2f", (registers->inputs_scaled[i]));
-                	}
-                	fflush(stdout);
 		}	
 		/* if we caught sigint, close modbus
 		   connections & exit gracefully */
