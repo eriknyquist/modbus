@@ -48,7 +48,7 @@ int main (int argc, char *argv[])
 	write(1, BANNER, strlen(BANNER));
 
 	long long delaytime_ns = 1000000000 / UPDATE_FREQUENCY_HZ;
-	start_timer(delaytime_ns);	
+	start_interval_timer(delaytime_ns, SIG);	
 
 	while(1)
 	{

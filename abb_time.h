@@ -2,6 +2,6 @@
 #define ABB_TIME_H_
 
 char * timestamp(void);
-char *start_timer(long long freq_nanosecs);
+void start_interval_timer(long long freq_nanosecs, int sig);
 
 #endif

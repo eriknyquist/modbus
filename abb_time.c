@@ -28,7 +28,7 @@ char * timestamp ()
         return buf;
 }
 
-void start_timer(long long freq_nanosecs)
+void start_interval_timer(long long freq_nanosecs, int sig)
 {
 	timer_t timerid;	
 	struct sigevent sev;
@@ -37,7 +37,7 @@ void start_timer(long long freq_nanosecs)
 	/* Create the timer */
 
 	sev.sigev_notify = SIGEV_SIGNAL;
-	sev.sigev_signo = SIG;
+	sev.sigev_signo = sig;
 	sev.sigev_value.sival_ptr = &timerid;
 	if (timer_create(CLOCKID, &sev, &timerid) == -1)
 		fail("Error creating timer", NULL);
