@@ -108,4 +108,10 @@ int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 		pv[i]->value_raw = inputs_raw[i];
 		pv[i]->value_scaled = (float) inputs_raw[i] * scalefactors[i];
 	}
+
+	/* ---debug--- */
+	printf("\r%f%10f%10f%10f", pv[0]->value_scaled, pv[1]->value_scaled,
+		pv[2]->value_scaled, pv[3]->value_scaled);
+	fflush(stdout);
+	/* ----------- */
 }
