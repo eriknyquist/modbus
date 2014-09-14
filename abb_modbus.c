@@ -17,18 +17,25 @@
 double delaytime;
 static double lastupdate;
 
-struct element
+typedef struct element
 {
 	uint16_t value_raw;
 	float value_scaled;
 	char *desc;
+} element;
+
+element sv[REG_READ_COUNT];
+element *pv[REG_READ_COUNT];
+
+char *descriptors[REG_READ_COUNT] =
+{
+	"OUTPUT_FREQ_HZ",
+	"CURRENT_A",
+	"VOLTAGE_V",
+	"MOTORSPEED_RPM"
 };
 
-/* allocate a struct for each register value, and an array to iterate through the struct pointers */	
-struct element frq, cur, vtg, rpm, *frequency, *current, *voltage, *motor_rpm;
-struct element *pv[REG_READ_COUNT];
-
-float scalefactors[4] =
+float scalefactors[REG_READ_COUNT] =
 {
         FREQ_RESOLUTION_HZ,
         CURRENT_RESOLUTION_A,
@@ -76,12 +83,13 @@ modbus_t *abb_modbus_init (char *serialport)
 	{
 		fail("Unable to connect to modbus server", modbusport);
 	}
-
-	pv[0]= &frq;
-	pv[1] = &cur;
-	pv[2] = &vtg;
-	pv[3] = &rpm;
-
+	int i;
+	for (i = 0; i < REG_READ_COUNT; i++)
+	{
+		pv[i] = &sv[i];
+		pv[i]->desc = descriptors[i];
+	}
+	
 	delaytime = 1000 / UPDATE_FREQUENCY_HZ;
 	lastupdate = (getms() - delaytime);
 	return modbusport;
