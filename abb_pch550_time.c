@@ -6,7 +6,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "abb_modbus.h"
+#include "abb_pch550_modbus.h"
 #include "common.h"
 
 #define CLOCKID CLOCK_MONOTONIC

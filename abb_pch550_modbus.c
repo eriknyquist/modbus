@@ -6,7 +6,7 @@
 #include <errno.h>
 #include <string.h>
 #include "common.h"
-#include "abb_time.h"
+#include "abb_pch550_time.h"
 
 #define MB_BITRATE 9600
 #define MB_DATABITS 8
@@ -53,7 +53,7 @@ void fail (char * errstr, modbus_t *modbusport)
 	exit(-1);
 }
 
-modbus_t *abb_modbus_init (char *serialport)
+modbus_t *abb_pch550_modbus_init (char *serialport)
 {
 	modbus_t *modbusport;
 
@@ -92,7 +92,7 @@ modbus_t *abb_modbus_init (char *serialport)
 	return modbusport;
 }
 
-int abb_update_input_registers (uint16_t *inputs_raw, modbus_t *modbusport)
+int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 {
 	int n, i;
 

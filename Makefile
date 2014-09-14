@@ -1,8 +1,8 @@
-FILES := main.c abb_modbus.c abb_time.c
+FILES := main.c abb_pch550_modbus.c abb_pch550_time.c
 MODBUS_H = /usr/include/modbus
 
-abb_modbus: ${FILES}
+abb_pch550_modbus: ${FILES}
 	${CC} -I${MODBUS_H} $^ -o $@ -lmodbus -lrt
 
 clean:
-	${RM} abb_modbus
+	${RM} abb_pch550_modbus

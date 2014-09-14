@@ -4,8 +4,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <modbus.h>
-#include "abb_modbus.h"
-#include "abb_time.h"
+#include "abb_pch550_modbus.h"
+#include "abb_pch550_time.h"
 #include "common.h"
 
 static uint8_t gottimersig = 0;
@@ -43,7 +43,7 @@ int main (int argc, char *argv[])
 	/* Catch sigint (Ctrl-C) */
 	signal(SIGINT, siginthandler);
 
-	modbusport = abb_modbus_init(argv[1]);	
+	modbusport = abb_pch550_modbus_init(argv[1]);	
 
 	write(1, BANNER, strlen(BANNER));
 
@@ -54,7 +54,7 @@ int main (int argc, char *argv[])
 	{
 		if (gottimersig)
 		{
-			abb_update_input_registers(inputs_raw, modbusport);
+			abb_pch550_read(inputs_raw, modbusport);
 			gottimersig = 0;
 		}
 
