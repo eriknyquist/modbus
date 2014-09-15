@@ -6,7 +6,7 @@
 
 /* Frequency at which the input
    registers will be read */
-#define UPDATE_FREQUENCY_HZ 10
+#define UPDATE_FREQUENCY_HZ 4
 
 #define FREQ_RESOLUTION_HZ 0.1
 #define CURRENT_RESOLUTION_A 0.1
@@ -20,10 +20,10 @@
 #define REG_READ_COUNT 4
 
 #define BANNER \
-"        \
+"\n         \
 Freq.(Hz)      \
-Current(A)     \
-Voltage(V)     \
+Current(A)      \
+Voltage(V)      \
 Motor Speed(RPM)\n"
 
 #endif

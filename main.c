@@ -8,6 +8,8 @@
 #include "abb_pch550_time.h"
 #include "common.h"
 
+#define SENSORFILE "log.out"
+
 static uint8_t gottimersig = 0;
 static uint8_t gotsigint = 0;
 uint16_t *inputs_raw;
@@ -55,6 +57,7 @@ int main (int argc, char *argv[])
 		if (gottimersig)
 		{
 			abb_pch550_read(inputs_raw, modbusport);
+			write_registers_tofile(SENSORFILE, modbusport);
 			gottimersig = 0;
 		}
 

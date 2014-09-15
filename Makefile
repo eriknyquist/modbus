@@ -1,4 +1,7 @@
-FILES := main.c abb_pch550_modbus.c abb_pch550_time.c
+FILES := \
+main.c abb_pch550_modbus.c \
+abb_pch550_time.c abb_pch550_file.c
+
 MODBUS_H = /usr/include/modbus
 
 abb_pch550_modbus: ${FILES}

@@ -8,6 +8,7 @@
 #include "common.h"
 #include "abb_pch550_modbus.h"
 #include "abb_pch550_time.h"
+#include "abb_pch550_file.h"
 
 #define MB_BITRATE 9600
 #define MB_DATABITS 8
@@ -22,10 +23,10 @@ element *pv[REG_READ_COUNT];
 
 char *descriptors[REG_READ_COUNT] =
 {
-	"OUTPUT_FREQ_HZ",
-	"CURRENT_A",
-	"VOLTAGE_V",
-	"MOTORSPEED_RPM"
+	"SENS_OUTPUT_FREQ_HZ",
+	"SENS_CURRENT_A",
+	"SENS_VOLTAGE_V",
+	"SENS_MOTORSPEED_RPM"
 };
 
 float scalefactors[REG_READ_COUNT] =
@@ -104,8 +105,30 @@ int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 	}
 
 	/* ---debug--- */
-	printf("\r%f%10f%10f%10f", pv[0]->value_scaled, pv[1]->value_scaled,
+	printf("\r%16.2f%16.2f%16.2f%16.2f", pv[0]->value_scaled, pv[1]->value_scaled,
 		pv[2]->value_scaled, pv[3]->value_scaled);
 	fflush(stdout);
 	/* ----------- */
+}
+
+void write_registers_tofile(char *filename, modbus_t *modbusport)
+{
+	FILE *fp;
+	int i;
+	char *timestamp_string = timestamp();
+
+	if ((fp = fopen(filename, "a")) == NULL)
+	{
+		fail("Error opening sensor log file for writing register reads", modbusport);
+	}
+
+	for (i = 0; i < REG_READ_COUNT; i++)
+	{
+		if (write_register_tofile(fp, timestamp_string, pv[i]) != 0)
+		{
+			fail("Error writing register read to sensor log file", modbusport);
+		}	
+	}
+	fputs("\n", fp);
+	fclose(fp);
 }
