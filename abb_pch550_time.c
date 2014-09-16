@@ -11,6 +11,13 @@
 
 #define CLOCKID CLOCK_MONOTONIC
 
+long long getms ()
+{
+	struct timeval time;
+	gettimeofday(&time, NULL);
+	return (long long) (time.tv_sec + (time.tv_usec / 1000000.0)) * 1000.0;
+}
+
 char * timestamp ()
 {
         char *buf = malloc(22);
@@ -26,29 +33,4 @@ char * timestamp ()
                 tm->tm_hour, tm->tm_min, tm->tm_sec, milliseconds);
 
         return buf;
-}
-
-void start_interval_timer(long long freq_nanosecs, int sig)
-{
-	timer_t timerid;	
-	struct sigevent sev;
-	struct itimerspec its;	
-
-	/* Create the timer */
-
-	sev.sigev_notify = SIGEV_SIGNAL;
-	sev.sigev_signo = sig;
-	sev.sigev_value.sival_ptr = &timerid;
-	if (timer_create(CLOCKID, &sev, &timerid) == -1)
-		fail("Error creating timer", NULL);
-
-	/* Start the timer */
-
-	its.it_value.tv_sec = freq_nanosecs / 1000000000;
-	its.it_value.tv_nsec = freq_nanosecs % 1000000000;
-	its.it_interval.tv_sec = its.it_value.tv_sec;
-	its.it_interval.tv_nsec = its.it_value.tv_nsec;
-
-	if (timer_settime(timerid, 0, &its, NULL) == -1)
-		fail("Error starting timer", NULL);
 }

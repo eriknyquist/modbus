@@ -6,7 +6,7 @@
 
 /* Frequency at which the input
    registers will be read */
-#define UPDATE_FREQUENCY_HZ 4
+#define UPDATE_FREQUENCY_HZ 10
 
 #define FREQ_RESOLUTION_HZ 0.1
 #define CURRENT_RESOLUTION_A 0.1
