@@ -57,12 +57,7 @@ int main (int argc, char *argv[])
 		finish = getms();
 		remaining_usecs = (delaytime_ms - (finish - start)) * 1000;
 
-		/* ----debug---- */
-		printf("  sleeping for %lld out of %ld ms",
-			remaining_usecs / 1000,
-			delaytime_ms);
-		/* ------------- */
-
-		usleep(remaining_usecs);
+		if (remaining_usecs > 0)
+			usleep(remaining_usecs);
 	}
 }

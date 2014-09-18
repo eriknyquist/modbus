@@ -26,7 +26,9 @@ char *descriptors[REG_READ_COUNT] =
 	"SENS_OUTPUT_FREQ_HZ",
 	"SENS_CURRENT_A",
 	"SENS_VOLTAGE_V",
-	"SENS_MOTORSPEED_RPM"
+	"SENS_MOTORSPEED_RPM",
+	"SENS_KW",
+	"SENS_KWH"
 };
 
 float scalefactors[REG_READ_COUNT] =
@@ -34,7 +36,9 @@ float scalefactors[REG_READ_COUNT] =
         FREQ_RESOLUTION_HZ,
         CURRENT_RESOLUTION_A,
         VOLTAGE_RESOLUTION_V,
-        MOTORSPEED_RESOLUTION_RPM
+        MOTORSPEED_RESOLUTION_RPM,
+	KW_RESOLUTION,
+	KWH_RESOLUTION
 };
 
 void fail (char * errstr, modbus_t *modbusport)
@@ -105,8 +109,9 @@ int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 	}
 
 	/* ---debug--- */
-	printf("\r%16.2f%16.2f%16.2f%16.2f", pv[0]->value_scaled, pv[1]->value_scaled,
-		pv[2]->value_scaled, pv[3]->value_scaled);
+	printf("\r%16.2f%16.2f%16.2f%16.2f%16.2f%16.2f", pv[0]->value_scaled, pv[1]->value_scaled,
+		pv[2]->value_scaled, pv[3]->value_scaled, pv[4]->value_scaled,
+		pv[5]->value_scaled);
 	fflush(stdout);
 	/* ----------- */
 }
