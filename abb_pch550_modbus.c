@@ -8,8 +8,10 @@
 #include "common.h"
 #include "abb_pch550_modbus.h"
 #include "abb_pch550_time.h"
-#include "abb_pch550_file.h"
 
+#define SENSORDATA "/home/sensordata/"
+#define UUID_LENGTH 37
+#define UUID_FILE "/uuid"
 #define MB_BITRATE 9600
 #define MB_DATABITS 8
 #define MB_STOPBITS 2
@@ -17,6 +19,7 @@
 #define MB_SLAVE_ADDRESS 10
 
 double delaytime;
+char uuid[38];
 
 element sv[REG_READ_COUNT];
 element *pv[REG_READ_COUNT];
@@ -73,14 +76,10 @@ modbus_t *abb_pch550_modbus_init (char *serialport)
 	}
 
 	if (modbus_set_slave(modbusport, MB_SLAVE_ADDRESS))
-	{
 		fail("Failed to set modbus slave address", modbusport);
-	}  
 
 	if (modbus_connect(modbusport))
-	{
 		fail("Unable to connect to modbus server", modbusport);
-	}
 	int i;
 	for (i = 0; i < REG_READ_COUNT; i++)
 	{
@@ -89,6 +88,26 @@ modbus_t *abb_pch550_modbus_init (char *serialport)
 	}
 	
 	return modbusport;
+}
+
+void ile_aip_init(void)
+{
+	FILE *fp;
+	if ((fp = fopen(UUID_FILE, "r")) == NULL)
+		fail("Failed to open UUID file", NULL);
+	fgets(uuid, UUID_LENGTH, fp);
+	if (strlen(uuid) != UUID_LENGTH - 1)
+	{
+		fprintf(stderr, 
+			"Error : file '%s' does not contain a UUID in the expected format\n%s\n%d\n",
+			UUID_FILE, uuid, strlen(uuid));
+		exit(-1);
+	}
+	if (access(SENSORDATA, F_OK) != 0)
+	{
+		printf("Error accessing '%s':\n%s\n", SENSORDATA, strerror(errno));
+		exit(-1);
+	}
 }
 
 int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
@@ -116,24 +135,35 @@ int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 	/* ----------- */
 }
 
-void write_registers_tofile(char *filename, modbus_t *modbusport)
+void write_registers_tofile(modbus_t *modbusport)
 {
 	FILE *fp;
 	int i;
-	char *timestamp_string = timestamp();
+        char outstring[512];
+	char *logfilename = gen_filename(uuid);
+	int pathlength = strlen(logfilename) + strlen(SENSORDATA);
+	char logpath[pathlength + 1];
 
-	if ((fp = fopen(filename, "a")) == NULL)
+	strcpy(logpath, SENSORDATA);
+	strcat(logpath, logfilename);
+
+        strcpy(outstring, "<D>,SEC:PUBLIC,");
+
+	if ((fp = fopen(logpath, "w")) == NULL)
 	{
 		fail("Error opening sensor log file for writing register reads", modbusport);
 	}
 
 	for (i = 0; i < REG_READ_COUNT; i++)
 	{
-		if (write_register_tofile(fp, timestamp_string, pv[i]) != 0)
-		{
-			fail("Error writing register read to sensor log file", modbusport);
-		}	
+		char buf[80];
+		snprintf(buf, sizeof(buf),
+			(i < (REG_READ_COUNT - 1)) ? "%s:%.2f," : "%s:%.2f",
+			pv[i]->desc, pv[i]->value_scaled);
+		strcat(outstring, buf);
 	}
-	fputs("\n", fp);
+	fputs(outstring, fp);
 	fclose(fp);
 }
+
+

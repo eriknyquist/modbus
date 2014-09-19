@@ -1,6 +1,6 @@
 FILES := \
 main.c abb_pch550_modbus.c \
-abb_pch550_time.c abb_pch550_file.c
+abb_pch550_time.c
 
 MODBUS_H = /usr/include/modbus
 
