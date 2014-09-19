@@ -26,12 +26,12 @@ element *pv[REG_READ_COUNT];
 
 char *descriptors[REG_READ_COUNT] =
 {
-	"SENS_OUTPUT_FREQ_HZ",
-	"SENS_CURRENT_A",
-	"SENS_VOLTAGE_V",
-	"SENS_MOTORSPEED_RPM",
-	"SENS_KW",
-	"SENS_KWH"
+	"ABB_OUTPUT_FREQ_HZ",
+	"ABB_CURRENT_A",
+	"ABB_VOLTAGE_V",
+	"ABB_MOTORSPEED_RPM",
+	"ABB_KW",
+	"ABB_KWH"
 };
 
 float scalefactors[REG_READ_COUNT] =
