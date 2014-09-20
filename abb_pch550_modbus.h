@@ -6,6 +6,7 @@ void ile_aip_init (void);
 int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport);
 void write_registers_tofile (modbus_t *modbusport);
 void fail (char *errstr, modbus_t *modbusport);
+void parse_conf (void);
 
 typedef struct element
 {

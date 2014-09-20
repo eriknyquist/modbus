@@ -9,6 +9,7 @@
 #include "abb_pch550_modbus.h"
 #include "abb_pch550_time.h"
 
+#define CONF_FILE "abb.conf"
 #define SENSORDATA "/home/sensordata/"
 #define UUID_LENGTH 37
 #define UUID_FILE "/uuid"
@@ -18,11 +19,25 @@
 #define MB_PARITY 'N'
 #define MB_SLAVE_ADDRESS 10
 
+int modbus_rs485_baud, modbus_station_id,
+	modbus_read_base, modbus_read_count,
+	update_frequency_hz;
+
 double delaytime;
 char uuid[38];
 
 element sv[REG_READ_COUNT];
 element *pv[REG_READ_COUNT];
+
+
+
+char *params_str[4] =
+{
+	"modbus_station_id",
+	"modbus_read_base",
+	"modbus_read_count",
+	"update_frequency_hz"
+};
 
 char *descriptors[REG_READ_COUNT] =
 {
@@ -166,4 +181,128 @@ void write_registers_tofile(modbus_t *modbusport)
 	fclose(fp);
 }
 
+uint8_t is_id (char c)
+{
+	return (c <= 'z'&& c >= 'a' || c <= 'Z' && c >= 'A' ||
+		c == '_') ? 1 : 0;
+}
 
+uint8_t is_dec (char c)
+{
+	return (c <= '9' && c >= '0' || c == '.') ? 1 : 0 ;
+}
+
+uint8_t is_whitespace (char c)
+{
+	return (c == ' ' || c == '\t' || c == '\r' ||
+		c == '\v' || c == '\n') ? 1 : 0;
+}
+
+void syntaxerr (int line)
+{
+	fprintf(stderr, "Syntax error in configuration file %s, line %d\n",
+		CONF_FILE, line);
+	exit(-1);
+}
+
+void assign (char *param, char *value)
+{
+	if (strcmp(param, "modbus_rs485_baud") == 0)
+		modbus_rs485_baud = atoi(value);
+	else if (strcmp(param, "modbus_station_id") == 0)
+		modbus_station_id = atoi(value);
+	else if (strcmp(param, "modbus_read_base") == 0)
+		modbus_read_base = atoi(value);
+	else if (strcmp(param, "modbus_read_count") == 0)
+		modbus_read_count = atoi(value);
+	else if (strcmp(param, "update_frequency_hz") == 0)
+		update_frequency_hz = atof(value);
+	else
+	{
+		fprintf(stderr,
+			"Error parsing %s:\nunrecognised parameter '%s'\n",
+			CONF_FILE, param);
+		exit(-1);
+	}
+	printf("value %s assigned to parameter '%s'\n", value, param);
+}
+
+void parse_conf()
+{
+	FILE *fp;
+	char c;
+	int line = 1;
+	uint8_t isfloat = 0;
+	uint8_t state = 0;
+	uint8_t idbufpos = 0;
+	uint8_t valbufpos = 0;
+	char idbuf[80];
+	char valbuf[32];
+	if ((fp = fopen(CONF_FILE, "r")) == NULL)
+	{
+		fprintf(stderr, "Error opening file '%s' for reading:\n%s\n",
+			CONF_FILE, strerror(errno));
+		exit(-1);
+	}
+
+	c = fgetc(fp);
+	while (c != ';')
+	{
+		switch (state)
+		{
+			case 0:
+				if (is_id(c))
+				{
+					idbuf[idbufpos] = c;
+					idbufpos++;
+					state = 1;
+				}
+				else if (is_whitespace(c))
+					state = 0;
+				else
+					syntaxerr(line);
+			break;
+			case 1:
+				if (is_id(c))
+				{
+					idbuf[idbufpos] = c;
+					idbufpos++;
+					state = 1;
+				}
+				else if (c == '=')
+				{
+					idbuf[idbufpos] = '\0';
+					state = 2;
+				}
+				else
+					syntaxerr(line);
+			break;
+			case 2:
+				if (is_dec(c))
+				{
+					valbuf[valbufpos] = c;
+					valbufpos++;
+					state = 2;
+					if (c == '.') isfloat = 1;
+				}
+				else if (c == ',')
+				{
+					valbuf[valbufpos] = '\0';
+					assign(idbuf, valbuf);
+					state = 0;
+					idbufpos = 0;
+					valbufpos = 0;
+				}
+				else if (is_whitespace(c))
+					state = 2;
+				else
+					syntaxerr(line);
+			break;
+		}
+		if (c == '\n') line++;
+		c = fgetc(fp);
+	}
+	valbuf[valbufpos] = '\0';
+	assign(idbuf, valbuf);
+	printf("Done parsing!\n");
+}
