@@ -1,0 +1,44 @@
+modbus_station_id=10,
+modbus_read_base=5,
+modbus_read_count=6,
+update_frequency_hz=0.1;
+
+freq
+{
+	name="ABB_OUTPUT_FREQ_HZ",
+	scale=0.1
+}
+
+current
+{
+	name="ABB_CURRENT_A",
+	scale=0.1
+}
+
+voltage
+{
+	name="ABB_VOLTAGE_V",
+	scale=1
+}
+
+motorspeed
+{
+	name="ABB_MOTORSPEED_RPM",
+	scale=1
+}
+
+kw
+{
+	name="ABB_KW",
+	scale=0.1
+}
+
+kwh
+{
+	name="ABB_KWH",
+	scale=0.1
+}
+
+{freq,current,voltage,motorspeed}
+{kw,kwh}
+
