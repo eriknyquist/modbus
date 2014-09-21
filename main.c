@@ -18,6 +18,8 @@ void siginthandler()
 
 int main (int argc, char *argv[])
 {
+	parse_conf();
+	exit(1);
 	if (argc != 2)
 	{
 		fprintf(stderr, "Usage: %s <serial_device>\n", argv[0]);

@@ -99,7 +99,7 @@ modbus_t *abb_pch550_modbus_init (char *serialport)
 	for (i = 0; i < REG_READ_COUNT; i++)
 	{
 		pv[i] = &sv[i];
-		pv[i]->desc = descriptors[i];
+		pv[i]->tag = descriptors[i];
 	}
 	
 	return modbusport;
@@ -174,7 +174,7 @@ void write_registers_tofile(modbus_t *modbusport)
 		char buf[80];
 		snprintf(buf, sizeof(buf),
 			(i < (REG_READ_COUNT - 1)) ? "%s:%.2f," : "%s:%.2f",
-			pv[i]->desc, pv[i]->value_scaled);
+			pv[i]->tag, pv[i]->value_scaled);
 		strcat(outstring, buf);
 	}
 	fputs(outstring, fp);
@@ -198,16 +198,16 @@ uint8_t is_whitespace (char c)
 		c == '\v' || c == '\n') ? 1 : 0;
 }
 
-void syntaxerr (int line)
+void syntaxerr (int line, char c)
 {
-	fprintf(stderr, "Syntax error in configuration file %s, line %d\n",
-		CONF_FILE, line);
+	fprintf(stderr, "Syntax error '%c' in configuration file %s, line %d\n",
+		c, CONF_FILE, line);
 	exit(-1);
 }
 
 void assign (char *param, char *value)
 {
-	if (strcmp(param, "modbus_rs485_baud") == 0)
+	if (strcmp(param, "modbus_rtu_baud") == 0)
 		modbus_rs485_baud = atoi(value);
 	else if (strcmp(param, "modbus_station_id") == 0)
 		modbus_station_id = atoi(value);
@@ -227,17 +227,133 @@ void assign (char *param, char *value)
 	printf("value %s assigned to parameter '%s'\n", value, param);
 }
 
+element get_element (FILE *fp, int line)
+{
+	element e;
+	int i;
+	int state = 0;
+	char idbuf[80], pbuf[80], tag[80], scale[10], c;	
+	int idbufpos = 0, pbufpos = 0, tagpos = 0, scalepos = 0;
+
+	while (state != 5)
+	{
+		c = fgetc(fp);
+		switch (state)
+		{
+			case 0:
+				if (is_id(c))
+				{
+					idbuf[idbufpos] = c;
+					idbufpos++;
+					state = 1;
+				}
+				else if (is_whitespace(c))
+					state = 0;
+				else
+					syntaxerr(line, c);
+			break;
+			case 1:
+				if (is_id(c))
+				{
+					idbuf[idbufpos] = c;
+					idbufpos++;
+					state = 1;
+				}
+				else if (is_whitespace(c))
+					state = 1;
+				else if (c == '{')
+				{
+					idbuf[idbufpos] = '\0';
+					printf("%s\n", idbuf);
+					state = 2;
+				}
+				else
+					syntaxerr(line, c);
+			break;
+			case 2:
+				if (is_id(c))
+				{
+					pbuf[pbufpos] = c;
+					pbufpos++;
+					state = 2;
+				}
+				else if (is_whitespace(c))
+					state = 2;
+				else if (c == '=')
+				{
+					pbuf[pbufpos] = '\0';
+					printf("%s\n", pbuf);
+					if (strcmp(pbuf, "name") == 0)
+						state = 3;
+					else if (strcmp(pbuf, "scale") == 0)
+						state = 4;
+					else
+						syntaxerr(line, c);
+					pbufpos = 0;
+				}
+				else
+					syntaxerr(line, c);
+			break;
+			case 3:
+				if (is_id(c))
+				{
+					tag[tagpos] = c;
+					tagpos++;
+					state = 3;
+				}
+				else if (is_whitespace(c))
+					state = 3;
+				else if (c == ',')
+				{
+					tag[tagpos] = '\0';
+					state = 2;
+				}
+				else if (c == '}')
+				{
+					tag[tagpos] = '\0';
+					state = 5;
+				}
+				else
+					syntaxerr(line, c);
+			break;
+			case 4:
+				if (is_dec(c))
+				{
+					scale[scalepos] = c;
+					scalepos++;
+					state = 4;
+				}
+				else if (is_whitespace(c))
+					state = 4;
+				else if (c == ',')
+				{
+					scale[scalepos] = '\0';
+					state = 2; 
+				}
+				else if (c == '}')
+				{
+					scale[scalepos] = '\0';
+					state = 5;
+				}
+				
+			break;
+		}
+		if (c == '\n') line++;
+	}
+	e.tag = tag;
+	e.id = idbuf;
+	e.scale = atof(scale);
+	return e;
+}
+
 void parse_conf()
 {
 	FILE *fp;
 	char c;
-	int line = 1;
-	uint8_t isfloat = 0;
-	uint8_t state = 0;
-	uint8_t idbufpos = 0;
-	uint8_t valbufpos = 0;
-	char idbuf[80];
-	char valbuf[32];
+	static int line = 1;
+	uint8_t isfloat = 0, state = 0, idbufpos = 0, valbufpos = 0;
+	char idbuf[80], valbuf[32];
+
 	if ((fp = fopen(CONF_FILE, "r")) == NULL)
 	{
 		fprintf(stderr, "Error opening file '%s' for reading:\n%s\n",
@@ -259,8 +375,10 @@ void parse_conf()
 				}
 				else if (is_whitespace(c))
 					state = 0;
+				else if (c == '#')
+					state = 3;
 				else
-					syntaxerr(line);
+					syntaxerr(line, c);
 			break;
 			case 1:
 				if (is_id(c))
@@ -275,7 +393,7 @@ void parse_conf()
 					state = 2;
 				}
 				else
-					syntaxerr(line);
+					syntaxerr(line, c);
 			break;
 			case 2:
 				if (is_dec(c))
@@ -296,7 +414,13 @@ void parse_conf()
 				else if (is_whitespace(c))
 					state = 2;
 				else
-					syntaxerr(line);
+					syntaxerr(line, c);
+			break;
+			case 3:
+				if (c == '\n')
+					state = 0;
+				else
+					state = 3;
 			break;
 		}
 		if (c == '\n') line++;
@@ -305,4 +429,6 @@ void parse_conf()
 	valbuf[valbufpos] = '\0';
 	assign(idbuf, valbuf);
 	printf("Done parsing!\n");
+	element em = get_element(fp, line);
+	printf("id=%s\ntag=%s\nscale=%.1f\n", em.id, em.tag, em.scale);
 }
