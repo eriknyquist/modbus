@@ -19,45 +19,14 @@
 #define MB_PARITY 'N'
 #define MB_SLAVE_ADDRESS 10
 
-int modbus_rs485_baud, modbus_station_id,
+int modbus_rtu_baud, modbus_station_id,
 	modbus_read_base, modbus_read_count,
 	update_frequency_hz;
 
 double delaytime;
 char uuid[38];
 
-element sv[REG_READ_COUNT];
-element *pv[REG_READ_COUNT];
-
-
-
-char *params_str[4] =
-{
-	"modbus_station_id",
-	"modbus_read_base",
-	"modbus_read_count",
-	"update_frequency_hz"
-};
-
-char *descriptors[REG_READ_COUNT] =
-{
-	"ABB_OUTPUT_FREQ_HZ",
-	"ABB_CURRENT_A",
-	"ABB_VOLTAGE_V",
-	"ABB_MOTORSPEED_RPM",
-	"ABB_KW",
-	"ABB_KWH"
-};
-
-float scalefactors[REG_READ_COUNT] =
-{
-        FREQ_RESOLUTION_HZ,
-        CURRENT_RESOLUTION_A,
-        VOLTAGE_RESOLUTION_V,
-        MOTORSPEED_RESOLUTION_RPM,
-	KW_RESOLUTION,
-	KWH_RESOLUTION
-};
+element *pv;
 
 void fail (char * errstr, modbus_t *modbusport)
 {
@@ -68,117 +37,6 @@ void fail (char * errstr, modbus_t *modbusport)
 		modbus_free(modbusport);
 	}
 	exit(-1);
-}
-
-modbus_t *abb_pch550_modbus_init (char *serialport)
-{
-	modbus_t *modbusport;
-
-	if (access(serialport, F_OK) != 0)
-	{
-		printf("Error accessing '%s':\n%s\n", serialport, strerror(errno));
-		exit(-1);
-	}
-
-	modbusport = modbus_new_rtu(serialport, MB_BITRATE, MB_PARITY, MB_DATABITS, MB_STOPBITS);
-
-	if (modbusport == NULL)
-	{
-		fprintf(stderr, "Unable to create the libmodbus context on serial port %s\n%s\n",
-			serialport, 
-			strerror(errno));
-		exit(-1);
-	}
-
-	if (modbus_set_slave(modbusport, MB_SLAVE_ADDRESS))
-		fail("Failed to set modbus slave address", modbusport);
-
-	if (modbus_connect(modbusport))
-		fail("Unable to connect to modbus server", modbusport);
-	int i;
-	for (i = 0; i < REG_READ_COUNT; i++)
-	{
-		pv[i] = &sv[i];
-		pv[i]->tag = descriptors[i];
-	}
-	
-	return modbusport;
-}
-
-void ile_aip_init(void)
-{
-	FILE *fp;
-	if ((fp = fopen(UUID_FILE, "r")) == NULL)
-		fail("Failed to open UUID file", NULL);
-	fgets(uuid, UUID_LENGTH, fp);
-	if (strlen(uuid) != UUID_LENGTH - 1)
-	{
-		fprintf(stderr, 
-			"Error : file '%s' does not contain a UUID in the expected format\n%s\n%d\n",
-			UUID_FILE, uuid, strlen(uuid));
-		exit(-1);
-	}
-	if (access(SENSORDATA, F_OK) != 0)
-	{
-		printf("Error accessing '%s':\n%s\n", SENSORDATA, strerror(errno));
-		exit(-1);
-	}
-}
-
-int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
-{
-	int n, i;
-
-	n = modbus_read_registers(modbusport, REG_READ_BASE, REG_READ_COUNT, inputs_raw);
-
-	if (n <= 0)
-	{
-		fail("Unable to read modbus registers", modbusport);
-	}
-
-	for (i = 0; i < REG_READ_COUNT; i++)
-	{
-		pv[i]->value_raw = inputs_raw[i];
-		pv[i]->value_scaled = (float) inputs_raw[i] * scalefactors[i];
-	}
-
-	/* ---debug--- */
-	printf("\r%16.2f%16.2f%16.2f%16.2f%16.2f%16.2f", pv[0]->value_scaled, pv[1]->value_scaled,
-		pv[2]->value_scaled, pv[3]->value_scaled, pv[4]->value_scaled,
-		pv[5]->value_scaled);
-	fflush(stdout);
-	/* ----------- */
-}
-
-void write_registers_tofile(modbus_t *modbusport)
-{
-	FILE *fp;
-	int i;
-        char outstring[512];
-	char *logfilename = gen_filename(uuid);
-	int pathlength = strlen(logfilename) + strlen(SENSORDATA);
-	char logpath[pathlength + 1];
-
-	strcpy(logpath, SENSORDATA);
-	strcat(logpath, logfilename);
-
-        strcpy(outstring, "<D>,SEC:PUBLIC,");
-
-	if ((fp = fopen(logpath, "w")) == NULL)
-	{
-		fail("Error opening sensor log file for writing register reads", modbusport);
-	}
-
-	for (i = 0; i < REG_READ_COUNT; i++)
-	{
-		char buf[80];
-		snprintf(buf, sizeof(buf),
-			(i < (REG_READ_COUNT - 1)) ? "%s:%.2f," : "%s:%.2f",
-			pv[i]->tag, pv[i]->value_scaled);
-		strcat(outstring, buf);
-	}
-	fputs(outstring, fp);
-	fclose(fp);
 }
 
 uint8_t is_id (char c)
@@ -208,7 +66,7 @@ void syntaxerr (int line, char c)
 void assign (char *param, char *value)
 {
 	if (strcmp(param, "modbus_rtu_baud") == 0)
-		modbus_rs485_baud = atoi(value);
+		modbus_rtu_baud = atoi(value);
 	else if (strcmp(param, "modbus_station_id") == 0)
 		modbus_station_id = atoi(value);
 	else if (strcmp(param, "modbus_read_base") == 0)
@@ -264,7 +122,6 @@ element get_element (FILE *fp, int line)
 				else if (c == '{')
 				{
 					idbuf[idbufpos] = '\0';
-					printf("%s\n", idbuf);
 					state = 2;
 				}
 				else
@@ -282,7 +139,6 @@ element get_element (FILE *fp, int line)
 				else if (c == '=')
 				{
 					pbuf[pbufpos] = '\0';
-					printf("%s\n", pbuf);
 					if (strcmp(pbuf, "name") == 0)
 						state = 3;
 					else if (strcmp(pbuf, "scale") == 0)
@@ -346,20 +202,11 @@ element get_element (FILE *fp, int line)
 	return e;
 }
 
-void parse_conf()
+void parse_conf(FILE *fp, int line)
 {
-	FILE *fp;
 	char c;
-	static int line = 1;
 	uint8_t isfloat = 0, state = 0, idbufpos = 0, valbufpos = 0;
 	char idbuf[80], valbuf[32];
-
-	if ((fp = fopen(CONF_FILE, "r")) == NULL)
-	{
-		fprintf(stderr, "Error opening file '%s' for reading:\n%s\n",
-			CONF_FILE, strerror(errno));
-		exit(-1);
-	}
 
 	c = fgetc(fp);
 	while (c != ';')
@@ -429,6 +276,129 @@ void parse_conf()
 	valbuf[valbufpos] = '\0';
 	assign(idbuf, valbuf);
 	printf("Done parsing!\n");
-	element em = get_element(fp, line);
-	printf("id=%s\ntag=%s\nscale=%.1f\n", em.id, em.tag, em.scale);
 }
+
+modbus_t *abb_pch550_modbus_init (char *serialport)
+{
+	FILE *fp;
+	if ((fp = fopen(CONF_FILE, "r")) == NULL)
+	{
+		fprintf(stderr, "Error opening file '%s' for reading:\n%s\n",
+			CONF_FILE, strerror(errno));
+		exit(-1);
+	}
+	int i;
+	static int line = 1;
+	parse_conf(fp, line);
+	pv = malloc(sizeof(element) * modbus_read_count);
+
+	for (i = 0; i < modbus_read_count; i++)
+	{
+		pv[i] = get_element(fp, line);
+		printf("tag=%s, id=%s, scale=%.1f\n", pv[i].tag, pv[i].id, pv[i].scale);
+	}
+
+	modbus_t *modbusport;
+/*
+	if (access(serialport, F_OK) != 0)
+	{
+		printf("Error accessing '%s':\n%s\n", serialport, strerror(errno));
+		exit(-1);
+	}
+
+	modbusport = modbus_new_rtu(serialport, modbus_rtu_baud, MB_PARITY, MB_DATABITS, MB_STOPBITS);
+
+	if (modbusport == NULL)
+	{
+		fprintf(stderr, "Unable to create the libmodbus context on serial port %s\n%s\n",
+			serialport, 
+			strerror(errno));
+		exit(-1);
+	}
+
+	if (modbus_set_slave(modbusport, MB_SLAVE_ADDRESS))
+		fail("Failed to set modbus slave address", modbusport);
+
+	if (modbus_connect(modbusport))
+		fail("Unable to connect to modbus server", modbusport);
+*/	
+	return NULL;
+}
+
+void ile_aip_init(void)
+{
+	FILE *fp;
+	if ((fp = fopen(UUID_FILE, "r")) == NULL)
+		fail("Failed to open UUID file", NULL);
+	fgets(uuid, UUID_LENGTH, fp);
+	if (strlen(uuid) != UUID_LENGTH - 1)
+	{
+		fprintf(stderr, 
+			"Error : file '%s' does not contain a UUID in the expected format\n%s\n%d\n",
+			UUID_FILE, uuid, strlen(uuid));
+		exit(-1);
+	}
+	if (access(SENSORDATA, F_OK) != 0)
+	{
+		printf("Error accessing '%s':\n%s\n", SENSORDATA, strerror(errno));
+		exit(-1);
+	}
+}
+
+int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
+{
+	int n, i;
+
+	/*n = modbus_read_registers(modbusport, REG_READ_BASE, REG_READ_COUNT, inputs_raw);
+
+	if (n <= 0)
+	{
+		fail("Unable to read modbus registers", modbusport);
+	}*/
+
+	for (i = 0; i < modbus_read_count; i++)
+	{
+		inputs_raw[i] = i * 3;
+		pv[i].value_raw = inputs_raw[i];
+		pv[i].value_scaled = (float) inputs_raw[i] * pv[i].scale;
+	}
+
+	/* ---debug--- */
+	printf("\r%16.2f%16.2f%16.2f%16.2f%16.2f%16.2f", pv[0].value_scaled, pv[1].value_scaled,
+		pv[2].value_scaled, pv[3].value_scaled, pv[4].value_scaled,
+		pv[5].value_scaled);
+	fflush(stdout);
+	/* ----------- */
+}
+
+void write_registers_tofile(modbus_t *modbusport)
+{
+	FILE *fp;
+	int i;
+        char outstring[512];
+	char *logfilename = gen_filename(uuid);
+	int pathlength = strlen(logfilename) + strlen(SENSORDATA);
+	char logpath[pathlength + 1];
+
+	strcpy(logpath, SENSORDATA);
+	strcat(logpath, logfilename);
+
+        strcpy(outstring, "<D>,SEC:PUBLIC,");
+
+	if ((fp = fopen(logpath, "w")) == NULL)
+	{
+		fail("Error opening sensor log file for writing register reads", modbusport);
+	}
+
+	for (i = 0; i < modbus_read_count; i++)
+	{
+		char buf[80];
+		snprintf(buf, sizeof(buf),
+			(i < (modbus_read_count - 1)) ? "%s:%.2f," : "%s:%.2f",
+			pv[i].tag, pv[i].value_scaled);
+		strcat(outstring, buf);
+	}
+	fputs(outstring, fp);
+	fclose(fp);
+}
+
