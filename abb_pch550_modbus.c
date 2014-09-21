@@ -20,13 +20,14 @@
 #define MB_SLAVE_ADDRESS 10
 
 int modbus_rtu_baud, modbus_station_id,
-	modbus_read_base, modbus_read_count,
-	update_frequency_hz;
+	modbus_read_base, modbus_read_count;
+float update_frequency_hz;
 
 double delaytime;
 char uuid[38];
 
 element *pv;
+static int line = 1;
 
 void fail (char * errstr, modbus_t *modbusport)
 {
@@ -56,7 +57,7 @@ uint8_t is_whitespace (char c)
 		c == '\v' || c == '\n') ? 1 : 0;
 }
 
-void syntaxerr (int line, char c)
+void syntaxerr (char c)
 {
 	fprintf(stderr, "Syntax error '%c' in configuration file %s, line %d\n",
 		c, CONF_FILE, line);
@@ -82,18 +83,18 @@ void assign (char *param, char *value)
 			CONF_FILE, param);
 		exit(-1);
 	}
-	printf("value %s assigned to parameter '%s'\n", value, param);
+	printf("'%s' set to %s\n", param, value);
 }
 
-element get_element (FILE *fp, int line)
+element get_element (FILE *fp)
 {
 	element e;
 	int i;
 	int state = 0;
-	char idbuf[80], pbuf[80], tag[80], scale[10], c;	
+	char pbuf[80], scale[10], c;	
 	int idbufpos = 0, pbufpos = 0, tagpos = 0, scalepos = 0;
 
-	while (state != 5)
+	while (state != 6)
 	{
 		c = fgetc(fp);
 		switch (state)
@@ -101,19 +102,21 @@ element get_element (FILE *fp, int line)
 			case 0:
 				if (is_id(c))
 				{
-					idbuf[idbufpos] = c;
+					e.id[idbufpos] = c;
 					idbufpos++;
 					state = 1;
 				}
 				else if (is_whitespace(c))
 					state = 0;
+				else if (c == '#')
+					state = 5;
 				else
-					syntaxerr(line, c);
+					syntaxerr(c);
 			break;
 			case 1:
 				if (is_id(c))
 				{
-					idbuf[idbufpos] = c;
+					e.id[idbufpos] = c;
 					idbufpos++;
 					state = 1;
 				}
@@ -121,11 +124,11 @@ element get_element (FILE *fp, int line)
 					state = 1;
 				else if (c == '{')
 				{
-					idbuf[idbufpos] = '\0';
+					e.id[idbufpos] = '\0';
 					state = 2;
 				}
 				else
-					syntaxerr(line, c);
+					syntaxerr(c);
 			break;
 			case 2:
 				if (is_id(c))
@@ -144,16 +147,16 @@ element get_element (FILE *fp, int line)
 					else if (strcmp(pbuf, "scale") == 0)
 						state = 4;
 					else
-						syntaxerr(line, c);
+						syntaxerr(c);
 					pbufpos = 0;
 				}
 				else
-					syntaxerr(line, c);
+					syntaxerr(c);
 			break;
 			case 3:
 				if (is_id(c))
 				{
-					tag[tagpos] = c;
+					e.tag[tagpos] = c;
 					tagpos++;
 					state = 3;
 				}
@@ -161,16 +164,16 @@ element get_element (FILE *fp, int line)
 					state = 3;
 				else if (c == ',')
 				{
-					tag[tagpos] = '\0';
+					e.tag[tagpos] = '\0';
 					state = 2;
 				}
 				else if (c == '}')
 				{
-					tag[tagpos] = '\0';
-					state = 5;
+					e.tag[tagpos] = '\0';
+					state = 6;
 				}
 				else
-					syntaxerr(line, c);
+					syntaxerr(c);
 			break;
 			case 4:
 				if (is_dec(c))
@@ -189,20 +192,22 @@ element get_element (FILE *fp, int line)
 				else if (c == '}')
 				{
 					scale[scalepos] = '\0';
-					state = 5;
+					state = 6;
 				}
 				
+			break;
+			case 5:
+				if (c == '\n')
+					state = 0;
 			break;
 		}
 		if (c == '\n') line++;
 	}
-	e.tag = tag;
-	e.id = idbuf;
 	e.scale = atof(scale);
 	return e;
 }
 
-void parse_conf(FILE *fp, int line)
+void parse_conf(FILE *fp)
 {
 	char c;
 	uint8_t isfloat = 0, state = 0, idbufpos = 0, valbufpos = 0;
@@ -225,7 +230,7 @@ void parse_conf(FILE *fp, int line)
 				else if (c == '#')
 					state = 3;
 				else
-					syntaxerr(line, c);
+					syntaxerr(c);
 			break;
 			case 1:
 				if (is_id(c))
@@ -240,7 +245,7 @@ void parse_conf(FILE *fp, int line)
 					state = 2;
 				}
 				else
-					syntaxerr(line, c);
+					syntaxerr(c);
 			break;
 			case 2:
 				if (is_dec(c))
@@ -261,7 +266,7 @@ void parse_conf(FILE *fp, int line)
 				else if (is_whitespace(c))
 					state = 2;
 				else
-					syntaxerr(line, c);
+					syntaxerr(c);
 			break;
 			case 3:
 				if (c == '\n')
@@ -275,7 +280,6 @@ void parse_conf(FILE *fp, int line)
 	}
 	valbuf[valbufpos] = '\0';
 	assign(idbuf, valbuf);
-	printf("Done parsing!\n");
 }
 
 modbus_t *abb_pch550_modbus_init (char *serialport)
@@ -288,20 +292,18 @@ modbus_t *abb_pch550_modbus_init (char *serialport)
 		exit(-1);
 	}
 	int i;
-	static int line = 1;
-	parse_conf(fp, line);
+	printf("\n");
+	parse_conf(fp);
+	printf("\n");
 	pv = malloc(sizeof(element) * modbus_read_count);
 
 	for (i = 0; i < modbus_read_count; i++)
-	{
-		pv[i] = get_element(fp, line);
-		printf("tag=%s, id=%s, scale=%.1f\n", pv[i].tag, pv[i].id, pv[i].scale);
+		pv[i] = get_element(fp);
 		
-	}
 	
 	for (i = 0; i < modbus_read_count; i++)
 	{
-		printf("tag=%s, id=%s, scale=%.1f\n", pv[i].tag, pv[i].id, pv[i].scale);
+		printf("Found tag: %s\n", pv[i].tag);
 	}
 
 	modbus_t *modbusport;
