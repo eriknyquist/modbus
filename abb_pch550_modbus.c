@@ -296,6 +296,12 @@ modbus_t *abb_pch550_modbus_init (char *serialport)
 	{
 		pv[i] = get_element(fp, line);
 		printf("tag=%s, id=%s, scale=%.1f\n", pv[i].tag, pv[i].id, pv[i].scale);
+		
+	}
+	
+	for (i = 0; i < modbus_read_count; i++)
+	{
+		printf("tag=%s, id=%s, scale=%.1f\n", pv[i].tag, pv[i].id, pv[i].scale);
 	}
 
 	modbus_t *modbusport;
