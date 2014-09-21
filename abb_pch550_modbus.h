@@ -11,8 +11,8 @@ typedef struct element
 {
 	uint16_t value_raw;
 	float value_scaled;
-	char *tag;
-	char *id;
+	char tag[80];
+	char id[80];
 	float scale;
 } element;
 
