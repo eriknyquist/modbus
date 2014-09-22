@@ -9,8 +9,9 @@
 #include "abb_pch550_modbus.h"
 #include "abb_pch550_time.h"
 
-#define CONF_FILE "abb.conf"
+#define CONF_FILE "/etc/abb.conf"
 #define SENSORDATA "/home/sensordata/"
+#define PARAMS 6
 #define UUID_LENGTH 37
 #define UUID_FILE "/uuid"
 #define MB_BITRATE 9600
@@ -22,7 +23,9 @@
 int modbus_rtu_baud, modbus_station_id,
 	modbus_read_base, modbus_read_count;
 float update_frequency_hz;
+char modbus_port_name[128];
 
+int paramcount;
 double delaytime;
 char uuid[38];
 
@@ -76,6 +79,7 @@ void assign (char *param, char *value)
 		modbus_read_count = atoi(value);
 	else if (strcmp(param, "update_frequency_hz") == 0)
 		update_frequency_hz = atof(value);
+	else if (strcmp(param, "modbus_port") == 0);
 	else
 	{
 		fprintf(stderr,
@@ -83,7 +87,8 @@ void assign (char *param, char *value)
 			CONF_FILE, param);
 		exit(-1);
 	}
-	printf("'%s' set to %s\n", param, value);
+	printf("%30s : %s\n", param, value);
+	paramcount++;
 }
 
 element get_element (FILE *fp)
@@ -242,7 +247,8 @@ void parse_conf(FILE *fp)
 				else if (c == '=')
 				{
 					idbuf[idbufpos] = '\0';
-					state = 2;
+					state = (strcmp(idbuf, "modbus_port") == 0)
+						? 4 : 2;
 				}
 				else
 					syntaxerr(c);
@@ -274,6 +280,24 @@ void parse_conf(FILE *fp)
 				else
 					state = 3;
 			break;
+			case 4:
+				if (c == ',')
+				{
+					modbus_port_name[valbufpos] = '\0';
+					assign(idbuf, modbus_port_name);
+					state = 0;
+					idbufpos = 0;
+					valbufpos = 0;
+				}
+				else if (is_whitespace(c))
+					state = 4;
+				else
+				{
+					modbus_port_name[valbufpos] = c;
+					valbufpos++;
+					state = 4;
+				}
+			break;
 		}
 		if (c == '\n') line++;
 		c = fgetc(fp);
@@ -282,7 +306,7 @@ void parse_conf(FILE *fp)
 	assign(idbuf, valbuf);
 }
 
-modbus_t *abb_pch550_modbus_init (char *serialport)
+modbus_t *abb_pch550_modbus_init ()
 {
 	FILE *fp;
 	if ((fp = fopen(CONF_FILE, "r")) == NULL)
@@ -292,6 +316,7 @@ modbus_t *abb_pch550_modbus_init (char *serialport)
 		exit(-1);
 	}
 	int i;
+	char *foundstr = "Found tag";
 	printf("\n");
 	parse_conf(fp);
 	printf("\n");
@@ -303,23 +328,23 @@ modbus_t *abb_pch550_modbus_init (char *serialport)
 	
 	for (i = 0; i < modbus_read_count; i++)
 	{
-		printf("Found tag: %s\n", pv[i].tag);
+		printf("%30s : %s\n", foundstr, pv[i].tag);
 	}
 
 	modbus_t *modbusport;
-/*
-	if (access(serialport, F_OK) != 0)
+
+	if (access(modbus_port_name, F_OK) != 0)
 	{
-		printf("Error accessing '%s':\n%s\n", serialport, strerror(errno));
+		printf("Error accessing '%s':\n%s\n", modbus_port_name, strerror(errno));
 		exit(-1);
 	}
-
-	modbusport = modbus_new_rtu(serialport, modbus_rtu_baud, MB_PARITY, MB_DATABITS, MB_STOPBITS);
+/*
+	modbusport = modbus_new_rtu(modbus_port_name, modbus_rtu_baud, MB_PARITY, MB_DATABITS, MB_STOPBITS);
 
 	if (modbusport == NULL)
 	{
 		fprintf(stderr, "Unable to create the libmodbus context on serial port %s\n%s\n",
-			serialport, 
+			modbus_port_name, 
 			strerror(errno));
 		exit(-1);
 	}

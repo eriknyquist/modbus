@@ -10,6 +10,7 @@
 
 extern int modbus_read_count;
 extern float update_frequency_hz;
+
 static uint8_t gotsigint = 0;
 uint16_t *inputs_raw;
 
@@ -20,12 +21,6 @@ void siginthandler()
 
 int main (int argc, char *argv[])
 {
-	if (argc != 2)
-	{
-		fprintf(stderr, "Usage: %s <serial_device>\n", argv[0]);
-		return -1;
-	}
-
 	modbus_t *modbusport;
   	int i;
 	uint8_t skip = 0;
@@ -37,7 +32,7 @@ int main (int argc, char *argv[])
 	signal(SIGINT, siginthandler);
 
 	ile_aip_init();
-	modbusport = abb_pch550_modbus_init(argv[1]);
+	modbusport = abb_pch550_modbus_init();
 	
 	long delaytime_ms = 1000 / update_frequency_hz;
 	/* Allocate space to store raw register reads */
