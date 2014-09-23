@@ -78,7 +78,7 @@ void unrec_id(char *id)
 void nosuchparam(char *param)
 {
 	fprintf(stderr, "Error in configuration file %s, line %d\n", CONF_FILE, line);
-	fprintf(stderr, "'%s' : no such parameter.\n");
+	fprintf(stderr, "'%s' : no such parameter.\n", param);
 	exit(-1);
 }
 
@@ -260,6 +260,8 @@ void kvp_conf (FILE *fp)
 					state = 1;
 				else if (is_whitespace(c))
 					state = 0;
+				else if (c == '#')
+					state = 2;
 				else
 					syntaxerr(c);
 			break;
@@ -278,7 +280,7 @@ void kvp_conf (FILE *fp)
 					int ti = idcmp(idbuf);
 					if (ti == -1)
 						unrec_id(idbuf);
-					if (pv[ti].major == -1)
+					if (pv[ti].major != -1)
 						doubleassn(idbuf);
 					pv[ti].major = majc;
 					pv[ti].minor = minc;
@@ -294,6 +296,10 @@ void kvp_conf (FILE *fp)
 				}
 				else
 					syntaxerr(c);
+			break;
+			case 2:
+				if (c == '\n')
+					state = 0;
 			break;
 		}
 	}
