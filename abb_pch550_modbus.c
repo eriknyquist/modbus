@@ -75,6 +75,13 @@ void unrec_id(char *id)
 	exit(-1);
 }
 
+void nosuchparam(char *param)
+{
+	fprintf(stderr, "Error in configuration file %s, line %d\n", CONF_FILE, line);
+	fprintf(stderr, "'%s' : no such parameter.\n");
+	exit(-1);
+}
+
 void doubleassn (char *id)
 {
 	fprintf(stderr, "Error in configuration file %s, line %d\n", CONF_FILE, line);
@@ -97,12 +104,8 @@ void assign (char *param, char *value)
 		update_frequency_hz = atof(value);
 	else if (strcmp(param, "modbus_port") == 0);
 	else
-	{
-		fprintf(stderr,
-			"Error parsing %s:\nunrecognised parameter '%s'\n",
-			CONF_FILE, param);
-		exit(-1);
-	}
+		nosuchparam(param);
+
 	printf("%30s : %s\n", param, value);
 	paramcount++;
 }
@@ -165,12 +168,12 @@ element get_element (FILE *fp)
 				else if (c == '=')
 				{
 					pbuf[pbufpos] = '\0';
-					if (strcmp(pbuf, "name") == 0)
+					if (strcmp(pbuf, "tag") == 0)
 						state = 3;
 					else if (strcmp(pbuf, "scale") == 0)
 						state = 4;
 					else
-						syntaxerr(c);
+						nosuchparam(pbuf);
 					pbufpos = 0;
 				}
 				else
