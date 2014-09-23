@@ -106,7 +106,7 @@ void assign (char *param, char *value)
 	else
 		nosuchparam(param);
 
-	printf("%30s : %s\n", param, value);
+	printf("%24s : %s\n", param, value);
 	paramcount++;
 }
 
@@ -425,7 +425,6 @@ modbus_t *abb_pch550_modbus_init ()
 	}
 
 	int i;
-	char *foundstr = "Using tag";
 	pv = malloc(sizeof(element) * modbus_read_count);
 
 	for (i = 0; i < modbus_read_count; i++)
@@ -434,6 +433,7 @@ modbus_t *abb_pch550_modbus_init ()
 		if (fp == NULL)
 		{
 			strncpy(pv[i].tag, "SENS_DEFAULT", sizeof(pv[i].tag));
+			strncpy(pv[i].id, "default_id", sizeof(pv[i].id));
 			pv[i].scale = 1;
 			pv[i].major = 0;
 			pv[i].minor = i;
@@ -452,9 +452,11 @@ modbus_t *abb_pch550_modbus_init ()
 		fclose(fp);	
 	}
 
+	printf("%24s : TAG\n", "ID");
+	printf("%28s\n", "-----");
 	for (i = 0; i < modbus_read_count; i++)
 	{
-		printf("%30s : %s\n", foundstr, pv[i].tag);
+		printf("%24s : %s\n", pv[i].id, pv[i].tag);
 	}
 
 	modbus_t *modbusport;
@@ -480,7 +482,14 @@ modbus_t *abb_pch550_modbus_init ()
 
 	if (modbus_connect(modbusport))
 		fail("Unable to connect to modbus server", modbusport);
-*/	
+*/
+
+	printf("\n");
+	for (i = 0; i < modbus_read_count; i++)
+	{
+		printf("%16s", pv[i].id);
+	}
+	printf("\n");
 	return NULL;
 }
 
@@ -522,12 +531,10 @@ int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 		pv[i].value_scaled = (float) inputs_raw[i] * pv[i].scale;
 	}
 
-	/* ---debug--- */
-	printf("\r%16.2f%16.2f%16.2f%16.2f%16.2f%16.2f", pv[0].value_scaled, pv[1].value_scaled,
-		pv[2].value_scaled, pv[3].value_scaled, pv[4].value_scaled,
-		pv[5].value_scaled);
-	fflush(stdout);
-	/* ----------- */
+	printf("\r");
+	for (i = 0; i < modbus_read_count; i++)
+		printf("%16.2f", pv[i].value_scaled);
+	fflush(stdout);	
 }
 
 int posmatch (int maj, int min)

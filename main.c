@@ -39,8 +39,6 @@ int main (int argc, char *argv[])
 	inputs_raw = (uint16_t *) malloc(modbus_read_count * sizeof(uint16_t));
 	memset(inputs_raw, 0, modbus_read_count * sizeof(uint16_t));
 
-	write(1, BANNER, strlen(BANNER));
-
 	while(1)
 	{
 		start = getms();
