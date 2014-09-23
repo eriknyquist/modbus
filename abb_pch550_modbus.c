@@ -67,6 +67,22 @@ void syntaxerr (char c)
 	exit(-1);
 }
 
+void unrec_id(char *id)
+{
+	fprintf(stderr,
+		"Unrecognised identifier '%s' in configuration file %s, line %d\n",
+		id, CONF_FILE, line);
+	exit(-1);
+}
+
+void doubleassn (char *id)
+{
+	fprintf(stderr, "Error in configuration file %s, line %d\n", CONF_FILE, line);
+	fprintf(stderr, "ID '%s' has already been assigned a position.\n", id);
+	fprintf(stderr, "You cannot assign two positions to the same ID.\n");
+	exit(-1);
+}
+
 void assign (char *param, char *value)
 {
 	if (strcmp(param, "modbus_rtu_baud") == 0)
@@ -102,6 +118,8 @@ element get_element (FILE *fp)
 	while (state != 6)
 	{
 		c = fgetc(fp);
+		if (c == '\n')
+			line++;
 		switch (state)
 		{
 			case 0:
@@ -206,10 +224,76 @@ element get_element (FILE *fp)
 					state = 0;
 			break;
 		}
-		if (c == '\n') line++;
 	}
 	e.scale = atof(scale);
 	return e;
+}
+
+int idcmp (char *idc)
+{
+	int i;
+	for (i = 0; i < modbus_read_count; i++)
+	{
+		if (strcmp(idc, pv[i].id) == 0)
+			return i;
+	}
+	return -1;
+}
+
+void kvp_conf (FILE *fp)
+{
+	int majc = 0, minc = 0;
+	char idbuf[80], c;
+	int idbufpos = 0;
+	uint8_t state = 0;
+	while ((c = fgetc(fp)) != EOF)
+	{
+		if (c == '\n')
+			line++;
+		switch (state)
+		{
+			case 0:
+				if (c == '{')
+					state = 1;
+				else if (is_whitespace(c))
+					state = 0;
+				else
+					syntaxerr(c);
+			break;
+			case 1:
+				if (is_id(c))
+				{
+					idbuf[idbufpos] = c;
+					idbufpos++;
+					state = 1;
+				}
+				else if (is_whitespace(c))
+					state = 1;
+				else if (c == ',' || c == '}')
+				{
+					idbuf[idbufpos] = '\0';
+					int ti = idcmp(idbuf);
+					if (ti == -1)
+						unrec_id(idbuf);
+					if (pv[ti].major == -1)
+						doubleassn(idbuf);
+					pv[ti].major = majc;
+					pv[ti].minor = minc;
+					idbufpos = 0;
+					if (c == '}')
+					{
+						majc++;
+						minc = 0;
+						state = 0;
+					}
+					else
+						minc++;
+				}
+				else
+					syntaxerr(c);
+			break;
+		}
+	}
 }
 
 void parse_conf(FILE *fp)
@@ -221,6 +305,8 @@ void parse_conf(FILE *fp)
 	c = fgetc(fp);
 	while (c != ';')
 	{
+		if (c == '\n')
+			line++;
 		switch (state)
 		{
 			case 0:
@@ -299,7 +385,6 @@ void parse_conf(FILE *fp)
 				}
 			break;
 		}
-		if (c == '\n') line++;
 		c = fgetc(fp);
 	}
 	valbuf[valbufpos] = '\0';
@@ -323,9 +408,14 @@ modbus_t *abb_pch550_modbus_init ()
 	pv = malloc(sizeof(element) * modbus_read_count);
 
 	for (i = 0; i < modbus_read_count; i++)
+	{
 		pv[i] = get_element(fp);
+		pv[i].major = -1;
+		pv[i].minor = -1;
+	}
 		
-	
+	kvp_conf(fp);
+	fclose(fp);	
 	for (i = 0; i < modbus_read_count; i++)
 	{
 		printf("%30s : %s\n", foundstr, pv[i].tag);
@@ -404,34 +494,57 @@ int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 	/* ----------- */
 }
 
+int posmatch (int maj, int min)
+{
+	int i;
+	for (i = 0; i < modbus_read_count; i++)
+	{
+		if (pv[i].major == maj &&
+			pv[i].minor == min)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
 void write_registers_tofile(modbus_t *modbusport)
 {
 	FILE *fp;
-	int i;
-        char outstring[512];
+	int i, j;
 	char *logfilename = gen_filename(uuid);
 	int pathlength = strlen(logfilename) + strlen(SENSORDATA);
 	char logpath[pathlength + 1];
 
 	strcpy(logpath, SENSORDATA);
 	strcat(logpath, logfilename);
-
-        strcpy(outstring, "<D>,SEC:PUBLIC,");
-
 	if ((fp = fopen(logpath, "w")) == NULL)
 	{
 		fail("Error opening sensor log file for writing register reads", modbusport);
 	}
 
-	for (i = 0; i < modbus_read_count; i++)
+	for (j = 0; j < modbus_read_count; j++)
 	{
+		int ix = posmatch(j, 0);
+		if (ix == -1)
+			continue;
+		char outstring[512];
 		char buf[80];
-		snprintf(buf, sizeof(buf),
-			(i < (modbus_read_count - 1)) ? "%s:%.2f," : "%s:%.2f",
-			pv[i].tag, pv[i].value_scaled);
-		strcat(outstring, buf);
+		strcpy(outstring, "<D>,SEC:PUBLIC");
+
+		for (i = 0; i < modbus_read_count; i++)
+		{
+			ix = posmatch(j, i);
+			if (ix == -1)
+				continue;
+
+			snprintf(buf, sizeof(buf), ",%s:%.2f",
+				pv[ix].tag, pv[ix].value_scaled);
+			strcat(outstring, buf);
+		}
+		fputs(outstring, fp);
+		fputc('\n', fp);
 	}
-	fputs(outstring, fp);
 	fclose(fp);
 }
 

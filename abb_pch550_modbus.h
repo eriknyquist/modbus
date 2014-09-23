@@ -14,6 +14,8 @@ typedef struct element
 	char tag[80];
 	char id[80];
 	float scale;
+	int major;
+	int minor;
 } element;
 
 #endif
