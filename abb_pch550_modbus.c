@@ -20,10 +20,10 @@
 #define MB_PARITY 'N'
 #define MB_SLAVE_ADDRESS 10
 
-int modbus_rtu_baud, modbus_station_id,
-	modbus_read_base, modbus_read_count;
-float update_frequency_hz;
-char modbus_port_name[128];
+int modbus_rtu_baud = 9600, modbus_station_id = 0,
+	modbus_read_base = 0, modbus_read_count = 1;
+float update_frequency_hz = 0.5;
+char modbus_port_name[128] = "/dev/null";
 
 int paramcount;
 double delaytime;
@@ -402,29 +402,56 @@ void parse_conf(FILE *fp)
 
 modbus_t *abb_pch550_modbus_init ()
 {
-	FILE *fp;
-	if ((fp = fopen(CONF_FILE, "r")) == NULL)
+	FILE *fp = NULL;
+	if (access(CONF_FILE, F_OK) != 0)
 	{
-		fprintf(stderr, "Error opening file '%s' for reading:\n%s\n",
-			CONF_FILE, strerror(errno));
-		exit(-1);
+		printf("\nWARNING: configuration file %s not found, or\n"
+			"insufficient permissions. Default settings will be used,\n"
+			"but they are unlikely to work the way you expect. It is\n"
+			"recommended that you create one- see sample file\n"
+			"'abb.conf' included with the source files.\n\n", CONF_FILE);
 	}
+	else
+	{
+		if ((fp = fopen(CONF_FILE, "r")) == NULL)
+		{
+			fprintf(stderr, "'%s' for reading:\n%s\n",
+				CONF_FILE, strerror(errno));
+			exit(-1);
+		}
+		printf("\n");
+		parse_conf(fp);
+		printf("\n");
+	}
+
 	int i;
-	char *foundstr = "Found tag";
-	printf("\n");
-	parse_conf(fp);
-	printf("\n");
+	char *foundstr = "Using tag";
 	pv = malloc(sizeof(element) * modbus_read_count);
 
 	for (i = 0; i < modbus_read_count; i++)
 	{
-		pv[i] = get_element(fp);
-		pv[i].major = -1;
-		pv[i].minor = -1;
+		
+		if (fp == NULL)
+		{
+			strncpy(pv[i].tag, "SENS_DEFAULT", sizeof(pv[i].tag));
+			pv[i].scale = 1;
+			pv[i].major = 0;
+			pv[i].minor = i;
+		}
+		else
+		{
+			pv[i] = get_element(fp);
+			pv[i].major = -1;
+			pv[i].minor = -1;
+		}
 	}
 		
-	kvp_conf(fp);
-	fclose(fp);	
+	if (fp != NULL)
+	{
+		kvp_conf(fp);
+		fclose(fp);	
+	}
+
 	for (i = 0; i < modbus_read_count; i++)
 	{
 		printf("%30s : %s\n", foundstr, pv[i].tag);
