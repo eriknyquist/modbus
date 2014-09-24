@@ -466,7 +466,7 @@ modbus_t *abb_pch550_modbus_init ()
 		printf("Error accessing '%s':\n%s\n", modbus_port_name, strerror(errno));
 		exit(-1);
 	}
-/*
+
 	modbusport = modbus_new_rtu(modbus_port_name, modbus_rtu_baud, MB_PARITY, MB_DATABITS, MB_STOPBITS);
 
 	if (modbusport == NULL)
@@ -482,7 +482,7 @@ modbus_t *abb_pch550_modbus_init ()
 
 	if (modbus_connect(modbusport))
 		fail("Unable to connect to modbus server", modbusport);
-*/
+
 
 	printf("\n");
 	for (i = 0; i < modbus_read_count; i++)
@@ -490,7 +490,7 @@ modbus_t *abb_pch550_modbus_init ()
 		printf("%16s", pv[i].id);
 	}
 	printf("\n");
-	return NULL;
+	return modbusport;
 }
 
 void ile_aip_init(void)
@@ -517,16 +517,15 @@ int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 {
 	int n, i;
 
-	/*n = modbus_read_registers(modbusport, REG_READ_BASE, REG_READ_COUNT, inputs_raw);
+	n = modbus_read_registers(modbusport, REG_READ_BASE, REG_READ_COUNT, inputs_raw);
 
 	if (n <= 0)
 	{
 		fail("Unable to read modbus registers", modbusport);
-	}*/
+	}
 
 	for (i = 0; i < modbus_read_count; i++)
 	{
-		inputs_raw[i] = i * 3;
 		pv[i].value_raw = inputs_raw[i];
 		pv[i].value_scaled = (float) inputs_raw[i] * pv[i].scale;
 	}
