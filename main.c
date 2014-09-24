@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include <modbus.h>
 #include "abb_pch550_modbus.h"
 #include "abb_pch550_time.h"
@@ -34,7 +35,8 @@ int main (int argc, char *argv[])
 	ile_aip_init();
 	modbusport = abb_pch550_modbus_init();
 	
-	long delaytime_ms = 1000 / update_frequency_hz;
+	long delaytime_ms = lround((double) ((float) 1000 / update_frequency_hz));
+
 	/* Allocate space to store raw register reads */
 	inputs_raw = (uint16_t *) malloc(modbus_read_count * sizeof(uint16_t));
 	memset(inputs_raw, 0, modbus_read_count * sizeof(uint16_t));
