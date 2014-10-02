@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <modbus.h>
-#include "abb_pch550_modbus.h"
-#include "abb_pch550_time.h"
+#include "abb_ach550_modbus.h"
+#include "abb_ach550_time.h"
 #include "common.h"
 
 int gotsigint = 0;
@@ -31,7 +31,7 @@ int main (int argc, char *argv[])
 	signal(SIGINT, siginthandler);
 
 	ile_aip_init();
-	modbusport = abb_pch550_modbus_init();
+	modbusport = abb_ach550_modbus_init();
 
 	/* derive total cycle time in microsecs from modbus_frequency_hz  */
 	delaytime_us = (uint64_t) llrintf(1000000.0 / update_frequency_hz);
@@ -61,17 +61,16 @@ int main (int argc, char *argv[])
 
 			/* -----THE ACTUAL WORK----- */
 
-			abb_pch550_read(inputs_raw, modbusport);
+			abb_ach550_read(inputs_raw, modbusport);
 			write_registers_tofile(modbusport);
 
 			/* ------------------------- */
 		}
 
 		offset = ((start - previous) > delaytime_us)
-		? (start - previous) - delaytime_us : 0;
+			? (start - previous) - delaytime_us : 0;
 
 		previous = start;
-		
 		finish = getms();
 		
 		if (finish >= start)

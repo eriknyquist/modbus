@@ -2,11 +2,12 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <math.h>
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
-#include "abb_pch550_modbus.h"
-#include "abb_pch550_time.h"
+#include "abb_ach550_modbus.h"
+#include "abb_ach550_time.h"
 
 #define CONF_FILE "/etc/abb.conf"
 #define SENSORDATA "/home/sensordata/"
@@ -398,7 +399,7 @@ void parse_conf(FILE *fp)
 	assign(idbuf, valbuf);
 }
 
-modbus_t *abb_pch550_modbus_init ()
+modbus_t *abb_ach550_modbus_init ()
 {
 	FILE *fp = NULL;
 	if (access(CONF_FILE, F_OK) != 0)
@@ -422,10 +423,11 @@ modbus_t *abb_pch550_modbus_init ()
 		printf("\n");
 	}
 
-	if (update_frequency_hz < UPDATE_FREQ_MIN)
+	if (((int) floorf(update_frequency_hz)) * 1000 <
+		((int) floorf(UPDATE_FREQ_MIN)) * 1000)
 	{
 		fprintf(stderr, "Error in configuration file '%s' : parameter \n"
-			"'update_frequency_hz' must be set to %f or higher.\n"
+			"'update_frequency_hz' must be set to %.2f or higher.\n"
 			"You have entered a value of %ld\n",
 			CONF_FILE, UPDATE_FREQ_MIN, update_frequency_hz);
 		exit(-1);
@@ -521,7 +523,7 @@ void ile_aip_init(void)
 	}
 }
 
-int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
+int abb_ach550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 {
 	int n, i;
 

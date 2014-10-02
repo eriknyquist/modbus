@@ -1,9 +1,9 @@
-#ifndef ABB_PCH550_MODBUS_H_
-#define ABB_PCH550_MODBUS_H_
+#ifndef ABB_ACH550_MODBUS_H_
+#define ABB_ACH550_MODBUS_H_
 
-modbus_t *abb_pch550_modbus_init ();
+modbus_t *abb_ach550_modbus_init ();
 void ile_aip_init (void);
-int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport);
+int abb_ach550_read (uint16_t *inputs_raw, modbus_t *modbusport);
 void write_registers_tofile (modbus_t *modbusport);
 void fail (char *errstr, modbus_t *modbusport);
 
