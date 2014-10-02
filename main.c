@@ -25,12 +25,7 @@ int main (int argc, char *argv[])
 	modbus_t *modbusport;
   	int i;
 	uint8_t skip = 0;
-	uint64_t start;
-	uint64_t finish;
-	uint64_t offset;
-	uint64_t previous;
-	uint64_t remaining_usecs;
-	uint64_t delaytime_us;
+	uint64_t start, finish, offset, previous, remaining_usecs, delaytime_us;
 
 	/* Catch sigint (Ctrl-C) */
 	signal(SIGINT, siginthandler);
@@ -38,12 +33,15 @@ int main (int argc, char *argv[])
 	ile_aip_init();
 	modbusport = abb_pch550_modbus_init();
 
+	/* derive total cycle time in microsecs from modbus_frequency_hz  */
 	delaytime_us = (uint64_t) llrintf(1000000.0 / update_frequency_hz);
 
 	/* Allocate space to store raw register reads */
 	inputs_raw = (uint16_t *) malloc(modbus_read_count * sizeof(uint16_t));
 	memset(inputs_raw, 0, modbus_read_count * sizeof(uint16_t));
 
+	/* must initialise a 'fake' previous timestamp,
+	 * so the loop works first time */
 	previous = getms() - (delaytime_us);
 	while(1)
 	{
@@ -52,8 +50,22 @@ int main (int argc, char *argv[])
 		if (gotsigint)
 			fail("Closing modbus connections & exiting.", modbusport); 
 
-		abb_pch550_read(inputs_raw, modbusport);
-		write_registers_tofile(modbusport);
+		if (skip)
+			skip = 0;
+		else
+		{
+			/* This is where all the 'actual work' goes- everything else
+		 	* is just timer maintenance. You can add as much stuff as you want
+		 	* and the cycle time should remain fixed (provided the actual execution
+		 	* time does not exceed the cycle time) */
+
+			/* -----THE ACTUAL WORK----- */
+
+			abb_pch550_read(inputs_raw, modbusport);
+			write_registers_tofile(modbusport);
+
+			/* ------------------------- */
+		}
 
 		offset = ((start - previous) > delaytime_us)
 		? (start - previous) - delaytime_us : 0;
@@ -61,9 +73,13 @@ int main (int argc, char *argv[])
 		previous = start;
 		
 		finish = getms();
-
-		remaining_usecs = ((start + delaytime_us) - finish) - offset;
-		usleep(remaining_usecs);
-
+		
+		if (finish >= start)
+		{
+			remaining_usecs = ((start + delaytime_us) - finish) - offset;
+			usleep(remaining_usecs);
+		}
+		else
+			skip = 1;
 	}
 }
