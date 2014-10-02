@@ -5,7 +5,6 @@
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
-#include "common.h"
 #include "abb_pch550_modbus.h"
 #include "abb_pch550_time.h"
 
@@ -14,11 +13,10 @@
 #define PARAMS 6
 #define UUID_LENGTH 37
 #define UUID_FILE "/uuid"
-#define MB_BITRATE 9600
+#define UPDATE_FREQ_MIN 0.01
 #define MB_DATABITS 8
 #define MB_STOPBITS 2
 #define MB_PARITY 'N'
-#define MB_SLAVE_ADDRESS 10
 
 int modbus_rtu_baud = 9600, modbus_station_id = 0,
 	modbus_read_base = 0, modbus_read_count = 1;
@@ -424,6 +422,16 @@ modbus_t *abb_pch550_modbus_init ()
 		printf("\n");
 	}
 
+	if (update_frequency_hz < UPDATE_FREQ_MIN)
+	{
+		fprintf(stderr, "Error in configuration file '%s' : parameter \n"
+			"'update_frequency_hz' must be set to %f or higher.\n"
+			"You have entered a value of %ld\n",
+			CONF_FILE, UPDATE_FREQ_MIN, update_frequency_hz);
+		exit(-1);
+	}
+
+
 	int i;
 	pv = malloc(sizeof(element) * modbus_read_count);
 
@@ -466,7 +474,7 @@ modbus_t *abb_pch550_modbus_init ()
 		printf("Error accessing '%s':\n%s\n", modbus_port_name, strerror(errno));
 		exit(-1);
 	}
-/*
+
 	modbusport = modbus_new_rtu(modbus_port_name, modbus_rtu_baud, MB_PARITY, MB_DATABITS, MB_STOPBITS);
 
 	if (modbusport == NULL)
@@ -477,13 +485,13 @@ modbus_t *abb_pch550_modbus_init ()
 		exit(-1);
 	}
 
-	if (modbus_set_slave(modbusport, MB_SLAVE_ADDRESS))
+	if (modbus_set_slave(modbusport, modbus_station_id))
 		fail("Failed to set modbus slave address", modbusport);
 
 	if (modbus_connect(modbusport))
 		fail("Unable to connect to modbus server", modbusport);
 
-*/
+
 	printf("\n");
 	for (i = 0; i < modbus_read_count; i++)
 	{
@@ -517,16 +525,15 @@ int abb_pch550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 {
 	int n, i;
 
-/*	n = modbus_read_registers(modbusport, REG_READ_BASE, REG_READ_COUNT, inputs_raw);
+	n = modbus_read_registers(modbusport, modbus_read_base, modbus_read_count, inputs_raw);
 
 	if (n <= 0)
 	{
 		fail("Unable to read modbus registers", modbusport);
 	}
-*/
+
 	for (i = 0; i < modbus_read_count; i++)
 	{
-		inputs_raw[i] = i * 3;
 		pv[i].value_raw = inputs_raw[i];
 		pv[i].value_scaled = (float) inputs_raw[i] * pv[i].scale;
 	}

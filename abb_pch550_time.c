@@ -5,15 +5,14 @@
 #include <time.h>
 #include <string.h>
 #include "abb_pch550_modbus.h"
-#include "common.h"
 
 #define CLOCKID CLOCK_MONOTONIC
 
-long long getms ()
+uint64_t getms ()
 {
 	struct timeval time;
 	gettimeofday(&time, NULL);
-	return (long long) (time.tv_sec + (time.tv_usec / 1000000.0)) * 1000.0;
+	return (uint64_t) (time.tv_sec * 1000000) + time.tv_usec;
 }
 
 char *gen_filename (char *uuid)
