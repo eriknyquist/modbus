@@ -441,6 +441,7 @@ modbus_t *abb_ach550_modbus_init ()
 
 	modbus_t *modbusport;
 
+#ifndef NOMODBUS
 	if (access(modbus_port_name, F_OK) != 0)
 	{
 		printf("Error accessing '%s':\n%s\n", modbus_port_name, strerror(errno));
@@ -462,7 +463,7 @@ modbus_t *abb_ach550_modbus_init ()
 
 	if (modbus_connect(modbusport))
 		fail("Unable to connect to modbus server", modbusport);
-
+#endif /* NOMODBUS */
 
 	printf("\n");
 	for (i = 0; i < modbus_read_count; i++)
@@ -497,12 +498,13 @@ int abb_ach550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 {
 	int n, i;
 
+#ifndef NOMODBUS
 	n = modbus_read_registers(modbusport, modbus_read_base, modbus_read_count, inputs_raw);
-
 	if (n <= 0)
 	{
 		fail("Unable to read modbus registers", modbusport);
 	}
+#endif
 
 	for (i = 0; i < modbus_read_count; i++)
 	{
