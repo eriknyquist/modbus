@@ -28,6 +28,13 @@ int paramcount;
 double delaytime;
 char uuid[38];
 
+modbus_params mbparams = { .rtu_baud=9600,
+			   .station_id=0,
+			   .read_base=0,
+			   .read_count=1,
+			   .update_freq_hz=2,
+			   .port_name="/dev/null" };
+modbus_params *mbp = &mbparams;
 element *pv;
 static int line = 1;
 
@@ -89,19 +96,21 @@ void doubleassn (char *id)
 	exit(-1);
 }
 
+void assign (char *param, char *value, modbus_params *mp)
 void assign (char *param, char *value)
 {
 	if (strcmp(param, "modbus_rtu_baud") == 0)
-		modbus_rtu_baud = atoi(value);
+		mp->rtu_baud = atoi(value);
 	else if (strcmp(param, "modbus_station_id") == 0)
-		modbus_station_id = atoi(value);
+		mp->station_id = atoi(value);
 	else if (strcmp(param, "modbus_read_base") == 0)
-		modbus_read_base = atoi(value);
+		mp->read_base = atoi(value);
 	else if (strcmp(param, "modbus_read_count") == 0)
-		modbus_read_count = atoi(value);
+		mp->read_count = atoi(value);
 	else if (strcmp(param, "update_frequency_hz") == 0)
-		update_frequency_hz = atof(value);
-	else if (strcmp(param, "modbus_port") == 0);
+		mp->update_freq_hz = atof(value);
+	else if (strcmp(param, "modbus_port") == 0)
+		strncpy(mp->port_name, value, sizeof(mp->port_name));
 	else
 		nosuchparam(param);
 
@@ -285,7 +294,7 @@ void parse_order (FILE *fp)
 	}
 }
 
-void parse_modbus_params(FILE *fp)
+void parse_modbus_params(FILE *fp, modbus_params *mp)
 {
 	char c;
 	uint8_t isfloat = 0, state = 0, idbufpos = 0, valbufpos = 0;
@@ -335,7 +344,7 @@ void parse_modbus_params(FILE *fp)
 				else if (c == ',')
 				{
 					valbuf[valbufpos] = '\0';
-					assign(idbuf, valbuf);
+					assign(idbuf, valbuf, mp);
 					state = 0;
 					idbufpos = 0;
 					valbufpos = 0;
@@ -351,7 +360,7 @@ void parse_modbus_params(FILE *fp)
 				if (c == ',')
 				{
 					modbus_port_name[valbufpos] = '\0';
-					assign(idbuf, modbus_port_name);
+					assign(idbuf, modbus_port_name, mp);
 					state = 0;
 					idbufpos = 0;
 					valbufpos = 0;
@@ -366,7 +375,7 @@ void parse_modbus_params(FILE *fp)
 		c = fgetc(fp);
 	}
 	valbuf[valbufpos] = '\0';
-	assign(idbuf, valbuf);
+	assign(idbuf, valbuf, mp);
 }
 
 modbus_t *abb_ach550_modbus_init ()
@@ -389,7 +398,7 @@ modbus_t *abb_ach550_modbus_init ()
 			exit(-1);
 		}
 		printf("\n");
-		parse_modbus_params(fp);
+		parse_modbus_params(fp, mbp);
 		printf("\n");
 	}
 

@@ -9,7 +9,7 @@ ${OUTPUT}: ${FILES}
 	${CC} -I${MODBUS_H} $^ -o $@ -lmodbus -lrt -lm
 
 nomodbus: ${FILES}
-	${CC} -I ${MODBUS_H} $^ -o ${OUTPUT} -lmodbus -lrt -lm -D NOMODBUS
+	${CC} -I${MODBUS_H} $^ -o ${OUTPUT} -lmodbus -lrt -lm -D NOMODBUS
 
 clean:
 	${RM} ${OUTPUT}
