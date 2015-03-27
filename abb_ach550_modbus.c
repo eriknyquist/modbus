@@ -109,7 +109,7 @@ void assign (char *param, char *value)
 	paramcount++;
 }
 
-element get_element (FILE *fp)
+element get_next_regparam(FILE *fp)
 {
 	element e;
 	int i;
@@ -131,11 +131,9 @@ element get_element (FILE *fp)
 					idbufpos++;
 					state = 1;
 				}
-				else if (is_whitespace(c))
-					state = 0;
 				else if (c == '#')
 					state = 5;
-				else
+				else if (! is_whitespace(c))
 					syntaxerr(c);
 			break;
 			case 1:
@@ -143,16 +141,13 @@ element get_element (FILE *fp)
 				{
 					e.id[idbufpos] = c;
 					idbufpos++;
-					state = 1;
 				}
-				else if (is_whitespace(c))
-					state = 1;
 				else if (c == '{')
 				{
 					e.id[idbufpos] = '\0';
 					state = 2;
 				}
-				else
+				else if (! is_whitespace(c))
 					syntaxerr(c);
 			break;
 			case 2:
@@ -160,10 +155,7 @@ element get_element (FILE *fp)
 				{
 					pbuf[pbufpos] = c;
 					pbufpos++;
-					state = 2;
 				}
-				else if (is_whitespace(c))
-					state = 2;
 				else if (c == '=')
 				{
 					pbuf[pbufpos] = '\0';
@@ -175,7 +167,7 @@ element get_element (FILE *fp)
 						nosuchparam(pbuf);
 					pbufpos = 0;
 				}
-				else
+				else if (! is_whitespace(c))
 					syntaxerr(c);
 			break;
 			case 3:
@@ -183,10 +175,7 @@ element get_element (FILE *fp)
 				{
 					e.tag[tagpos] = c;
 					tagpos++;
-					state = 3;
 				}
-				else if (is_whitespace(c))
-					state = 3;
 				else if (c == ',')
 				{
 					e.tag[tagpos] = '\0';
@@ -197,7 +186,7 @@ element get_element (FILE *fp)
 					e.tag[tagpos] = '\0';
 					state = 6;
 				}
-				else
+				else if (! is_whitespace(c))
 					syntaxerr(c);
 			break;
 			case 4:
@@ -205,10 +194,7 @@ element get_element (FILE *fp)
 				{
 					scale[scalepos] = c;
 					scalepos++;
-					state = 4;
 				}
-				else if (is_whitespace(c))
-					state = 4;
 				else if (c == ',')
 				{
 					scale[scalepos] = '\0';
@@ -242,7 +228,7 @@ int idcmp (char *idc)
 	return -1;
 }
 
-void kvp_conf (FILE *fp)
+void parse_order (FILE *fp)
 {
 	int majc = 0, minc = 0;
 	char idbuf[80], c;
@@ -257,11 +243,9 @@ void kvp_conf (FILE *fp)
 			case 0:
 				if (c == '{')
 					state = 1;
-				else if (is_whitespace(c))
-					state = 0;
 				else if (c == '#')
 					state = 2;
-				else
+				else if (! is_whitespace(c))
 					syntaxerr(c);
 			break;
 			case 1:
@@ -269,10 +253,7 @@ void kvp_conf (FILE *fp)
 				{
 					idbuf[idbufpos] = c;
 					idbufpos++;
-					state = 1;
 				}
-				else if (is_whitespace(c))
-					state = 1;
 				else if (c == ',' || c == '}')
 				{
 					idbuf[idbufpos] = '\0';
@@ -293,7 +274,7 @@ void kvp_conf (FILE *fp)
 					else
 						minc++;
 				}
-				else
+				else if (! is_whitespace(c))
 					syntaxerr(c);
 			break;
 			case 2:
@@ -304,7 +285,7 @@ void kvp_conf (FILE *fp)
 	}
 }
 
-void parse_conf(FILE *fp)
+void parse_modbus_params(FILE *fp)
 {
 	char c;
 	uint8_t isfloat = 0, state = 0, idbufpos = 0, valbufpos = 0;
@@ -324,11 +305,9 @@ void parse_conf(FILE *fp)
 					idbufpos++;
 					state = 1;
 				}
-				else if (is_whitespace(c))
-					state = 0;
 				else if (c == '#')
 					state = 3;
-				else
+				else if (! is_whitespace(c))
 					syntaxerr(c);
 			break;
 			case 1:
@@ -336,7 +315,6 @@ void parse_conf(FILE *fp)
 				{
 					idbuf[idbufpos] = c;
 					idbufpos++;
-					state = 1;
 				}
 				else if (c == '=')
 				{
@@ -352,7 +330,6 @@ void parse_conf(FILE *fp)
 				{
 					valbuf[valbufpos] = c;
 					valbufpos++;
-					state = 2;
 					if (c == '.') isfloat = 1;
 				}
 				else if (c == ',')
@@ -363,16 +340,12 @@ void parse_conf(FILE *fp)
 					idbufpos = 0;
 					valbufpos = 0;
 				}
-				else if (is_whitespace(c))
-					state = 2;
-				else
+				else if (! is_whitespace(c))
 					syntaxerr(c);
 			break;
 			case 3:
 				if (c == '\n')
 					state = 0;
-				else
-					state = 3;
 			break;
 			case 4:
 				if (c == ',')
@@ -383,13 +356,10 @@ void parse_conf(FILE *fp)
 					idbufpos = 0;
 					valbufpos = 0;
 				}
-				else if (is_whitespace(c))
-					state = 4;
-				else
+				else if (! is_whitespace(c))
 				{
 					modbus_port_name[valbufpos] = c;
 					valbufpos++;
-					state = 4;
 				}
 			break;
 		}
@@ -419,7 +389,7 @@ modbus_t *abb_ach550_modbus_init ()
 			exit(-1);
 		}
 		printf("\n");
-		parse_conf(fp);
+		parse_modbus_params(fp);
 		printf("\n");
 	}
 
@@ -450,7 +420,7 @@ modbus_t *abb_ach550_modbus_init ()
 		}
 		else
 		{
-			pv[i] = get_element(fp);
+			pv[i] = get_next_regparam(fp);
 			pv[i].major = -1;
 			pv[i].minor = -1;
 		}
@@ -458,7 +428,7 @@ modbus_t *abb_ach550_modbus_init ()
 		
 	if (fp != NULL)
 	{
-		kvp_conf(fp);
+		parse_order(fp);
 		fclose(fp);	
 	}
 
