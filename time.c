@@ -6,8 +6,8 @@
 #include <time.h>
 #include <string.h>
 #include "modbus_init.h"
+#include "time.h"
 
-#define TIMESTAMP_LEN 10
 #define CLOCKID CLOCK_MONOTONIC
 
 uint64_t getms ()

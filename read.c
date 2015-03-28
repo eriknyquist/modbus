@@ -18,7 +18,7 @@ int abb_ach550_read (uint16_t *inputs_raw, modbusport *mp, element *pv)
 	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count, inputs_raw);
 	if (n <= 0)
 	{
-		fail("Unable to read modbus registers", mp->port);
+		fatal("Unable to read modbus registers", mp);
 	}
 #endif
 	for (i = 0; i < mp->read_count; i++)
@@ -59,7 +59,7 @@ void write_registers_tofile(modbusport *mp, element *pv)
 	strcat(logpath, logfilename);
 	if ((fp = fopen(logpath, "w")) == NULL)
 	{
-		fail("Error opening sensor log file for writing register reads", NULL);
+		err("can't open " SENSORDATA " to write data", mp);
 	}
 
 	for (j = 0; j < mp->read_count; j++)

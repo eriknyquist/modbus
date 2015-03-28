@@ -6,6 +6,7 @@
 #include <math.h>
 #include <modbus.h>
 #include <pthread.h>
+#include <libgen.h>
 #include <sys/time.h>
 #include <sys/signal.h>
 #include "modbus_init.h"
@@ -14,6 +15,7 @@
 #include "read.h"
 
 int gotsigint = 0;
+char *dname;
 
 uint16_t *inputs_raw;
 element *pv;
@@ -40,10 +42,11 @@ void read_thread(void)
 int main (int argc, char *argv[])
 {
   	int i, tstatus;
-
+	dname = basename(argv[0]);
 	/* Catch sigint (Ctrl-C) */
 	signal(SIGINT, siginthandler);
 
+	strncpy(mbp->dname, dname, sizeof(mbp->dname));
 	ile_aip_init(mbp);
 	get_modbus_params(mbp);
 	pv = malloc(sizeof(element) * mbp->read_count);
@@ -55,12 +58,17 @@ int main (int argc, char *argv[])
 
 	tstatus = create_periodic(mbp->secs, read_thread);
 	if (tstatus == -1)
-		fail("Error creating timer", mbp->port);
+		fatal("can't create timer", mbp);
 
 	while(1)
 	{
 		if(gotsigint)
-			fail("Closing modbus connection...", mbp->port);
+		{
+			logger("closing modbus connection...", mbp);
+			modbus_close(mbp->port);
+			modbus_free(mbp->port);
+			exit(0);
+		}
 		usleep(10000);
 	}
 }

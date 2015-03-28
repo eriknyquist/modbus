@@ -11,6 +11,7 @@ typedef struct modbusport
 	int read_count;
 	time_t secs;
 	char uuid[38];
+	char dname[32];
 } modbusport;
 
 typedef struct element
@@ -26,7 +27,9 @@ typedef struct element
 
 modbus_t *modbus_init (modbusport *mp, element *pv);
 void ile_aip_init (modbusport *mp);
-void fail (char *errstr, modbus_t *mp);
+void fatal (char *errstr, modbusport *mp);
+void err (char *errstr, modbusport *mp);
+void logger (char *str, modbusport *mp);
 void get_modbus_params(modbusport *mp);
 
 #endif

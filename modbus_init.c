@@ -26,26 +26,39 @@ FILE *fp = NULL;
 static int line = 1;
 static int column = 1;
 
-void fail (char * errstr, modbus_t *mp)
+void fatal (char * errstr, modbusport *mp)
 {
-	fprintf(stderr, "\n%s\n%s\n", errstr, strerror(errno));
+	err(errstr, mp);
 	if (mp != NULL)
 	{
-		modbus_close(mp);
-		modbus_free(mp);
+		modbus_close(mp->port);
+		modbus_free(mp->port);
 	}
+	logger("exiting.", mp);
 	exit(-1);
+}
+
+void err (char *errstr, modbusport *mp)
+{
+	char ts[TIMESTAMP_LEN];
+	timestamp(ts);
+	fprintf(stderr, "[%s][%s]:ERROR: %s %s\n",
+			ts, mp->dname, errstr, strerror(errno));
+}
+
+void logger (char *str, modbusport *mp)
+{
+	char ts[TIMESTAMP_LEN];
+	timestamp(ts);
+	fprintf(stderr, "[%s][%s]:LOG: %s\n",
+			ts, mp->dname, str);
 }
 
 void get_modbus_params(modbusport *mp)
 {
         if (access(CONF_FILE, F_OK) != 0)
         {
-                printf("\nWARNING: configuration file %s not found, or\n"
-                        "insufficient permissions. Default settings will be used,\n"
-                        "but they are unlikely to work the way you expect. It is\n"
-                        "recommended that you create one- see sample file\n"
-                        "'abb.conf' included with the source files.\n\n", CONF_FILE);
+		logger("\"" CONF_FILE "\" no such file. Using defaults.", mp);
         }
         else
         {
@@ -127,10 +140,10 @@ modbus_t *modbus_init (modbusport *mp, element *pv)
 	}
 
 	if (modbus_set_slave(mp->port, mp->station_id))
-		fail("Failed to set modbus slave address", mp->port);
+		fatal("Failed to set modbus slave address", mp);
 
 	if (modbus_connect(mp->port))
-		fail("Unable to connect to modbus server", mp->port);
+		fatal("Unable to connect to modbus server", mp);
 #endif /* NOMODBUS */
 
 	printf("\n");
@@ -146,7 +159,7 @@ void ile_aip_init(modbusport *mp)
 {
 	FILE *fp;
 	if ((fp = fopen(UUID_FILE, "r")) == NULL)
-		fail("Failed to open UUID file", NULL);
+		fatal("Failed to open UUID file", NULL);
 	fgets(mp->uuid, UUID_LENGTH, fp);
 	if (strlen(mp->uuid) != UUID_LENGTH - 1)
 	{
