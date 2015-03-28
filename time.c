@@ -7,6 +7,7 @@
 #include <string.h>
 #include "modbus_init.h"
 
+#define TIMESTAMP_LEN 10
 #define CLOCKID CLOCK_MONOTONIC
 
 uint64_t getms ()
@@ -57,4 +58,15 @@ int create_periodic(time_t period, void (*thread))
         if (status == -1)
                 return status;
 	return status;
+}
+
+int timestamp(char *ts)
+{
+   time_t rawtime;
+   struct tm *info;
+
+   time(&rawtime);
+
+   info = localtime(&rawtime);
+   snprintf(ts, TIMESTAMP_LEN, "%02d:%02d:%02d", info->tm_hour, info->tm_min, info->tm_sec);
 }
