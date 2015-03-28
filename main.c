@@ -5,13 +5,15 @@
 #include <stdlib.h>
 #include <math.h>
 #include <modbus.h>
-#include "abb_ach550_modbus.h"
-#include "abb_ach550_parse.h"
-#include "abb_ach550_time.h"
+#include "modbus_init.h"
+#include "parse.h"
+#include "time.h"
+#include "read.h"
 
 int gotsigint = 0;
 
 uint16_t *inputs_raw;
+element *pv;
 
 modbusport mbport = { .rtu_baud=9600,
                            .station_id=0,
@@ -35,8 +37,10 @@ int main (int argc, char *argv[])
 	/* Catch sigint (Ctrl-C) */
 	signal(SIGINT, siginthandler);
 
-	ile_aip_init();
-	abb_ach550_modbus_init(mbp);
+	ile_aip_init(mbp);
+	get_modbus_params(mbp);
+	pv = malloc(sizeof(element) * mbp->read_count);
+	modbus_init(mbp, pv);
 
 	/* derive total cycle time in microsecs from modbus_frequency_hz  */
 	delaytime_us = (uint64_t) llrintf(1000000.0 / mbp->update_freq_hz);
@@ -66,8 +70,8 @@ int main (int argc, char *argv[])
 
 			/* -----THE ACTUAL WORK----- */
 
-			abb_ach550_read(inputs_raw, mbp);
-			write_registers_tofile(mbp);
+			abb_ach550_read(inputs_raw, mbp, pv);
+			write_registers_tofile(mbp, pv);
 
 			/* ------------------------- */
 		}

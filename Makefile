@@ -1,7 +1,5 @@
-FILES := \
-main.c abb_ach550_modbus.c \
-abb_ach550_time.c abb_ach550_parse.c
-OUTPUT=abb_ach550_modbus
+FILES := main.c modbus_init.c time.c parse.c read.c
+OUTPUT=mbd
 
 MODBUS_H = /usr/include/modbus
 

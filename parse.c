@@ -6,9 +6,9 @@
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
-#include "abb_ach550_modbus.h"
-#include "abb_ach550_parse.h"
-#include "abb_ach550_time.h"
+#include "modbus_init.h"
+#include "time.h"
+#include "shared.h"
 
 int paramcount;
 double delaytime;

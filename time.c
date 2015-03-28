@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include <time.h>
 #include <string.h>
-#include "abb_ach550_modbus.h"
+#include "modbus_init.h"
 
 #define CLOCKID CLOCK_MONOTONIC
 
