@@ -6,13 +6,20 @@
 #include <math.h>
 #include <modbus.h>
 #include "abb_ach550_modbus.h"
+#include "abb_ach550_parse.h"
 #include "abb_ach550_time.h"
-#include "common.h"
 
 int gotsigint = 0;
 
 uint16_t *inputs_raw;
-extern modbus_params *mbp;
+
+modbusport mbport = { .rtu_baud=9600,
+                           .station_id=0,
+                           .read_base=0,
+                           .read_count=1,
+                           .update_freq_hz=2,
+                           .port_name="/dev/null" };
+modbusport *mbp = &mbport;
 
 void siginthandler()
 {
@@ -21,7 +28,6 @@ void siginthandler()
 
 int main (int argc, char *argv[])
 {
-	modbus_t *modbusport;
   	int i;
 	uint8_t skip = 0;
 	uint64_t start, finish, offset, previous, remaining_usecs, delaytime_us;
@@ -30,7 +36,7 @@ int main (int argc, char *argv[])
 	signal(SIGINT, siginthandler);
 
 	ile_aip_init();
-	modbusport = abb_ach550_modbus_init();
+	abb_ach550_modbus_init(mbp);
 
 	/* derive total cycle time in microsecs from modbus_frequency_hz  */
 	delaytime_us = (uint64_t) llrintf(1000000.0 / mbp->update_freq_hz);
@@ -47,7 +53,7 @@ int main (int argc, char *argv[])
 		start = getms();
 
 		if (gotsigint)
-			fail("Closing modbus connections & exiting.", modbusport); 
+			fail("Closing modbus connections & exiting.", mbp->port); 
 
 		if (skip)
 			skip = 0;
@@ -60,8 +66,8 @@ int main (int argc, char *argv[])
 
 			/* -----THE ACTUAL WORK----- */
 
-			abb_ach550_read(inputs_raw, modbusport);
-			write_registers_tofile(modbusport);
+			abb_ach550_read(inputs_raw, mbp);
+			write_registers_tofile(mbp);
 
 			/* ------------------------- */
 		}

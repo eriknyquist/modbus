@@ -1,21 +1,17 @@
 #ifndef ABB_ACH550_MODBUS_H_
 #define ABB_ACH550_MODBUS_H_
 
-modbus_t *abb_ach550_modbus_init ();
-void ile_aip_init (void);
-int abb_ach550_read (uint16_t *inputs_raw, modbus_t *modbusport);
-void write_registers_tofile (modbus_t *modbusport);
-void fail (char *errstr, modbus_t *modbusport);
 
-typedef struct modbus_params
+typedef struct modbusport
 {
+	modbus_t *port;
+	char port_name[128];
 	int rtu_baud;
 	int station_id;
 	int read_base;
 	int read_count;
 	float update_freq_hz;
-	char port_name[128];
-} modbus_params;
+} modbusport;
 
 typedef struct element
 {
@@ -27,5 +23,11 @@ typedef struct element
 	int major;
 	int minor;
 } element;
+
+modbus_t *abb_ach550_modbus_init (modbusport *mp);
+void ile_aip_init (void);
+int abb_ach550_read (uint16_t *inputs_raw, modbusport *mp);
+void write_registers_tofile (modbusport *mp);
+void fail (char *errstr, modbus_t *mp);
 
 #endif
