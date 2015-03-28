@@ -3,12 +3,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
 #include <modbus.h>
-#include <pthread.h>
 #include <libgen.h>
-#include <sys/time.h>
-#include <sys/signal.h>
 #include "modbus_init.h"
 #include "parse.h"
 #include "time.h"

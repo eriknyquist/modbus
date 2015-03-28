@@ -4,10 +4,10 @@ OUTPUT=mbd
 MODBUS_H = /usr/include/modbus
 
 ${OUTPUT}: ${FILES}
-	${CC} -I${MODBUS_H} $^ -o $@ -lmodbus -lrt -lm -lpthread
+	${CC} -I${MODBUS_H} $^ -o $@ -lmodbus -lrt -lpthread
 
 nomodbus: ${FILES}
-	${CC} -I${MODBUS_H} $^ -o ${OUTPUT} -lmodbus -lrt -lm -lpthread -D NOMODBUS
+	${CC} -I${MODBUS_H} $^ -o ${OUTPUT} -lmodbus -lrt -lpthread -D NOMODBUS
 
 clean:
 	${RM} ${OUTPUT}

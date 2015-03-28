@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <math.h>
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
