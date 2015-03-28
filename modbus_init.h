@@ -1,7 +1,6 @@
 #ifndef MODBUS_INIT_H_
 #define MODBUS_INIT_H_
 
-
 typedef struct modbusport
 {
 	modbus_t *port;
@@ -10,7 +9,7 @@ typedef struct modbusport
 	int station_id;
 	int read_base;
 	int read_count;
-	float update_freq_hz;
+	time_t secs;
 	char uuid[38];
 } modbusport;
 

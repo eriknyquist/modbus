@@ -74,8 +74,8 @@ void assign (char *param, char *value, modbusport *mp)
 		mp->read_base = atoi(value);
 	else if (strcmp(param, "modbus_read_count") == 0)
 		mp->read_count = atoi(value);
-	else if (strcmp(param, "update_frequency_hz") == 0)
-		mp->update_freq_hz = atof(value);
+	else if (strcmp(param, "interval_secs") == 0)
+		mp->secs = atoi(value);
 	else if (strcmp(param, "modbus_port") == 0)
 		strncpy(mp->port_name, value, sizeof(mp->port_name));
 	else

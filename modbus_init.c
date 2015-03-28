@@ -13,7 +13,8 @@
 #include "shared.h"
 
 #define UUID_FILE "/uuid"
-#define UPDATE_FREQ_MIN 0.01
+#define INTERVAL_MIN 1
+#define INTERVAL_MAX 3600
 #define MB_DATABITS 8
 #define MB_STOPBITS 2
 #define MB_PARITY 'N'
@@ -59,13 +60,12 @@ void get_modbus_params(modbusport *mp)
                 printf("\n");
         }
 
-        if (((int) floorf(mp->update_freq_hz)) * 1000 <
-                ((int) floorf(UPDATE_FREQ_MIN)) * 1000)
+        if (mp->secs < INTERVAL_MIN || mp->secs > INTERVAL_MAX)
         {
                 fprintf(stderr, "Error in configuration file '%s' : parameter \n"
-                        "'update_frequency_hz' must be set to %.2f or higher.\n"
+                        "'interval_secs' must be between %d and %d.\n"
                         "You have entered a value of %ld\n",
-                        CONF_FILE, UPDATE_FREQ_MIN, mp->update_freq_hz);
+                        CONF_FILE, INTERVAL_MIN, INTERVAL_MAX, mp->secs);
                 exit(-1);
         }
 
