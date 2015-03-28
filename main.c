@@ -10,10 +10,9 @@
 #include "common.h"
 
 int gotsigint = 0;
-extern int modbus_read_count;
-extern float update_frequency_hz;
 
 uint16_t *inputs_raw;
+extern modbus_params *mbp;
 
 void siginthandler()
 {
@@ -34,11 +33,11 @@ int main (int argc, char *argv[])
 	modbusport = abb_ach550_modbus_init();
 
 	/* derive total cycle time in microsecs from modbus_frequency_hz  */
-	delaytime_us = (uint64_t) llrintf(1000000.0 / update_frequency_hz);
+	delaytime_us = (uint64_t) llrintf(1000000.0 / mbp->update_freq_hz);
 
 	/* Allocate space to store raw register reads */
-	inputs_raw = (uint16_t *) malloc(modbus_read_count * sizeof(uint16_t));
-	memset(inputs_raw, 0, modbus_read_count * sizeof(uint16_t));
+	inputs_raw = (uint16_t *) malloc(mbp->read_count * sizeof(uint16_t));
+	memset(inputs_raw, 0, mbp->read_count * sizeof(uint16_t));
 
 	/* must initialise a 'fake' previous timestamp,
 	 * so the loop works first time */

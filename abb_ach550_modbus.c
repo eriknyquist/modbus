@@ -19,11 +19,6 @@
 #define MB_STOPBITS 2
 #define MB_PARITY 'N'
 
-int modbus_rtu_baud = 9600, modbus_station_id = 0,
-	modbus_read_base = 0, modbus_read_count = 1;
-float update_frequency_hz = 0.5;
-char modbus_port_name[128] = "/dev/null";
-
 int paramcount;
 double delaytime;
 char uuid[38];
@@ -35,8 +30,11 @@ modbus_params mbparams = { .rtu_baud=9600,
 			   .update_freq_hz=2,
 			   .port_name="/dev/null" };
 modbus_params *mbp = &mbparams;
+
 element *pv;
+
 static int line = 1;
+static int column = 1;
 
 void fail (char * errstr, modbus_t *modbusport)
 {
@@ -68,8 +66,8 @@ uint8_t is_whitespace (char c)
 
 void syntaxerr (char c)
 {
-	fprintf(stderr, "Syntax error '%c' in configuration file %s, line %d\n",
-		c, CONF_FILE, line);
+	fprintf(stderr, "Syntax error '%c' in configuration file %s, line %d, column %d\n",
+		c, CONF_FILE, line, column);
 	exit(-1);
 }
 
@@ -97,7 +95,6 @@ void doubleassn (char *id)
 }
 
 void assign (char *param, char *value, modbus_params *mp)
-void assign (char *param, char *value)
 {
 	if (strcmp(param, "modbus_rtu_baud") == 0)
 		mp->rtu_baud = atoi(value);
@@ -130,7 +127,10 @@ element get_next_regparam(FILE *fp)
 	{
 		c = fgetc(fp);
 		if (c == '\n')
+		{
 			line++;
+			column = 1;
+		}
 		switch (state)
 		{
 			case 0:
@@ -157,7 +157,7 @@ element get_next_regparam(FILE *fp)
 					state = 2;
 				}
 				else if (! is_whitespace(c))
-					syntaxerr(c);
+					syntaxerr(c);	
 			break;
 			case 2:
 				if (is_id(c))
@@ -177,7 +177,7 @@ element get_next_regparam(FILE *fp)
 					pbufpos = 0;
 				}
 				else if (! is_whitespace(c))
-					syntaxerr(c);
+					syntaxerr(c);	
 			break;
 			case 3:
 				if (is_id(c))
@@ -221,23 +221,24 @@ element get_next_regparam(FILE *fp)
 					state = 0;
 			break;
 		}
+		column++;
 	}
 	e.scale = atof(scale);
 	return e;
 }
 
-int idcmp (char *idc)
+int idcmp (char *idc, element *v, modbus_params *mbp)
 {
 	int i;
-	for (i = 0; i < modbus_read_count; i++)
-	{
-		if (strcmp(idc, pv[i].id) == 0)
+	for (i = 0; i < mbp->read_count; i++)
+		{
+		if (strcmp(idc, v[i].id) == 0)
 			return i;
 	}
 	return -1;
 }
 
-void parse_order (FILE *fp)
+void parse_order (FILE *fp, element *v, modbus_params *mbp)
 {
 	int majc = 0, minc = 0;
 	char idbuf[80], c;
@@ -246,7 +247,10 @@ void parse_order (FILE *fp)
 	while ((c = fgetc(fp)) != EOF)
 	{
 		if (c == '\n')
+		{
 			line++;
+			column = 1;
+		}
 		switch (state)
 		{
 			case 0:
@@ -266,13 +270,13 @@ void parse_order (FILE *fp)
 				else if (c == ',' || c == '}')
 				{
 					idbuf[idbufpos] = '\0';
-					int ti = idcmp(idbuf);
+					int ti = idcmp(idbuf, v, mbp);
 					if (ti == -1)
 						unrec_id(idbuf);
-					if (pv[ti].major != -1)
+					if (v[ti].major != -1)
 						doubleassn(idbuf);
-					pv[ti].major = majc;
-					pv[ti].minor = minc;
+					v[ti].major = majc;
+					v[ti].minor = minc;
 					idbufpos = 0;
 					if (c == '}')
 					{
@@ -291,6 +295,7 @@ void parse_order (FILE *fp)
 					state = 0;
 			break;
 		}
+		column++;
 	}
 }
 
@@ -304,7 +309,10 @@ void parse_modbus_params(FILE *fp, modbus_params *mp)
 	while (c != ';')
 	{
 		if (c == '\n')
+		{
 			line++;
+			column = 1;
+		}
 		switch (state)
 		{
 			case 0:
@@ -359,19 +367,20 @@ void parse_modbus_params(FILE *fp, modbus_params *mp)
 			case 4:
 				if (c == ',')
 				{
-					modbus_port_name[valbufpos] = '\0';
-					assign(idbuf, modbus_port_name, mp);
+					mp->port_name[valbufpos] = '\0';
+					assign(idbuf, mp->port_name, mp);
 					state = 0;
 					idbufpos = 0;
 					valbufpos = 0;
 				}
 				else if (! is_whitespace(c))
 				{
-					modbus_port_name[valbufpos] = c;
+					mp->port_name[valbufpos] = c;
 					valbufpos++;
 				}
 			break;
 		}
+		column++;
 		c = fgetc(fp);
 	}
 	valbuf[valbufpos] = '\0';
@@ -402,21 +411,20 @@ modbus_t *abb_ach550_modbus_init ()
 		printf("\n");
 	}
 
-	if (((int) floorf(update_frequency_hz)) * 1000 <
+	if (((int) floorf(mbp->update_freq_hz)) * 1000 <
 		((int) floorf(UPDATE_FREQ_MIN)) * 1000)
 	{
 		fprintf(stderr, "Error in configuration file '%s' : parameter \n"
 			"'update_frequency_hz' must be set to %.2f or higher.\n"
 			"You have entered a value of %ld\n",
-			CONF_FILE, UPDATE_FREQ_MIN, update_frequency_hz);
+			CONF_FILE, UPDATE_FREQ_MIN, mbp->update_freq_hz);
 		exit(-1);
 	}
 
 
 	int i;
-	pv = malloc(sizeof(element) * modbus_read_count);
-
-	for (i = 0; i < modbus_read_count; i++)
+	pv = malloc(sizeof(element) * mbp->read_count);
+	for (i = 0; i < mbp->read_count; i++)
 	{
 		
 		if (fp == NULL)
@@ -437,13 +445,13 @@ modbus_t *abb_ach550_modbus_init ()
 		
 	if (fp != NULL)
 	{
-		parse_order(fp);
+		parse_order(fp, pv, mbp);
 		fclose(fp);	
 	}
 
 	printf("%24s : TAG\n", "ID");
 	printf("%28s\n", "-----");
-	for (i = 0; i < modbus_read_count; i++)
+	for (i = 0; i < mbp->read_count; i++)
 	{
 		printf("%24s : %s\n", pv[i].id, pv[i].tag);
 	}
@@ -451,23 +459,23 @@ modbus_t *abb_ach550_modbus_init ()
 	modbus_t *modbusport;
 
 #ifndef NOMODBUS
-	if (access(modbus_port_name, F_OK) != 0)
+	if (access(mbp->port_name, F_OK) != 0)
 	{
-		printf("Error accessing '%s':\n%s\n", modbus_port_name, strerror(errno));
+		printf("Error accessing '%s':\n%s\n", mbp->port_name, strerror(errno));
 		exit(-1);
 	}
 
-	modbusport = modbus_new_rtu(modbus_port_name, modbus_rtu_baud, MB_PARITY, MB_DATABITS, MB_STOPBITS);
+	modbusport = modbus_new_rtu(mbp->port_name, mbp->rtu_baud, MB_PARITY, MB_DATABITS, MB_STOPBITS);
 
 	if (modbusport == NULL)
 	{
 		fprintf(stderr, "Unable to create the libmodbus context on serial port %s\n%s\n",
-			modbus_port_name, 
+			mbp->port_name, 
 			strerror(errno));
 		exit(-1);
 	}
 
-	if (modbus_set_slave(modbusport, modbus_station_id))
+	if (modbus_set_slave(modbusport, mbp->station_id))
 		fail("Failed to set modbus slave address", modbusport);
 
 	if (modbus_connect(modbusport))
@@ -475,7 +483,7 @@ modbus_t *abb_ach550_modbus_init ()
 #endif /* NOMODBUS */
 
 	printf("\n");
-	for (i = 0; i < modbus_read_count; i++)
+	for (i = 0; i < mbp->read_count; i++)
 	{
 		printf("%16s", pv[i].id);
 	}
@@ -508,21 +516,21 @@ int abb_ach550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 	int n, i;
 
 #ifndef NOMODBUS
-	n = modbus_read_registers(modbusport, modbus_read_base, modbus_read_count, inputs_raw);
+	n = modbus_read_registers(modbusport, mbp->read_base, mbp->read_count, inputs_raw);
 	if (n <= 0)
 	{
 		fail("Unable to read modbus registers", modbusport);
 	}
 #endif
 
-	for (i = 0; i < modbus_read_count; i++)
+	for (i = 0; i < mbp->read_count; i++)
 	{
 		pv[i].value_raw = inputs_raw[i];
 		pv[i].value_scaled = (float) inputs_raw[i] * pv[i].scale;
 	}
 
 	printf("\r");
-	for (i = 0; i < modbus_read_count; i++)
+	for (i = 0; i < mbp->read_count; i++)
 		printf("%16.2f", pv[i].value_scaled);
 	fflush(stdout);	
 }
@@ -530,7 +538,7 @@ int abb_ach550_read (uint16_t *inputs_raw, modbus_t *modbusport)
 int posmatch (int maj, int min)
 {
 	int i;
-	for (i = 0; i < modbus_read_count; i++)
+	for (i = 0; i < mbp->read_count; i++)
 	{
 		if (pv[i].major == maj &&
 			pv[i].minor == min)
@@ -556,7 +564,7 @@ void write_registers_tofile(modbus_t *modbusport)
 		fail("Error opening sensor log file for writing register reads", NULL);
 	}
 
-	for (j = 0; j < modbus_read_count; j++)
+	for (j = 0; j < mbp->read_count; j++)
 	{
 		int ix = posmatch(j, 0);
 		if (ix == -1)
@@ -565,7 +573,7 @@ void write_registers_tofile(modbus_t *modbusport)
 		char buf[80];
 		strcpy(outstring, "<D>,SEC:PUBLIC");
 
-		for (i = 0; i < modbus_read_count; i++)
+		for (i = 0; i < mbp->read_count; i++)
 		{
 			ix = posmatch(j, i);
 			if (ix == -1)
