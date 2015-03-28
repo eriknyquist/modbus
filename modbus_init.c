@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/types.h>
 #include <math.h>
 #include <modbus.h>
 #include <errno.h>
@@ -40,18 +41,20 @@ void fatal (char * errstr, modbusport *mp)
 
 void err (char *errstr, modbusport *mp)
 {
+	unsigned long pid = (unsigned long) getpid();
 	char ts[TIMESTAMP_LEN];
 	timestamp(ts);
-	fprintf(stderr, "[%s][%s]:ERROR: %s %s\n",
-			ts, mp->dname, errstr, strerror(errno));
+	fprintf(stderr, "[%s][%s](%ld) error: %s %s\n",
+			ts, mp->dname, pid, errstr, strerror(errno));
 }
 
 void logger (char *str, modbusport *mp)
 {
+	unsigned long pid = (unsigned long) getpid();
 	char ts[TIMESTAMP_LEN];
 	timestamp(ts);
-	fprintf(stderr, "[%s][%s]:LOG: %s\n",
-			ts, mp->dname, str);
+	fprintf(stderr, "[%s][%s](%ld) log: %s\n",
+			ts, mp->dname, pid, str);
 }
 
 void get_modbus_params(modbusport *mp)
@@ -68,9 +71,7 @@ void get_modbus_params(modbusport *mp)
                                 CONF_FILE, strerror(errno));
                         exit(-1);
                 }
-                printf("\n");
                 parse_modbus_params(fp, mp);
-                printf("\n");
         }
 
         if (mp->secs < INTERVAL_MIN || mp->secs > INTERVAL_MAX)
@@ -106,18 +107,19 @@ modbus_t *modbus_init (modbusport *mp, element *pv)
 			pv[i].minor = -1;
 		}
 	}
-		
 	if (fp != NULL)
 	{
 		parse_order(fp, pv, mp);
 		fclose(fp);	
 	}
 
-	printf("%24s : TAG\n", "ID");
-	printf("%28s\n", "-----");
 	for (i = 0; i < mp->read_count; i++)
 	{
-		printf("%24s : %s\n", pv[i].id, pv[i].tag);
+		int msglen = 30 + strlen(pv[i].id) + strlen(pv[i].tag);
+		char msg[msglen];
+		snprintf(msg, msglen, "register #%d; id=\"%s\", tag=\"%s\"",
+			mp->read_base + i, pv[i].id, pv[i].tag);
+		logger(msg, mp);
 	}
 
 	

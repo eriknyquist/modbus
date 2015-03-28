@@ -81,7 +81,10 @@ void assign (char *param, char *value, modbusport *mp)
 	else
 		nosuchparam(param);
 
-	printf("%24s : %s\n", param, value);
+	int msgsize = 9 + strlen(value) + strlen(param);
+	char msg[msgsize];
+	snprintf(msg, msgsize, "%s set to '%s'", param, value);
+	logger(msg, mp);
 	paramcount++;
 }
 
