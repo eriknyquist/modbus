@@ -5,13 +5,16 @@
 #include <stdlib.h>
 #include <math.h>
 #include <modbus.h>
+#include <pthread.h>
+#include <sys/time.h>
+#include <sys/signal.h>
 #include "modbus_init.h"
 #include "parse.h"
 #include "time.h"
 #include "read.h"
 
+timer_t timer_id;
 int gotsigint = 0;
-
 uint16_t *inputs_raw;
 element *pv;
 
@@ -32,7 +35,7 @@ int main (int argc, char *argv[])
 {
   	int i;
 	uint8_t skip = 0;
-	uint64_t start, finish, offset, previous, remaining_usecs, delaytime_us;
+	uint64_t interval;
 
 	/* Catch sigint (Ctrl-C) */
 	signal(SIGINT, siginthandler);
@@ -42,52 +45,19 @@ int main (int argc, char *argv[])
 	pv = malloc(sizeof(element) * mbp->read_count);
 	modbus_init(mbp, pv);
 
-	/* derive total cycle time in microsecs from modbus_frequency_hz  */
-	delaytime_us = (uint64_t) llrintf(1000000.0 / mbp->update_freq_hz);
 
 	/* Allocate space to store raw register reads */
 	inputs_raw = (uint16_t *) malloc(mbp->read_count * sizeof(uint16_t));
 	memset(inputs_raw, 0, mbp->read_count * sizeof(uint16_t));
 
-	/* must initialise a 'fake' previous timestamp,
-	 * so the loop works first time */
-	previous = getms() - (delaytime_us);
 	while(1)
 	{
-		start = getms();
-
 		if (gotsigint)
 			fail("Closing modbus connections & exiting.", mbp->port); 
-
-		if (skip)
-			skip = 0;
 		else
 		{
-			/* This is where all the 'actual work' goes- everything else
-		 	* is just timer maintenance. You can add as much stuff as you want
-		 	* and the cycle time should remain fixed (provided the actual execution
-		 	* time does not exceed the cycle time) */
-
-			/* -----THE ACTUAL WORK----- */
-
 			abb_ach550_read(inputs_raw, mbp, pv);
 			write_registers_tofile(mbp, pv);
-
-			/* ------------------------- */
 		}
-
-		offset = ((start - previous) > delaytime_us)
-			? (start - previous) - delaytime_us : 0;
-
-		previous = start;
-		finish = getms();
-		
-		if (finish >= start)
-		{
-			remaining_usecs = ((start + delaytime_us) - finish) - offset;
-			usleep(remaining_usecs);
-		}
-		else
-			skip = 1;
 	}
 }
