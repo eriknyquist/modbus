@@ -20,6 +20,7 @@ typedef struct modbusport
         time_t secs;
         char uuid[38];
         char dname[32];
+	char logdir[MAX_PATH_LEN];
         char logfile[MAX_PATH_LEN];
         char errfile[MAX_PATH_LEN];
         unsigned long pid;

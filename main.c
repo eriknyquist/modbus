@@ -23,7 +23,8 @@ modbusport mbport = { .rtu_baud=9600,
                            .read_base=0,
                            .read_count=1,
                            .secs=2,
-                           .port_name="/dev/null" };
+                           .port_name="/dev/null",
+			   .logdir=0 };
 modbusport *mbp = &mbport;
 
 void siginthandler()
@@ -49,7 +50,8 @@ int main (int argc, char *argv[])
 	}
 	if (pid > 0)
 		exit(0);
-		
+
+	mbp->pid = (unsigned long) getpid();		
   	int i, tstatus;
 
 	/* Catch sigint (ctrl-c) */
@@ -60,9 +62,9 @@ int main (int argc, char *argv[])
 
 	dname = basename(argv[0]);
 	strncpy(mbp->dname, dname, sizeof(mbp->dname));
-	log_init(mbp);
 	ile_aip_init(mbp);
 	get_modbus_params(mbp);
+	log_init(mbp);
 	pv = malloc(sizeof(element) * mbp->read_count);
 	modbus_init(mbp, pv);
 

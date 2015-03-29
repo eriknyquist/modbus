@@ -77,6 +77,8 @@ void assign (char *param, char *value, modbusport *mp)
 		mp->secs = atoi(value);
 	else if (strcmp(param, "modbus_port") == 0)
 		strncpy(mp->port_name, value, sizeof(mp->port_name));
+	else if (strcmp(param, "log_location") == 0)
+		strncpy(mp->logdir, value, sizeof(mp->logdir));
 	else
 		nosuchparam(param);
 
@@ -274,7 +276,7 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 {
 	char c;
 	uint8_t isfloat = 0, state = 0, idbufpos = 0, valbufpos = 0;
-	char idbuf[80], valbuf[32];
+	char idbuf[80], valbuf[MAX_PATH_LEN];
 
 	c = fgetc(fp);
 	while (c != ';')
@@ -307,8 +309,9 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 				else if (c == '=')
 				{
 					idbuf[idbufpos] = '\0';
-					state = (strcmp(idbuf, "modbus_port") == 0)
-						? 4 : 2;
+					state = (strcmp(idbuf, "modbus_port") == 0 ||
+					         strcmp(idbuf, "log_location") == 0)
+					         ? 4 : 2;
 				}
 				else
 					syntaxerr(c);
@@ -338,15 +341,15 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 			case 4:
 				if (c == ',')
 				{
-					mp->port_name[valbufpos] = '\0';
-					assign(idbuf, mp->port_name, mp);
+					valbuf[valbufpos] = '\0';
+					assign(idbuf, valbuf, mp);
 					state = 0;
 					idbufpos = 0;
 					valbufpos = 0;
 				}
 				else if (! is_whitespace(c))
 				{
-					mp->port_name[valbufpos] = c;
+					valbuf[valbufpos] = c;
 					valbufpos++;
 				}
 			break;
