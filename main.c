@@ -5,10 +5,11 @@
 #include <stdlib.h>
 #include <modbus.h>
 #include <libgen.h>
-#include "modbus_init.h"
+#include "init.h"
 #include "parse.h"
 #include "time.h"
 #include "read.h"
+#include "log.h"
 
 int gotsigint = 0;
 char *dname;
@@ -38,11 +39,13 @@ void read_thread(void)
 int main (int argc, char *argv[])
 {
   	int i, tstatus;
-	dname = basename(argv[0]);
 	/* Catch sigint (Ctrl-C) */
 	signal(SIGINT, siginthandler);
 
+	dname = basename(argv[0]);
 	strncpy(mbp->dname, dname, sizeof(mbp->dname));
+	mbp->pid = (unsigned long) getpid();
+	log_init(mbp);
 	ile_aip_init(mbp);
 	get_modbus_params(mbp);
 	pv = malloc(sizeof(element) * mbp->read_count);

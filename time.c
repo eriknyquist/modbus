@@ -5,7 +5,7 @@
 #include <sys/signal.h>
 #include <time.h>
 #include <string.h>
-#include "modbus_init.h"
+#include "init.h"
 #include "time.h"
 
 #define CLOCKID CLOCK_MONOTONIC

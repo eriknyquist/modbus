@@ -6,10 +6,11 @@
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
-#include "modbus_init.h"
+#include "init.h"
 #include "parse.h"
 #include "read.h"
 #include "time.h"
+#include "log.h"
 #include "shared.h"
 
 #define UUID_FILE "/uuid"
@@ -25,36 +26,6 @@ FILE *fp = NULL;
 
 static int line = 1;
 static int column = 1;
-
-void fatal (char * errstr, modbusport *mp)
-{
-	err(errstr, mp);
-	if (mp != NULL)
-	{
-		modbus_close(mp->port);
-		modbus_free(mp->port);
-	}
-	logger("exiting.", mp);
-	exit(-1);
-}
-
-void err (char *errstr, modbusport *mp)
-{
-	unsigned long pid = (unsigned long) getpid();
-	char ts[TIMESTAMP_LEN];
-	timestamp(ts);
-	fprintf(stderr, "[%s][%s](%ld) error: %s %s\n",
-			ts, mp->dname, pid, errstr, strerror(errno));
-}
-
-void logger (char *str, modbusport *mp)
-{
-	unsigned long pid = (unsigned long) getpid();
-	char ts[TIMESTAMP_LEN];
-	timestamp(ts);
-	fprintf(stderr, "[%s][%s](%ld) log: %s\n",
-			ts, mp->dname, pid, str);
-}
 
 void get_modbus_params(modbusport *mp)
 {

@@ -12,6 +12,10 @@ typedef struct modbusport
 	time_t secs;
 	char uuid[38];
 	char dname[32];
+	char logfile[256];
+	FILE *logfp;
+	FILE *errfp;
+	unsigned long pid;
 } modbusport;
 
 typedef struct element

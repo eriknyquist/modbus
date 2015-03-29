@@ -5,8 +5,9 @@
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
-#include "modbus_init.h"
+#include "init.h"
 #include "time.h"
+#include "log.h"
 #include "shared.h"
 
 int abb_ach550_read (uint16_t *inputs_raw, modbusport *mp, element *pv)

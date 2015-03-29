@@ -1,4 +1,4 @@
-FILES := main.c modbus_init.c time.c parse.c read.c
+FILES := main.c init.c time.c parse.c read.c log.c
 OUTPUT=mbd
 
 MODBUS_H = /usr/include/modbus

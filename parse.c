@@ -5,8 +5,9 @@
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
-#include "modbus_init.h"
+#include "init.h"
 #include "time.h"
+#include "log.h"
 #include "shared.h"
 
 int paramcount;
@@ -80,9 +81,8 @@ void assign (char *param, char *value, modbusport *mp)
 	else
 		nosuchparam(param);
 
-	int msgsize = 9 + strlen(value) + strlen(param);
-	char msg[msgsize];
-	snprintf(msg, msgsize, "%s set to '%s'", param, value);
+	char msg[MAX_LOG_LEN];
+	snprintf(msg, sizeof(msg), "%s set to '%s'", param, value);
 	logger(msg, mp);
 	paramcount++;
 }
