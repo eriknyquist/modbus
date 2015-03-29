@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <modbus.h>
+#include <sys/types.h>
 #include <libgen.h>
 #include "init.h"
 #include "parse.h"
@@ -11,7 +12,7 @@
 #include "read.h"
 #include "log.h"
 
-int gotsigint = 0;
+volatile int gotkillsig = 0;
 char *dname;
 
 uint16_t *inputs_raw;
@@ -27,7 +28,7 @@ modbusport *mbp = &mbport;
 
 void siginthandler()
 {
-	gotsigint = 1;
+	gotkillsig = 1;
 }
 
 void read_thread(void)
@@ -38,19 +39,33 @@ void read_thread(void)
 
 int main (int argc, char *argv[])
 {
+	pid_t pid = 0;
+
+	pid = fork();
+	if (pid < 0)
+	{
+		fprintf(stderr, "fork failed.\n");
+		exit(-1);
+	}
+	if (pid > 0)
+		exit(0);
+		
   	int i, tstatus;
-	/* Catch sigint (Ctrl-C) */
+
+	/* Catch sigint (ctrl-c) */
 	signal(SIGINT, siginthandler);
+
+	/* Catch sigterm (kill) */
+	signal(SIGTERM, siginthandler);
 
 	dname = basename(argv[0]);
 	strncpy(mbp->dname, dname, sizeof(mbp->dname));
-	mbp->pid = (unsigned long) getpid();
 	log_init(mbp);
 	ile_aip_init(mbp);
 	get_modbus_params(mbp);
 	pv = malloc(sizeof(element) * mbp->read_count);
 	modbus_init(mbp, pv);
-	
+
 	/* Allocate space to store raw register reads */
 	inputs_raw = (uint16_t *) malloc(mbp->read_count * sizeof(uint16_t));
 	memset(inputs_raw, 0, mbp->read_count * sizeof(uint16_t));
@@ -61,9 +76,9 @@ int main (int argc, char *argv[])
 
 	while(1)
 	{
-		if(gotsigint)
+		if(gotkillsig)
 		{
-			logger("closing modbus connection...", mbp);
+			logger("killed. Closing modbus connection & exiting.", mbp);
 			modbus_close(mbp->port);
 			modbus_free(mbp->port);
 			exit(0);

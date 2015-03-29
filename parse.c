@@ -8,7 +8,6 @@
 #include "init.h"
 #include "time.h"
 #include "log.h"
-#include "shared.h"
 
 int paramcount;
 double delaytime;

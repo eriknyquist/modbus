@@ -9,5 +9,8 @@ ${OUTPUT}: ${FILES}
 nomodbus: ${FILES}
 	${CC} -I${MODBUS_H} $^ -o ${OUTPUT} -lmodbus -lrt -lpthread -D NOMODBUS
 
+vnomodbus: ${FILES}
+	${CC} -I${MODBUS_H} $^ -o ${OUTPUT} -lmodbus -lrt -lpthread -D NOMODBUS -D DEBUG
+
 clean:
 	${RM} ${OUTPUT}

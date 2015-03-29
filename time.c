@@ -60,7 +60,7 @@ int create_periodic(time_t period, void (*thread))
 	return status;
 }
 
-int timestamp(char *ts)
+char *timestamp()
 {
    time_t rawtime;
    struct tm *info;
@@ -68,5 +68,7 @@ int timestamp(char *ts)
    time(&rawtime);
 
    info = localtime(&rawtime);
-   snprintf(ts, TIMESTAMP_LEN, "%02d:%02d:%02d", info->tm_hour, info->tm_min, info->tm_sec);
+   char *tmp = asctime(info);
+   tmp[strlen(tmp) - 1] = 0;
+   return tmp;
 }

@@ -8,13 +8,17 @@
 #include "init.h"
 #include "time.h"
 #include "log.h"
-#include "shared.h"
 
 int abb_ach550_read (uint16_t *inputs_raw, modbusport *mp, element *pv)
 {
 	int n, i;
 
 #ifndef NOMODBUS
+	char msg[MAX_LOG_LEN];
+	snprintf(msg, sizeof(msg), "reading modbus registers %d to %d from '%s'",
+		mp->read_base, mp->read_base + mp->read_count, mp->port_name);
+	logger(msg, mp);
+
 	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count, inputs_raw);
 	if (n <= 0)
 	{
@@ -27,10 +31,12 @@ int abb_ach550_read (uint16_t *inputs_raw, modbusport *mp, element *pv)
 		pv[i].value_scaled = (float) inputs_raw[i] * pv[i].scale;
 	}
 
+#ifdef DEBUG
 	printf("\r");
 	for (i = 0; i < mp->read_count; i++)
 		printf("%16.2f", pv[i].value_scaled);
 	fflush(stdout);	
+#endif
 }
 
 int posmatch (int maj, int min, int read_count, element *pv)
@@ -52,11 +58,10 @@ void write_registers_tofile(modbusport *mp, element *pv)
 	FILE *fp;
 	int i, j;
 	char *logfilename = gen_filename(mp->uuid);
-	int pathlength = strlen(logfilename) + strlen(SENSORDATA);
-	char logpath[pathlength + 1];
+	char logpath[MAX_PATH_LEN];
+	snprintf(logpath, sizeof(logpath), "%s/%s", SENSORDATA, logfilename);
 
-	strcpy(logpath, SENSORDATA);
-	strcat(logpath, logfilename);
+	logger("writing to " SENSORDATA, mp);
 	if ((fp = fopen(logpath, "w")) == NULL)
 	{
 		err("can't open " SENSORDATA " to write data", mp);

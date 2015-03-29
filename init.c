@@ -11,7 +11,6 @@
 #include "read.h"
 #include "time.h"
 #include "log.h"
-#include "shared.h"
 
 #define UUID_FILE "/uuid"
 #define INTERVAL_MIN 1
@@ -116,8 +115,9 @@ modbus_t *modbus_init (modbusport *mp, element *pv)
 
 	if (modbus_connect(mp->port))
 		fatal("Unable to connect to modbus server", mp);
-#endif /* NOMODBUS */
+#endif
 
+#ifdef DEBUG
 	printf("\n");
 	for (i = 0; i < mp->read_count; i++)
 	{
@@ -125,6 +125,7 @@ modbus_t *modbus_init (modbusport *mp, element *pv)
 	}
 	printf("\n");
 	return mp->port;
+#endif
 }
 
 void ile_aip_init(modbusport *mp)
