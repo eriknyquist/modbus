@@ -1,5 +1,5 @@
-#ifndef MODBUS_INIT_H_
-#define MODBUS_INIT_H_
+#ifndef INIT_H_
+#define INIT_H_
 
 typedef struct modbusport
 {
@@ -31,9 +31,6 @@ typedef struct element
 
 modbus_t *modbus_init (modbusport *mp, element *pv);
 void ile_aip_init (modbusport *mp);
-void fatal (char *errstr, modbusport *mp);
-void err (char *errstr, modbusport *mp);
-void logger (char *str, modbusport *mp);
 void get_modbus_params(modbusport *mp);
 
 #endif

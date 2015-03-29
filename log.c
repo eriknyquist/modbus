@@ -6,18 +6,6 @@
 #include "shared.h"
 #include "time.h"
 
-void fatal (char * errstr, modbusport *mp)
-{
-	err(errstr, mp);
-	if (mp != NULL)
-	{
-		modbus_close(mp->port);
-		modbus_free(mp->port);
-	}
-	logger("exiting.", mp);
-	exit(-1);
-}
-
 void err (char *errstr, modbusport *mp)
 {
 	char msg[MAX_LOG_LEN];
@@ -52,6 +40,18 @@ void logger (char *str, modbusport *mp)
 		fp = mp->logfp;
 
 	fprintf(fp, "%s\n", msg);
+}
+
+void fatal (char * errstr, modbusport *mp)
+{
+	err(errstr, mp);
+	if (mp != NULL)
+	{
+		modbus_close(mp->port);
+		modbus_free(mp->port);
+	}
+	logger("exiting.", mp);
+	exit(-1);
 }
 
 void log_init(modbusport *mp)
