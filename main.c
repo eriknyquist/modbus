@@ -83,6 +83,8 @@ int main (int argc, char *argv[])
 			logger("killed. Closing modbus connection & exiting.", mbp);
 			modbus_close(mbp->port);
 			modbus_free(mbp->port);
+			free(pv);
+			free(inputs_raw);
 			exit(0);
 		}
 		usleep(10000);
