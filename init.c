@@ -166,7 +166,6 @@ void ile_aip_init(modbusport *mp)
 
 element *mbd_init(modbusport *mp)
 {
-	uint16_t d = 10;
 	element *p;
 
 	/* initialisation for modbus register data logging */
@@ -181,7 +180,7 @@ element *mbd_init(modbusport *mp)
 
 	/* Allocate space to store raw register reads */
 	inputs_raw = (uint16_t *) malloc(mp->read_count * sizeof(uint16_t));
-	memset(inputs_raw, d, mp->read_count * sizeof(uint16_t));
+	memset(inputs_raw, 0, mp->read_count * sizeof(uint16_t));
 
 	/* allocate space to store scaled register reads, along 
  	 * with additional information (IDs, tags etc) */
