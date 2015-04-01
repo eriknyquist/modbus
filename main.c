@@ -15,6 +15,8 @@
 volatile int gotkillsig = 0;
 char *dname;
 
+/* this is where mbd_read will put scaled 
+ * register reads. */
 element *pv;
 
 modbusport mbport = { .rtu_baud=9600,
@@ -75,11 +77,8 @@ int main (int argc, char *argv[])
 	{
 		if(gotkillsig)
 		{
-			logger("killed. Closing modbus connection & exiting.", mbp);
-			modbus_close(mbp->port);
-			modbus_free(mbp->port);
 			free(pv);
-			free(inputs_raw);
+			mbd_exit(mbp);
 			exit(0);
 		}
 		usleep(10000);

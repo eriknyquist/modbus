@@ -9,6 +9,7 @@
 #include "time.h"
 #include "log.h"
 
+/* TODO: put this ptr inside modbusport struct */
 extern uint16_t *inputs_raw;
 
 int mbd_read (modbusport *mp, element *pv)

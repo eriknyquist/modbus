@@ -18,6 +18,10 @@ typedef struct modbusport
         int read_base;
         int read_count;
         time_t secs;
+
+	/* TODO: this stuff should probably
+ 	 * be inside a seperate struct for
+ 	 * daemon-logging related things.*/
         char uuid[38];
         char dname[32];
 	char logdir[MAX_PATH_LEN];

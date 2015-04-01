@@ -4,5 +4,6 @@
 #include "shared.h"
 
 element *mbd_init(modbusport *mp);
+void mbd_exit(modbusport *mp);
 
 #endif

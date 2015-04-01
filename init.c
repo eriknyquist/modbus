@@ -192,3 +192,11 @@ element *mbd_init(modbusport *mp)
 	modbus_init(mp, p);
 	return p;
 }
+
+void mbd_exit(modbusport *mp)
+{
+	logger("killed. Closing modbus connection & exiting.", mp);
+	modbus_close(mp->port);
+	modbus_free(mp->port);
+	free(inputs_raw);
+}
