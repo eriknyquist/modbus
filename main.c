@@ -15,7 +15,6 @@
 volatile int gotkillsig = 0;
 char *dname;
 
-uint16_t *inputs_raw;
 element *pv;
 
 modbusport mbport = { .rtu_baud=9600,
@@ -34,7 +33,7 @@ void siginthandler()
 
 void read_thread(void)
 {
-	abb_ach550_read(inputs_raw, mbp, pv);
+	mbd_read(mbp, pv);
 	write_registers_tofile(mbp, pv);
 }
 
@@ -51,7 +50,6 @@ int main (int argc, char *argv[])
 	if (pid > 0)
 		exit(0);
 
-	mbp->pid = (unsigned long) getpid();		
   	int i, tstatus;
 
 	/* Catch sigint (ctrl-c) */
@@ -60,17 +58,14 @@ int main (int argc, char *argv[])
 	/* Catch sigterm (kill) */
 	signal(SIGTERM, siginthandler);
 
+	/* get executable name, used for logging */
 	dname = basename(argv[0]);
 	strncpy(mbp->dname, dname, sizeof(mbp->dname));
-	ile_aip_init(mbp);
-	get_modbus_params(mbp);
-	log_init(mbp);
-	pv = malloc(sizeof(element) * mbp->read_count);
-	modbus_init(mbp, pv);
 
-	/* Allocate space to store raw register reads */
-	inputs_raw = (uint16_t *) malloc(mbp->read_count * sizeof(uint16_t));
-	memset(inputs_raw, 0, mbp->read_count * sizeof(uint16_t));
+	/* get PID, also used for logging */
+	mbp->pid = (unsigned long) getpid();
+		
+	pv = mbd_init(mbp);
 
 	tstatus = create_periodic(mbp->secs, read_thread);
 	if (tstatus == -1)

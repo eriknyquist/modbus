@@ -10,15 +10,10 @@
 
 #define CLOCKID CLOCK_MONOTONIC
 
-uint64_t getms ()
-{
-	struct timeval time;
-	gettimeofday(&time, NULL);
-	return (uint64_t) (time.tv_sec * 1000000) + time.tv_usec;
-}
-
 char *gen_filename (char *uuid)
 {
+	/* generates the file name for logged register reads, 
+ 	 * which is comprised of a timestamp & the system's UUID */
 	char timestamp[40];
 	char *filename = malloc(80);
         struct timeval tv;
@@ -35,6 +30,8 @@ char *gen_filename (char *uuid)
 
 int create_periodic(time_t period, void (*thread))
 {
+	/* sets up the function pointed to by 'thread'
+  	 * to run every 'period' seconds, via a new thread. */
         int status;
 	timer_t timer_id;
         struct itimerspec ts;
@@ -62,13 +59,15 @@ int create_periodic(time_t period, void (*thread))
 
 char *timestamp()
 {
-   time_t rawtime;
-   struct tm *info;
+	/* plain-text calendar timestamp.
+ 	 * used for logging. */
+	time_t rawtime;
+	struct tm *info;
 
-   time(&rawtime);
+	time(&rawtime);
 
-   info = localtime(&rawtime);
-   char *tmp = asctime(info);
-   tmp[strlen(tmp) - 1] = 0;
-   return tmp;
+	info = localtime(&rawtime);
+	char *tmp = asctime(info);
+	tmp[strlen(tmp) - 1] = 0;
+	return tmp;
 }

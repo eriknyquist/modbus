@@ -23,6 +23,7 @@ int paramcount;
 double delaytime;
 FILE *fp = NULL;
 
+uint16_t *inputs_raw;
 static int line = 1;
 static int column = 1;
 
@@ -40,6 +41,8 @@ void get_modbus_params(modbusport *mp)
                                 CONF_FILE, strerror(errno));
                         exit(-1);
                 }
+
+		/* parse 1st section of conf file, i.e. modbus paramaters */
                 parse_modbus_params(fp, mp);
         }
 
@@ -63,6 +66,9 @@ modbus_t *modbus_init (modbusport *mp, element *pv)
 		
 		if (fp == NULL)
 		{
+			/* if this register does not have a tag or scale factor 
+  			 * defined, use defaults. TODO: make default tags and IDs
+  			 * unique i.e. default_id_1, default_id_2 */
 			strncpy(pv[i].tag, "SENS_DEFAULT", sizeof(pv[i].tag));
 			strncpy(pv[i].id, "default_id", sizeof(pv[i].id));
 			pv[i].scale = 1;
@@ -78,10 +84,13 @@ modbus_t *modbus_init (modbusport *mp, element *pv)
 	}
 	if (fp != NULL)
 	{
+		/* figure out the order in which readings should be
+  		 * arranged in the logging of register data */
 		parse_order(fp, pv, mp);
 		fclose(fp);	
 	}
 
+	/* report settings to the daemon's logfile */
 	for (i = 0; i < mp->read_count; i++)
 	{
 		int msglen = 30 + strlen(pv[i].id) + strlen(pv[i].tag);
@@ -92,8 +101,13 @@ modbus_t *modbus_init (modbusport *mp, element *pv)
 	}
 
 	
-
+/* NOMODBUS macro is handy for debugging conf file parsing & periodic 
+ * timer on a system with no modbus slave- most development is done
+ * on a VM. Remove before submission. */
 #ifndef NOMODBUS
+
+	/* configure modbus port settings & create modbus context */
+
 	if (access(mp->port_name, F_OK) != 0)
 	{
 		printf("Error accessing '%s':\n%s\n", mp->port_name, strerror(errno));
@@ -117,6 +131,8 @@ modbus_t *modbus_init (modbusport *mp, element *pv)
 		fatal("Unable to connect to modbus server", mp);
 #endif
 
+/* DEBUG macro useful for printing register reads to stdout. 
+ * Remove before submission. */
 #ifdef DEBUG
 	printf("\n");
 	for (i = 0; i < mp->read_count; i++)
@@ -146,4 +162,33 @@ void ile_aip_init(modbusport *mp)
 		printf("Error accessing '%s':\n%s\n", SENSORDATA, strerror(errno));
 		exit(-1);
 	}
+}
+
+element *mbd_init(modbusport *mp)
+{
+	uint16_t d = 10;
+	element *p;
+
+	/* initialisation for modbus register data logging */
+	ile_aip_init(mp);
+
+	/* read the modbus params from conf file, so we know
+ 	 * how many modbus registers we're reading */
+	get_modbus_params(mp);
+
+	/* initialisation for daemon logging */
+	log_init(mp);
+
+	/* Allocate space to store raw register reads */
+	inputs_raw = (uint16_t *) malloc(mp->read_count * sizeof(uint16_t));
+	memset(inputs_raw, d, mp->read_count * sizeof(uint16_t));
+
+	/* allocate space to store scaled register reads, along 
+ 	 * with additional information (IDs, tags etc) */
+	p = malloc(sizeof(element) * mp->read_count);
+
+	/* read the remainder of conf file, if any, and initiate
+ 	 * modbus connection */
+	modbus_init(mp, p);
+	return p;
 }

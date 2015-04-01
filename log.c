@@ -49,7 +49,7 @@ void fatal (char * errstr, modbusport *mp)
 		modbus_close(mp->port);
 		modbus_free(mp->port);
 	}
-	logger("exiting.", mp);
+	err("exiting.", mp);
 	exit(-1);
 }
 

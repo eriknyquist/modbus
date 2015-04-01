@@ -9,7 +9,9 @@
 #include "time.h"
 #include "log.h"
 
-int abb_ach550_read (uint16_t *inputs_raw, modbusport *mp, element *pv)
+extern uint16_t *inputs_raw;
+
+int mbd_read (modbusport *mp, element *pv)
 {
 	int n, i;
 

@@ -3,8 +3,6 @@
 
 #include "shared.h"
 
-modbus_t *modbus_init (modbusport *mp, element *pv);
-void ile_aip_init (modbusport *mp);
-void get_modbus_params(modbusport *mp);
+element *mbd_init(modbusport *mp);
 
 #endif
