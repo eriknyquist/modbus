@@ -92,4 +92,5 @@ void write_registers_tofile(modbusport *mp, element *pv)
 		fputc('\n', fp);
 	}
 	fclose(fp);
+	free(logfilename);
 }
