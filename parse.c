@@ -9,6 +9,20 @@
 #include "time.h"
 #include "log.h"
 
+#define CONF_ID_BAUD         "modbus_rtu_baud"
+#define CONF_ID_STATION_ID   "modbus_station_id"
+#define CONF_ID_READ_BASE    "modbus_read_base"
+#define CONF_ID_READ_COUNT   "modbus_read_count"
+#define CONF_ID_INTERVAL     "interval_secs"
+#define CONF_ID_MODBUS_PORT  "modbus_port"
+#define CONF_ID_LOGPATH      "log_location"
+#define CONF_ID_TAG          "tag"
+#define CONF_ID_SCALE        "scale"
+
+#define MAX_PARAM_LEN        80
+#define MAX_ID_LEN           80
+#define MAX_NUM_LEN          10
+
 int paramcount;
 double delaytime;
 char uuid[38];
@@ -65,19 +79,19 @@ void doubleassn (char *id)
 
 void assign (char *param, char *value, modbusport *mp)
 {
-	if (strcmp(param, "modbus_rtu_baud") == 0)
+	if (strcmp(param, CONF_ID_BAUD) == 0)
 		mp->rtu_baud = atoi(value);
-	else if (strcmp(param, "modbus_station_id") == 0)
+	else if (strcmp(param, CONF_ID_STATION_ID) == 0)
 		mp->station_id = atoi(value);
-	else if (strcmp(param, "modbus_read_base") == 0)
+	else if (strcmp(param, CONF_ID_READ_BASE) == 0)
 		mp->read_base = atoi(value);
-	else if (strcmp(param, "modbus_read_count") == 0)
+	else if (strcmp(param, CONF_ID_READ_COUNT) == 0)
 		mp->read_count = atoi(value);
-	else if (strcmp(param, "interval_secs") == 0)
+	else if (strcmp(param, CONF_ID_INTERVAL) == 0)
 		mp->secs = atoi(value);
-	else if (strcmp(param, "modbus_port") == 0)
+	else if (strcmp(param, CONF_ID_MODBUS_PORT) == 0)
 		strncpy(mp->port_name, value, sizeof(mp->port_name));
-	else if (strcmp(param, "log_location") == 0)
+	else if (strcmp(param, CONF_ID_LOGPATH) == 0)
 		strncpy(mp->logdir, value, sizeof(mp->logdir));
 	else
 		nosuchparam(param);
@@ -93,7 +107,7 @@ element get_next_regparam(FILE *fp)
 	element e;
 	int i;
 	int state = 0;
-	char pbuf[80], scale[10], c;	
+	char pbuf[MAX_PARAM_LEN], scale[MAX_NUM_LEN], c;	
 	int idbufpos = 0, pbufpos = 0, tagpos = 0, scalepos = 0;
 
 	while (state != 6)
@@ -141,9 +155,9 @@ element get_next_regparam(FILE *fp)
 				else if (c == '=')
 				{
 					pbuf[pbufpos] = '\0';
-					if (strcmp(pbuf, "tag") == 0)
+					if (strcmp(pbuf, CONF_ID_TAG) == 0)
 						state = 3;
-					else if (strcmp(pbuf, "scale") == 0)
+					else if (strcmp(pbuf, CONF_ID_SCALE) == 0)
 						state = 4;
 					else
 						nosuchparam(pbuf);
@@ -214,7 +228,7 @@ int idcmp (char *idc, element *v, modbusport *mp)
 void parse_order (FILE *fp, element *v, modbusport *mp)
 {
 	int majc = 0, minc = 0;
-	char idbuf[80], c;
+	char idbuf[MAX_ID_LEN], c;
 	int idbufpos = 0;
 	uint8_t state = 0;
 	while ((c = fgetc(fp)) != EOF)
@@ -276,7 +290,7 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 {
 	char c;
 	uint8_t isfloat = 0, state = 0, idbufpos = 0, valbufpos = 0;
-	char idbuf[80], valbuf[MAX_PATH_LEN];
+	char idbuf[MAX_PARAM_LEN], valbuf[MAX_PATH_LEN];
 
 	c = fgetc(fp);
 	while (c != ';')
@@ -309,8 +323,8 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 				else if (c == '=')
 				{
 					idbuf[idbufpos] = '\0';
-					state = (strcmp(idbuf, "modbus_port") == 0 ||
-					         strcmp(idbuf, "log_location") == 0)
+					state = (strcmp(idbuf, CONF_ID_MODBUS_PORT) == 0 ||
+					         strcmp(idbuf, CONF_ID_LOGPATH) == 0)
 					         ? 4 : 2;
 				}
 				else
