@@ -1,16 +1,17 @@
 FILES := main.c init.c time.c parse.c read.c log.c
-OUTPUT=mbd
+CFLAGS = -Wall -lmodbus -lrt -lpthread
+OUTPUT = mbd
 
 MODBUS_H = /usr/include/modbus
 
-${OUTPUT}: ${FILES}
-	${CC} -I${MODBUS_H} $^ -o $@ -Wall -lmodbus -lrt -lpthread
+$(OUTPUT): $(FILES)
+	$(CC) -I$(MODBUS_H) $^ -o $@ $(CFLAGS)
 
-nomodbus: ${FILES}
-	${CC} -I${MODBUS_H} $^ -o ${OUTPUT} -Wall -lmodbus -lrt -lpthread -D NOMODBUS
+nomodbus: $(FILES)
+	$(CC) -I$(MODBUS_H) $^ -o $(OUTPUT) $(CFLAGS) -D NOMODBUS
 
-vnomodbus: ${FILES}
-	${CC} -I${MODBUS_H} $^ -o ${OUTPUT} -Wall -lmodbus -lrt -lpthread -D NOMODBUS -D DEBUG
+vnomodbus: $(FILES)
+	$(CC) -I$(MODBUS_H) $^ -o $(OUTPUT) $(CFLAGS) -D NOMODBUS -D DEBUG
 
 clean:
-	${RM} ${OUTPUT}
+	$(RM) $(OUTPUT)
