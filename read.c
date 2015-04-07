@@ -12,11 +12,12 @@
 /* TODO: put this ptr inside modbusport struct */
 extern uint16_t *inputs_raw;
 
-int mbd_read (modbusport *mp, element *pv)
+void mbd_read (modbusport *mp, element *pv)
 {
-	int n, i;
+	int i;
 
 #ifndef NOMODBUS
+	int n;
 	char msg[MAX_LOG_LEN];
 	snprintf(msg, sizeof(msg), "reading modbus registers %d to %d from '%s'",
 		mp->read_base, mp->read_base + mp->read_count, mp->port_name);

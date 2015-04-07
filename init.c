@@ -24,8 +24,6 @@ double delaytime;
 FILE *fp = NULL;
 
 uint16_t *inputs_raw;
-static int line = 1;
-static int column = 1;
 
 void get_modbus_params(modbusport *mp)
 {
@@ -57,7 +55,7 @@ void get_modbus_params(modbusport *mp)
 
 }
 
-modbus_t *modbus_init (modbusport *mp, element *pv)
+void modbus_init (modbusport *mp, element *pv)
 {
 
 	int i;
@@ -140,7 +138,6 @@ modbus_t *modbus_init (modbusport *mp, element *pv)
 		printf("%16s", pv[i].id);
 	}
 	printf("\n");
-	return mp->port;
 #endif
 }
 
@@ -148,19 +145,21 @@ void ile_aip_init(modbusport *mp)
 {
 	FILE *fp;
 	if ((fp = fopen(UUID_FILE, "r")) == NULL)
-		fatal("Failed to open UUID file", NULL);
+		fprintf(stderr, "Failed to open UUID file %s:\n%s\n",
+			UUID_FILE, strerror(errno));
+		exit(errno);
 	fgets(mp->uuid, UUID_LENGTH, fp);
 	if (strlen(mp->uuid) != UUID_LENGTH - 1)
 	{
 		fprintf(stderr, 
-			"Error : file '%s' does not contain a UUID in the expected format\n%s\n%d\n",
+			"Error : file '%s' does not contain a UUID in the expected format\n%s\n%zu\n",
 			UUID_FILE, mp->uuid, strlen(mp->uuid));
 		exit(-1);
 	}
 	if (access(SENSORDATA, F_OK) != 0)
 	{
-		printf("Error accessing '%s':\n%s\n", SENSORDATA, strerror(errno));
-		exit(-1);
+		fprintf(stderr, "Error accessing '%s':\n%s\n", SENSORDATA, strerror(errno));
+		exit(errno);
 	}
 }
 

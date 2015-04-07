@@ -6,11 +6,20 @@
 #include <modbus.h>
 #include <sys/types.h>
 #include <libgen.h>
+#include <signal.h>
 #include "init.h"
 #include "parse.h"
 #include "time.h"
 #include "read.h"
 #include "log.h"
+
+#define DEFAULT_BAUD 9600
+#define DEFAULT_STATION_ID 0
+#define DEFAULT_READ_BASE 0
+#define DEFAULT_READ_COUNT 1
+#define DEFAULT_SECS 2
+#define DEFAULT_PORT_NAME "/dev/null"
+#define DEFAULT_LOGDIR 0
 
 volatile int gotkillsig = 0;
 char *dname;
@@ -19,13 +28,15 @@ char *dname;
  * register reads. */
 element *pv;
 
-modbusport mbport = { .rtu_baud=9600,
-                           .station_id=0,
-                           .read_base=0,
-                           .read_count=1,
-                           .secs=2,
-                           .port_name="/dev/null",
-			   .logdir=0 };
+modbusport mbport = {
+	.rtu_baud=   DEFAULT_BAUD,
+	.station_id= DEFAULT_STATION_ID,
+	.read_base=  DEFAULT_READ_BASE,
+	.read_count= DEFAULT_READ_COUNT,
+	.secs=       DEFAULT_SECS,
+	.port_name=  {DEFAULT_PORT_NAME},
+	.logdir=     {DEFAULT_LOGDIR}};
+
 modbusport *mbp = &mbport;
 
 void siginthandler()
@@ -52,7 +63,7 @@ int main (int argc, char *argv[])
 	if (pid > 0)
 		exit(0);
 
-  	int i, tstatus;
+  	int tstatus;
 
 	/* Catch sigint (ctrl-c) */
 	signal(SIGINT, siginthandler);
@@ -66,7 +77,7 @@ int main (int argc, char *argv[])
 
 	/* get PID, also used for logging */
 	mbp->pid = (unsigned long) getpid();
-		
+
 	pv = mbd_init(mbp);
 
 	tstatus = create_periodic(mbp->secs, read_thread);

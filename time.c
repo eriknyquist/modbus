@@ -20,7 +20,7 @@ char *gen_filename (char *uuid)
 
         gettimeofday (&tv, NULL);
 
-	snprintf(timestamp, sizeof(timestamp), "%d%ld-", tv.tv_sec, tv.tv_usec / 1000);
+	snprintf(timestamp, sizeof(timestamp), "%ld%ld-", tv.tv_sec, tv.tv_usec / 1000);
 	strcpy(filename, timestamp);
 	strcat(filename, uuid);
 	strcat(filename, ".log");

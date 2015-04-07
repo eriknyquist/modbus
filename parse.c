@@ -32,13 +32,13 @@ static int column = 1;
 
 uint8_t is_id (char c)
 {
-	return (c <= 'z'&& c >= 'a' || c <= 'Z' && c >= 'A' ||
+	return ((c <= 'z'&& c >= 'a') || (c <= 'Z' && c >= 'A' ) ||
 		c == '_') ? 1 : 0;
 }
 
 uint8_t is_dec (char c)
 {
-	return (c <= '9' && c >= '0' || c == '.') ? 1 : 0 ;
+	return ((c <= '9' && c >= '0') || (c == '.')) ? 1 : 0 ;
 }
 
 uint8_t is_whitespace (char c)
@@ -105,7 +105,6 @@ void assign (char *param, char *value, modbusport *mp)
 element get_next_regparam(FILE *fp)
 {
 	element e;
-	int i;
 	int state = 0;
 	char pbuf[MAX_PARAM_LEN], scale[MAX_NUM_LEN], c;	
 	int idbufpos = 0, pbufpos = 0, tagpos = 0, scalepos = 0;
@@ -289,7 +288,7 @@ void parse_order (FILE *fp, element *v, modbusport *mp)
 void parse_modbus_params(FILE *fp, modbusport *mp)
 {
 	char c;
-	uint8_t isfloat = 0, state = 0, idbufpos = 0, valbufpos = 0;
+	uint8_t state = 0, idbufpos = 0, valbufpos = 0;
 	char idbuf[MAX_PARAM_LEN], valbuf[MAX_PATH_LEN];
 
 	c = fgetc(fp);
@@ -335,7 +334,6 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 				{
 					valbuf[valbufpos] = c;
 					valbufpos++;
-					if (c == '.') isfloat = 1;
 				}
 				else if (c == ',')
 				{
