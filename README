@@ -1,0 +1,21 @@
+Dependencies:
+	libmodbus
+
+Installing dependencies:
+	apt-get install libmodbus5
+	apt-get install libmodbus-dev
+
+Build:
+	run 'make' to build mbd daemon. If you want to
+	build a debug version of the daemon that performs
+	no modbus communication, use 'nomodbus' target i.e.
+	'make nomodbus'.
+
+In addition to the existence of 'libmodbus', daemon will also expect
+a UUID present in '/uuid', configuration data in '/etc/abb.conf'
+(included with source), and a FIXED directory to log modbus reads
+'/home/sensordata'. Make sure these files & directories exist before
+running the daemon.
+
+
+		
