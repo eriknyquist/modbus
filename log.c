@@ -14,7 +14,7 @@ void err (char *errstr, modbusport *mp)
 	snprintf(msg, sizeof(msg), "[%s][%s.%ld]:error: %s %s",
 			timestamp(), mp->dname, mp->pid, errstr, strerror(errno));
 
-	if (mp->logdir == 0 || (fp = fopen(mp->errfile, "a")) == NULL)
+	if (strlen(mp->errfile) == 0 || (fp = fopen(mp->errfile, "a")) == NULL)
 		fprintf(stderr, "%s\n", msg);
 	else
 	{
@@ -31,7 +31,7 @@ void logger (char *str, modbusport *mp)
 	snprintf(msg, sizeof(msg), "[%s][%s.%ld]:log: %s",
 			timestamp(), mp->dname, mp->pid, str);
 
-	if (mp->logdir == 0 || (fp = fopen(mp->logfile, "a")) == NULL)
+	if (strlen(mp->logfile) == 0 || (fp = fopen(mp->logfile, "a")) == NULL)
 		fprintf(stdout, "%s\n", msg);
 	else
 	{
@@ -54,9 +54,17 @@ void fatal (char * errstr, modbusport *mp)
 
 void log_init(modbusport *mp)
 {
-	snprintf(mp->logfile, sizeof(mp->logfile),
-		"%s/%s-log.%ld", mp->logdir, mp->dname, mp->pid);
+	if (strlen(mp->logdir) == 0)
+	{
+		mp->logfile[0] = '\0';
+		mp->errfile[0] = '\0';
+	}
+	else
+	{
+		snprintf(mp->logfile, sizeof(mp->logfile),
+			"%s/%s-log.%ld", mp->logdir, mp->dname, mp->pid);
 
-	snprintf(mp->errfile, sizeof(mp->errfile),
-		"%s/%s-err.%ld", mp->logdir, mp->dname, mp->pid);
+		snprintf(mp->errfile, sizeof(mp->errfile),
+			"%s/%s-err.%ld", mp->logdir, mp->dname, mp->pid);
+	}
 }

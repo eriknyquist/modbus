@@ -145,9 +145,11 @@ void ile_aip_init(modbusport *mp)
 {
 	FILE *fp;
 	if ((fp = fopen(UUID_FILE, "r")) == NULL)
+	{
 		fprintf(stderr, "Failed to open UUID file %s:\n%s\n",
 			UUID_FILE, strerror(errno));
-		exit(errno);
+			exit(errno);
+	}
 	fgets(mp->uuid, UUID_LENGTH, fp);
 	if (strlen(mp->uuid) != UUID_LENGTH - 1)
 	{
@@ -166,14 +168,12 @@ void ile_aip_init(modbusport *mp)
 element *mbd_init(modbusport *mp)
 {
 	element *p;
-
 	/* initialisation for modbus register data logging */
 	ile_aip_init(mp);
-
+	
 	/* read the modbus params from conf file, so we know
  	 * how many modbus registers we're reading */
 	get_modbus_params(mp);
-
 	/* initialisation for daemon logging */
 	log_init(mp);
 

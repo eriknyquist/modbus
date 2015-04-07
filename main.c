@@ -35,7 +35,7 @@ modbusport mbport = {
 	.read_count= DEFAULT_READ_COUNT,
 	.secs=       DEFAULT_SECS,
 	.port_name=  {DEFAULT_PORT_NAME},
-	.logdir=     {DEFAULT_LOGDIR}};
+	.logdir[0]=     '\0'};
 
 modbusport *mbp = &mbport;
 
