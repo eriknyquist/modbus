@@ -14,7 +14,8 @@ void err (char *errstr, modbusport *mp)
 	snprintf(msg, sizeof(msg), "[%s][%s.%ld]:error: %s %s",
 			timestamp(), mp->dname, mp->pid, errstr, strerror(errno));
 
-	if (strlen(mp->errfile) == 0 || (fp = fopen(mp->errfile, "a")) == NULL)
+	/* if log location not defined or inaccessible, print to stderr */
+	if (strlen(mp->logdir) == 0 || (fp = fopen(mp->errfile, "a")) == NULL)
 		fprintf(stderr, "%s\n", msg);
 	else
 	{
@@ -28,10 +29,11 @@ void logger (char *str, modbusport *mp)
 	char msg[MAX_LOG_LEN];
 	FILE *fp;
 
+	/* if log location not defined or inaccessible, print to stdout */
 	snprintf(msg, sizeof(msg), "[%s][%s.%ld]:log: %s",
 			timestamp(), mp->dname, mp->pid, str);
 
-	if (strlen(mp->logfile) == 0 || (fp = fopen(mp->logfile, "a")) == NULL)
+	if (strlen(mp->logdir) == 0 || (fp = fopen(mp->logfile, "a")) == NULL)
 		fprintf(stdout, "%s\n", msg);
 	else
 	{
@@ -54,12 +56,9 @@ void fatal (char * errstr, modbusport *mp)
 
 void log_init(modbusport *mp)
 {
-	if (strlen(mp->logdir) == 0)
-	{
-		mp->logfile[0] = '\0';
-		mp->errfile[0] = '\0';
-	}
-	else
+	/* if log location has been defined in conf file, create logfile names
+	 * based on executable name & PID */
+	if (strlen(mp->logdir) > 0)
 	{
 		snprintf(mp->logfile, sizeof(mp->logfile),
 			"%s/%s-log.%ld", mp->logdir, mp->dname, mp->pid);
