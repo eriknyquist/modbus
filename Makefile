@@ -1,17 +1,23 @@
-FILES := main.c init.c time.c parse.c read.c log.c
-CFLAGS = -Wall -lmodbus -lrt -lpthread
 OUTPUT = mbd
-
 MODBUS_H = /usr/include/modbus
+SRC=src
+BIN=bin
+CFLAGS = -Wall -lmodbus -lrt -lpthread
 
-$(OUTPUT): $(FILES)
-	$(CC) -I$(MODBUS_H) $^ -o $@ $(CFLAGS)
+FILES := main.c init.c time.c parse.c read.c log.c
+SRCFILES = $(FILES:%=$(SRC)/%)
 
-nomodbus: $(FILES)
-	$(CC) -I$(MODBUS_H) $^ -o $(OUTPUT) $(CFLAGS) -D NOMODBUS
+$(OUTPUT): pre-build
+	$(CC) -I$(MODBUS_H) $(SRCFILES) -o $(BIN)/$@ $(CFLAGS)
 
-vnomodbus: $(FILES)
-	$(CC) -I$(MODBUS_H) $^ -o $(OUTPUT) $(CFLAGS) -D NOMODBUS -D DEBUG
+nomodbus: pre-build
+	$(CC) -I$(MODBUS_H) $(SRCFILES) -o $(BIN)/$(OUTPUT) $(CFLAGS) -D NOMODBUS
+
+vnomodbus: pre-build
+	$(CC) -I$(MODBUS_H) $(SRCFILES) -o $(BIN)/$(OUTPUT) $(CFLAGS) -D NOMODBUS -D DEBUG
+
+pre-build:
+	[ -d $(BIN) ] || mkdir $(BIN)
 
 clean:
-	$(RM) $(OUTPUT)
+	rm -rf $(BIN)
