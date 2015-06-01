@@ -9,6 +9,8 @@
 #include "time.h"
 #include "log.h"
 
+#define SENSOR_READING_HEADER "<D>,SEC:PUBLIC"
+
 /* TODO: put this ptr inside modbusport struct */
 extern uint16_t *inputs_raw;
 
@@ -78,7 +80,7 @@ void write_registers_tofile(modbusport *mp, element *pv)
 			continue;
 		char outstring[512];
 		char buf[80];
-		strcpy(outstring, "<D>,SEC:PUBLIC");
+		strcpy(outstring, SENSOR_READING_HEADER);
 
 		for (i = 0; i < mp->read_count; i++)
 		{
