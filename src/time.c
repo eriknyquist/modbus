@@ -52,8 +52,7 @@ int create_periodic(time_t period, void (*thread))
                 return status;
 
         status = timer_settime(timer_id, 0, &ts, 0);
-        if (status == -1)
-                return status;
+
 	return status;
 }
 

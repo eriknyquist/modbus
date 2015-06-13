@@ -55,11 +55,11 @@ int main (int argc, char *argv[])
 	pid_t pid = 0;
 
 	pid = fork();
-	if (pid < 0)
-	{
+	if (pid < 0) {
 		fprintf(stderr, "fork failed.\n");
 		exit(-1);
 	}
+
 	if (pid > 0)
 		exit(0);
 
@@ -84,10 +84,8 @@ int main (int argc, char *argv[])
 	if (tstatus == -1)
 		fatal("can't create timer", mbp);
 
-	while(1)
-	{
-		if(gotkillsig)
-		{
+	while(1) {
+		if(gotkillsig) {
 			free(pv);
 			mbd_exit(mbp);
 			exit(0);

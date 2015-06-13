@@ -109,102 +109,90 @@ element get_next_regparam(FILE *fp)
 	char pbuf[MAX_PARAM_LEN], scale[MAX_NUM_LEN], c;	
 	int idbufpos = 0, pbufpos = 0, tagpos = 0, scalepos = 0;
 
-	while (state != 6)
-	{
+	while (state != 6) {
+
 		c = fgetc(fp);
-		if (c == '\n')
-		{
+
+		if (c == '\n') {
 			line++;
 			column = 1;
 		}
-		switch (state)
-		{
-			case 0:
-				if (is_id(c))
-				{
-					e.id[idbufpos] = c;
-					idbufpos++;
-					state = 1;
-				}
-				else if (c == '#')
-					state = 5;
-				else if (! is_whitespace(c))
-					syntaxerr(c);
+
+		switch (state) {
+		case 0:
+			if (is_id(c)) {
+				e.id[idbufpos] = c;
+				idbufpos++;
+				state = 1;
+			} else if (c == '#') {
+				state = 5;
+			} else if (! is_whitespace(c)) {
+				syntaxerr(c);
+			}
+
 			break;
-			case 1:
-				if (is_id(c))
-				{
-					e.id[idbufpos] = c;
-					idbufpos++;
-				}
-				else if (c == '{')
-				{
-					e.id[idbufpos] = '\0';
-					state = 2;
-				}
-				else if (! is_whitespace(c))
-					syntaxerr(c);	
+		case 1:
+			if (is_id(c)) {
+				e.id[idbufpos] = c;
+				idbufpos++;
+			} else if (c == '{') {
+				e.id[idbufpos] = '\0';
+				state = 2;
+			} else if (! is_whitespace(c)) {
+				syntaxerr(c);
+			}
+
 			break;
-			case 2:
-				if (is_id(c))
-				{
-					pbuf[pbufpos] = c;
-					pbufpos++;
-				}
-				else if (c == '=')
-				{
-					pbuf[pbufpos] = '\0';
-					if (strcmp(pbuf, CONF_ID_TAG) == 0)
-						state = 3;
-					else if (strcmp(pbuf, CONF_ID_SCALE) == 0)
-						state = 4;
-					else
-						nosuchparam(pbuf);
-					pbufpos = 0;
-				}
-				else if (! is_whitespace(c))
-					syntaxerr(c);	
+		case 2:
+			if (is_id(c)) {
+				pbuf[pbufpos] = c;
+				pbufpos++;
+			} else if (c == '=') {
+				pbuf[pbufpos] = '\0';
+
+				if (strcmp(pbuf, CONF_ID_TAG) == 0)
+					state = 3;
+				else if (strcmp(pbuf, CONF_ID_SCALE) == 0)
+					state = 4;
+				else
+					nosuchparam(pbuf);
+				pbufpos = 0;
+			} else if (! is_whitespace(c)) {
+				syntaxerr(c);
+			}
+
 			break;
-			case 3:
-				if (is_id(c))
-				{
-					e.tag[tagpos] = c;
+		case 3:
+			if (is_id(c)) {
+				e.tag[tagpos] = c;
 					tagpos++;
-				}
-				else if (c == ',')
-				{
-					e.tag[tagpos] = '\0';
-					state = 2;
-				}
-				else if (c == '}')
-				{
-					e.tag[tagpos] = '\0';
-					state = 6;
-				}
-				else if (! is_whitespace(c))
+			} else if (c == ',') {
+				e.tag[tagpos] = '\0';
+				state = 2;
+			} else if (c == '}') {
+				e.tag[tagpos] = '\0';
+				state = 6;
+			} else if (! is_whitespace(c)) {
 					syntaxerr(c);
+			}
+
 			break;
-			case 4:
-				if (is_dec(c))
-				{
-					scale[scalepos] = c;
-					scalepos++;
-				}
-				else if (c == ',')
-				{
-					scale[scalepos] = '\0';
-					state = 2; 
-				}
-				else if (c == '}')
-				{
-					scale[scalepos] = '\0';
-					state = 6;
-				}
-				
+		case 4:
+			if (is_dec(c)) {
+				scale[scalepos] = c;
+				scalepos++;
+			} else if (c == ',') {
+				scale[scalepos] = '\0';
+				state = 2; 
+			} else if (c == '}') {
+				scale[scalepos] = '\0';
+				state = 6;
+			}
+
 			break;
-			case 5:
-				if (c == '\n')
-					state = 0;
+		case 5:
+			if (c == '\n')
+				state = 0;
 			break;
 		}
 		column++;
@@ -216,11 +204,12 @@ element get_next_regparam(FILE *fp)
 int idcmp (char *idc, element *v, modbusport *mp)
 {
 	int i;
-	for (i = 0; i < mp->read_count; i++)
-		{
+
+	for (i = 0; i < mp->read_count; i++) {
 		if (strcmp(idc, v[i].id) == 0)
 			return i;
 	}
+
 	return -1;
 }
 
@@ -230,55 +219,56 @@ void parse_order (FILE *fp, element *v, modbusport *mp)
 	char idbuf[MAX_ID_LEN], c;
 	int idbufpos = 0;
 	uint8_t state = 0;
-	while ((c = fgetc(fp)) != EOF)
-	{
-		if (c == '\n')
-		{
+
+	while ((c = fgetc(fp)) != EOF) {
+		if (c == '\n') {
 			line++;
 			column = 1;
 		}
-		switch (state)
-		{
-			case 0:
-				if (c == '{')
-					state = 1;
-				else if (c == '#')
-					state = 2;
-				else if (! is_whitespace(c))
-					syntaxerr(c);
+
+		switch (state) {
+		case 0:
+			if (c == '{')
+				state = 1;
+			else if (c == '#')
+				state = 2;
+			else if (! is_whitespace(c))
+				syntaxerr(c);
+
 			break;
-			case 1:
-				if (is_id(c))
-				{
-					idbuf[idbufpos] = c;
-					idbufpos++;
-				}
-				else if (c == ',' || c == '}')
-				{
-					idbuf[idbufpos] = '\0';
-					int ti = idcmp(idbuf, v, mp);
-					if (ti == -1)
-						unrec_id(idbuf);
-					if (v[ti].major != -1)
-						doubleassn(idbuf);
-					v[ti].major = majc;
-					v[ti].minor = minc;
-					idbufpos = 0;
-					if (c == '}')
-					{
-						majc++;
-						minc = 0;
-						state = 0;
-					}
-					else
-						minc++;
-				}
-				else if (! is_whitespace(c))
-					syntaxerr(c);
-			break;
-			case 2:
-				if (c == '\n')
+		case 1:
+			if (is_id(c)) {
+				idbuf[idbufpos] = c;
+				idbufpos++;
+			} else if (c == ',' || c == '}') {
+				idbuf[idbufpos] = '\0';
+				int ti = idcmp(idbuf, v, mp);
+
+				if (ti == -1)
+					unrec_id(idbuf);
+				if (v[ti].major != -1)
+					doubleassn(idbuf);
+
+				v[ti].major = majc;
+				v[ti].minor = minc;
+				idbufpos = 0;
+
+				if (c == '}') {
+					majc++;
+					minc = 0;
 					state = 0;
+				} else {
+					minc++;
+				}
+			} else if (! is_whitespace(c)) {
+				syntaxerr(c);
+			}
+
+			break;
+		case 2:
+			if (c == '\n')
+				state = 0;
+
 			break;
 		}
 		column++;
@@ -292,78 +282,71 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 	char idbuf[MAX_PARAM_LEN], valbuf[MAX_PATH_LEN];
 
 	c = fgetc(fp);
-	while (c != ';')
-	{
-		if (c == '\n')
-		{
+
+	while (c != ';') {
+		if (c == '\n') {
 			line++;
 			column = 1;
 		}
-		switch (state)
-		{
-			case 0:
-				if (is_id(c))
-				{
-					idbuf[idbufpos] = c;
-					idbufpos++;
-					state = 1;
-				}
-				else if (c == '#')
-					state = 3;
-				else if (! is_whitespace(c))
-					syntaxerr(c);
+
+		switch (state) {
+		case 0:
+			if (is_id(c)) {
+				idbuf[idbufpos] = c;
+				idbufpos++;
+				state = 1;
+			} else if (c == '#') {
+				state = 3;
+			} else if (! is_whitespace(c)) {
+				syntaxerr(c);
+			}
+
 			break;
-			case 1:
-				if (is_id(c))
-				{
-					idbuf[idbufpos] = c;
-					idbufpos++;
-				}
-				else if (c == '=')
-				{
-					idbuf[idbufpos] = '\0';
-					state = (strcmp(idbuf, CONF_ID_MODBUS_PORT) == 0 ||
-					         strcmp(idbuf, CONF_ID_LOGPATH) == 0)
-					         ? 4 : 2;
-				}
-				else
-					syntaxerr(c);
+		case 1:
+			if (is_id(c)) {
+				idbuf[idbufpos] = c;
+				idbufpos++;
+			} else if (c == '=') {
+				idbuf[idbufpos] = '\0';
+				state = (strcmp(idbuf, CONF_ID_MODBUS_PORT) == 0
+					|| strcmp(idbuf, CONF_ID_LOGPATH) == 0)
+					? 4 : 2;
+			} else {
+				syntaxerr(c);
+			}
+
 			break;
-			case 2:
-				if (is_dec(c))
-				{
-					valbuf[valbufpos] = c;
-					valbufpos++;
-				}
-				else if (c == ',')
-				{
-					valbuf[valbufpos] = '\0';
-					assign(idbuf, valbuf, mp);
-					state = 0;
-					idbufpos = 0;
-					valbufpos = 0;
-				}
-				else if (! is_whitespace(c))
-					syntaxerr(c);
+		case 2:
+			if (is_dec(c)) {
+				valbuf[valbufpos] = c;
+				valbufpos++;
+			} else if (c == ',') {
+				valbuf[valbufpos] = '\0';
+				assign(idbuf, valbuf, mp);
+				state = 0;
+				idbufpos = 0;
+				valbufpos = 0;
+			} else if (! is_whitespace(c)) {
+				syntaxerr(c);
+			}
+
 			break;
-			case 3:
-				if (c == '\n')
-					state = 0;
+		case 3:
+			if (c == '\n')
+				state = 0;
 			break;
-			case 4:
-				if (c == ',')
-				{
-					valbuf[valbufpos] = '\0';
-					assign(idbuf, valbuf, mp);
-					state = 0;
-					idbufpos = 0;
-					valbufpos = 0;
-				}
-				else if (! is_whitespace(c))
-				{
-					valbuf[valbufpos] = c;
-					valbufpos++;
-				}
+		case 4:
+			if (c == ',') {
+				valbuf[valbufpos] = '\0';
+				assign(idbuf, valbuf, mp);
+				state = 0;
+				idbufpos = 0;
+				valbufpos = 0;
+			} else if (! is_whitespace(c)) {
+				valbuf[valbufpos] = c;
+				valbufpos++;
+			}
+
 			break;
 		}
 		column++;
