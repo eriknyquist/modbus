@@ -106,8 +106,13 @@ element get_next_regparam(FILE *fp)
 {
 	element e;
 	int state = 0;
-	char pbuf[MAX_PARAM_LEN], scale[MAX_NUM_LEN], c;	
-	int idbufpos = 0, pbufpos = 0, tagpos = 0, scalepos = 0;
+	char pbuf[MAX_PARAM_LEN];
+	char scale[MAX_NUM_LEN];
+	char c;	
+	int idbufpos = 0;
+	int pbufpos = 0;
+	int tagpos = 0;
+	int scalepos = 0;
 
 	while (state != 6) {
 
@@ -198,6 +203,7 @@ element get_next_regparam(FILE *fp)
 		column++;
 	}
 	e.scale = atof(scale);
+
 	return e;
 }
 
@@ -354,4 +360,10 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 	}
 	valbuf[valbufpos] = '\0';
 	assign(idbuf, valbuf, mp);
+
+	/* eat up remaining whitespace to make parsing the next 
+	 * section easier (if it exists) */
+	int ret = (c = fgetc(fp));
+	while (! is_whitespace(c) && ret != EOF)
+		ret = (c = fgetc(fp));
 }

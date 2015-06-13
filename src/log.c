@@ -11,7 +11,7 @@ void err (char *errstr, modbusport *mp)
 	char msg[MAX_LOG_LEN];
 	FILE *fp;
 
-	snprintf(msg, sizeof(msg), "[%s][%s.%ld]:error: %s %s",
+	snprintf(msg, sizeof(msg), "[%s][%s.%ld] error: %s %s",
 			timestamp(), mp->dname, mp->pid, errstr, strerror(errno));
 
 	/* if log location not defined or inaccessible, print to stderr */
@@ -29,7 +29,7 @@ void logger (char *str, modbusport *mp)
 	FILE *fp;
 
 	/* if log location not defined or inaccessible, print to stdout */
-	snprintf(msg, sizeof(msg), "[%s][%s.%ld]:log: %s",
+	snprintf(msg, sizeof(msg), "[%s][%s.%ld] log: %s",
 			timestamp(), mp->dname, mp->pid, str);
 
 	if (strlen(mp->logdir) == 0 || (fp = fopen(mp->logfile, "a")) == NULL) {
