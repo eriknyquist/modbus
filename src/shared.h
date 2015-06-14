@@ -2,7 +2,7 @@
 #define SHARED_H_
 
 #define DEFAULT_PORT_NAME     "/dev/null"
-#define CONF_FILE             "/etc/abb.conf"
+#define CONF_FILE             "/etc/mbd.conf"
 #define DEFAULT_SENS_LOGDIR   "/home/sensordata"
 #define DEFAULT_LOGDIR        "/home/root"
 #define DEFAULT_UUID_FILE     "/uuid"

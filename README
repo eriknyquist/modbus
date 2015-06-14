@@ -11,11 +11,13 @@ Build:
 	no modbus communication, use 'nomodbus' target i.e.
 	'make nomodbus'.
 
-In addition to the existence of 'libmodbus', daemon will also expect
-a UUID present in '/uuid', configuration data in '/etc/abb.conf'
-(included with source), and a FIXED directory to log modbus reads
-'/home/sensordata'. Make sure these files & directories exist before
-running the daemon.
+This program will look for a configuration file named '/etc/mbd.conf'
+(example included with source).
+
+In the absence of a confniguration file, defaults will be used, however they
+almost certainly won't do what you want them to, so inspect the sample
+configuration file included with the source and set all parameters to
+appropriate values.
 
 
 		
