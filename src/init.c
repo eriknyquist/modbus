@@ -57,11 +57,8 @@ void modbus_init (modbusport *mp, element *pv)
 
 	for (i = 0; i < mp->read_count; i++) {
 		if (fp == NULL || eof || (eof = get_next_regparam(fp, &(pv[i])))) {
-			/* if this register does not have a tag or scale factor 
-  			 * defined, use defaults. TODO: make default tags and IDs
-  			 * unique i.e. default_id_1, default_id_2 */
-			strncpy(pv[i].tag, "SENS_DEFAULT", sizeof(pv[i].tag));
-			strncpy(pv[i].id, "default_id", sizeof(pv[i].id));
+			snprintf(pv[i].tag, sizeof(pv[i].tag), "SENS_REG_%d", i + mp->read_base);
+			snprintf(pv[i].id, sizeof(pv[i].id), "reg%d", i + mp->read_base);
 			pv[i].scale = 1;
 			pv[i].major = 0;
 			pv[i].minor = i;
