@@ -21,7 +21,7 @@
 
 int paramcount;
 double delaytime;
-FILE *fp = NULL;
+static FILE *fp = NULL;
 
 uint16_t *inputs_raw;
 
@@ -52,11 +52,11 @@ void get_modbus_params(modbusport *mp)
 
 void modbus_init (modbusport *mp, element *pv)
 {
-
 	int i;
+	int eof = 0;
+
 	for (i = 0; i < mp->read_count; i++) {
-		
-		if (fp == NULL) {
+		if (fp == NULL || eof || (eof = get_next_regparam(fp, &(pv[i])))) {
 			/* if this register does not have a tag or scale factor 
   			 * defined, use defaults. TODO: make default tags and IDs
   			 * unique i.e. default_id_1, default_id_2 */
@@ -66,18 +66,18 @@ void modbus_init (modbusport *mp, element *pv)
 			pv[i].major = 0;
 			pv[i].minor = i;
 		} else {
-			pv[i] = get_next_regparam(fp);
 			pv[i].major = -1;
 			pv[i].minor = -1;
 		}
 	}
 
-	if (fp != NULL) {
+	if (!eof) {
 		/* figure out the order in which readings should be
   		 * arranged in the logging of register data */
 		parse_order(fp, pv, mp);
-		fclose(fp);	
 	}
+
+	fclose(fp);
 
 	/* report settings to the daemon's logfile */
 	for (i = 0; i < mp->read_count; i++) {

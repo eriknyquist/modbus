@@ -102,9 +102,8 @@ void assign (char *param, char *value, modbusport *mp)
 	paramcount++;
 }
 
-element get_next_regparam(FILE *fp)
+int get_next_regparam(FILE *fp, element *e)
 {
-	element e;
 	int state = 0;
 	char pbuf[MAX_PARAM_LEN];
 	char scale[MAX_NUM_LEN];
@@ -116,7 +115,8 @@ element get_next_regparam(FILE *fp)
 
 	while (state != 6) {
 
-		c = fgetc(fp);
+		if ((c = fgetc(fp)) == EOF )
+			return 1;
 
 		if (c == '\n') {
 			line++;
@@ -126,7 +126,7 @@ element get_next_regparam(FILE *fp)
 		switch (state) {
 		case 0:
 			if (is_id(c)) {
-				e.id[idbufpos] = c;
+				e->id[idbufpos] = c;
 				idbufpos++;
 				state = 1;
 			} else if (c == '#') {
@@ -138,10 +138,10 @@ element get_next_regparam(FILE *fp)
 			break;
 		case 1:
 			if (is_id(c)) {
-				e.id[idbufpos] = c;
+				e->id[idbufpos] = c;
 				idbufpos++;
 			} else if (c == '{') {
-				e.id[idbufpos] = '\0';
+				e->id[idbufpos] = '\0';
 				state = 2;
 			} else if (! is_whitespace(c)) {
 				syntaxerr(c);
@@ -169,13 +169,13 @@ element get_next_regparam(FILE *fp)
 			break;
 		case 3:
 			if (is_id(c)) {
-				e.tag[tagpos] = c;
+				e->tag[tagpos] = c;
 					tagpos++;
 			} else if (c == ',') {
-				e.tag[tagpos] = '\0';
+				e->tag[tagpos] = '\0';
 				state = 2;
 			} else if (c == '}') {
-				e.tag[tagpos] = '\0';
+				e->tag[tagpos] = '\0';
 				state = 6;
 			} else if (! is_whitespace(c)) {
 					syntaxerr(c);
@@ -202,9 +202,9 @@ element get_next_regparam(FILE *fp)
 		}
 		column++;
 	}
-	e.scale = atof(scale);
+	e->scale = atof(scale);
 
-	return e;
+	return 0;
 }
 
 int idcmp (char *idc, element *v, modbusport *mp)
@@ -360,10 +360,4 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 	}
 	valbuf[valbufpos] = '\0';
 	assign(idbuf, valbuf, mp);
-
-	/* eat up remaining whitespace to make parsing the next 
-	 * section easier (if it exists) */
-	int ret = (c = fgetc(fp));
-	while (! is_whitespace(c) && ret != EOF)
-		ret = (c = fgetc(fp));
 }
