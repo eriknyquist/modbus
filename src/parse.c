@@ -79,7 +79,7 @@ void doubleassn (char *id)
 	exit(-1);
 }
 
-void assign (char *param, char *value, modbusport *mp)
+void assign (char *param, char *value, modbusport *mp, logging *lp)
 {
 	if (strcmp(param, CONF_ID_BAUD) == 0)
 		mp->rtu_baud = atoi(value);
@@ -94,17 +94,17 @@ void assign (char *param, char *value, modbusport *mp)
 	else if (strcmp(param, CONF_ID_MODBUS_PORT) == 0)
 		strncpy(mp->port_name, value, sizeof(mp->port_name));
 	else if (strcmp(param, CONF_ID_LOGPATH) == 0)
-		strncpy(mp->logdir, value, sizeof(mp->logdir));
+		strncpy(lp->logdir, value, sizeof(lp->logdir));
 	else if (strcmp(param, CONF_ID_UUIDPATH) == 0)
-		strncpy(mp->uuidfile, value, sizeof(mp->uuidfile));
+		strncpy(lp->uuidfile, value, sizeof(lp->uuidfile));
 	else if (strcmp(param, CONF_ID_SENSORLOGPATH) == 0)
-		strncpy(mp->sens_logdir, value, sizeof(mp->sens_logdir));
+		strncpy(lp->sens_logdir, value, sizeof(lp->sens_logdir));
 	else
 		nosuchparam(param);
 
 	char msg[MAX_LOG_LEN];
 	snprintf(msg, sizeof(msg), "%s set to '%s'", param, value);
-	logger(msg, mp);
+	logger(msg, lp);
 	paramcount++;
 }
 
@@ -287,7 +287,7 @@ void parse_order (FILE *fp, element *v, modbusport *mp)
 	}
 }
 
-void parse_modbus_params(FILE *fp, modbusport *mp)
+void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp)
 {
 	char c;
 	uint8_t state = 0, idbufpos = 0, valbufpos = 0;
@@ -336,7 +336,7 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 				valbufpos++;
 			} else if (c == ',') {
 				valbuf[valbufpos] = '\0';
-				assign(idbuf, valbuf, mp);
+				assign(idbuf, valbuf, mp, lp);
 				state = 0;
 				idbufpos = 0;
 				valbufpos = 0;
@@ -352,7 +352,7 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 		case 4:
 			if (c == ',') {
 				valbuf[valbufpos] = '\0';
-				assign(idbuf, valbuf, mp);
+				assign(idbuf, valbuf, mp, lp);
 				state = 0;
 				idbufpos = 0;
 				valbufpos = 0;
@@ -367,5 +367,5 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 		c = fgetc(fp);
 	}
 	valbuf[valbufpos] = '\0';
-	assign(idbuf, valbuf, mp);
+	assign(idbuf, valbuf, mp, lp);
 }

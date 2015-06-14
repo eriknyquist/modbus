@@ -25,9 +25,10 @@ typedef struct modbusport
         int read_count;
         time_t secs;
 
-	/* TODO: this stuff should probably
- 	 * be inside a seperate struct for
- 	 * daemon-logging related things.*/
+} modbusport;
+
+typedef struct logging
+{
         char uuid[38];
         char dname[32];
 	char uuidfile[MAX_PATH_LEN];
@@ -36,7 +37,7 @@ typedef struct modbusport
         char logfile[MAX_PATH_LEN];
         char errfile[MAX_PATH_LEN];
         unsigned long pid;
-} modbusport;
+} logging;
 
 typedef struct element
 {

@@ -14,7 +14,7 @@
 /* TODO: put this ptr inside modbusport struct */
 extern uint16_t *inputs_raw;
 
-void mbd_read (modbusport *mp, element *pv)
+void mbd_read (modbusport *mp, element *pv, logging *lp)
 {
 	int i;
 
@@ -23,12 +23,12 @@ void mbd_read (modbusport *mp, element *pv)
 	char msg[MAX_LOG_LEN];
 	snprintf(msg, sizeof(msg), "reading modbus registers %d to %d from '%s'",
 		mp->read_base, mp->read_base + mp->read_count, mp->port_name);
-	logger(msg, mp);
+	logger(msg, lp);
 
 	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count, inputs_raw);
 
 	if (n <= 0)
-		fatal("Unable to read modbus registers", mp);
+		fatal("Unable to read modbus registers", mp, lp);
 
 #endif
 	for (i = 0; i < mp->read_count; i++) {
@@ -56,18 +56,18 @@ int posmatch (int maj, int min, int read_count, element *pv)
 	return -1;
 }
 
-void write_registers_tofile(modbusport *mp, element *pv)
+void write_registers_tofile(modbusport *mp, element *pv, logging *lp)
 {
 	FILE *fp;
 	int i, j;
-	char *logfilename = gen_filename(mp->uuid);
+	char *logfilename = gen_filename(lp->uuid);
 	char logpath[MAX_PATH_LEN];
-	snprintf(logpath, sizeof(logpath), "%s/%s", mp->sens_logdir, logfilename);
+	snprintf(logpath, sizeof(logpath), "%s/%s", lp->sens_logdir, logfilename);
 
-	logger("writing to sensor log directory", mp);
+	logger("writing to sensor log directory", lp);
 
 	if ((fp = fopen(logpath, "w")) == NULL)
-		err("can't open sensor log directory to write data", mp);
+		err("can't open sensor log directory to write data", lp);
 
 	for (j = 0; j < mp->read_count; j++) {
 		int ix = posmatch(j, 0, mp->read_count, pv);

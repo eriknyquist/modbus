@@ -24,10 +24,10 @@ static FILE *fp = NULL;
 
 uint16_t *inputs_raw;
 
-void get_modbus_params(modbusport *mp)
+void get_modbus_params(modbusport *mp, logging *lp)
 {
         if (access(CONF_FILE, F_OK) != 0) {
-		logger("\"" CONF_FILE "\" no such file. Using defaults.", mp);
+		logger("\"" CONF_FILE "\" no such file. Using defaults.", lp);
         } else {
                 if ((fp = fopen(CONF_FILE, "r")) == NULL) {
                         fprintf(stderr, "'%s' for reading:\n%s\n",
@@ -36,7 +36,7 @@ void get_modbus_params(modbusport *mp)
                 }
 
 		/* parse 1st section of conf file, i.e. modbus paramaters */
-                parse_modbus_params(fp, mp);
+                parse_modbus_params(fp, mp, lp);
         }
 
         if (mp->secs < INTERVAL_MIN || mp->secs > INTERVAL_MAX) {
@@ -49,7 +49,7 @@ void get_modbus_params(modbusport *mp)
 
 }
 
-void modbus_init (modbusport *mp, element *pv)
+void modbus_init (modbusport *mp, element *pv, logging *lp)
 {
 	int i;
 	int eof = 0;
@@ -81,7 +81,7 @@ void modbus_init (modbusport *mp, element *pv)
 		char msg[msglen];
 		snprintf(msg, msglen, "register #%d; id=\"%s\", tag=\"%s\"",
 			mp->read_base + i, pv[i].id, pv[i].tag);
-		logger(msg, mp);
+		logger(msg, lp);
 	}
 
 	
@@ -107,10 +107,10 @@ void modbus_init (modbusport *mp, element *pv)
 	}
 
 	if (modbus_set_slave(mp->port, mp->station_id))
-		fatal("Failed to set modbus slave address", mp);
+		fatal("Failed to set modbus slave address", mp, lp);
 
 	if (modbus_connect(mp->port))
-		fatal("Unable to connect to modbus server", mp);
+		fatal("Unable to connect to modbus server", mp, lp);
 #endif
 
 /* DEBUG macro useful for printing register reads to stdout. 
@@ -125,42 +125,42 @@ void modbus_init (modbusport *mp, element *pv)
 #endif
 }
 
-void ile_aip_init(modbusport *mp)
+void ile_aip_init(logging *lp)
 {
 	FILE *fp;
 
-	if ((fp = fopen(mp->uuidfile, "r")) == NULL) {
+	if ((fp = fopen(lp->uuidfile, "r")) == NULL) {
 		fprintf(stderr, "Failed to open UUID file %s:\n%s\n",
-			mp->uuidfile, strerror(errno));
+			lp->uuidfile, strerror(errno));
 			exit(errno);
 	}
 
-	fgets(mp->uuid, UUID_LENGTH, fp);
+	fgets(lp->uuid, UUID_LENGTH, fp);
 
-	if (strlen(mp->uuid) != UUID_LENGTH - 1) {
+	if (strlen(lp->uuid) != UUID_LENGTH - 1) {
 		fprintf(stderr, 
 			"Error : file '%s' does not contain a UUID in the expected format\n%s\n%zu\n",
-			mp->uuidfile, mp->uuid, strlen(mp->uuid));
+			lp->uuidfile, lp->uuid, strlen(lp->uuid));
 		exit(-1);
 	}
 
-	if (access(mp->sens_logdir, F_OK) != 0) {
-		fprintf(stderr, "Error accessing '%s':\n%s\n", mp->sens_logdir, strerror(errno));
+	if (access(lp->sens_logdir, F_OK) != 0) {
+		fprintf(stderr, "Error accessing '%s':\n%s\n", lp->sens_logdir, strerror(errno));
 		exit(errno);
 	}
 }
 
-element *mbd_init(modbusport *mp)
+element *mbd_init(modbusport *mp, logging *lp)
 {
 	element *p;
 	/* initialisation for modbus register data logging */
-	ile_aip_init(mp);
+	ile_aip_init(lp);
 	
 	/* read the modbus params from conf file, so we know
  	 * how many modbus registers we're reading */
-	get_modbus_params(mp);
+	get_modbus_params(mp, lp);
 	/* initialisation for daemon logging */
-	log_init(mp);
+	log_init(lp);
 
 	/* Allocate space to store raw register reads */
 	inputs_raw = (uint16_t *) malloc(mp->read_count * sizeof(uint16_t));
@@ -172,13 +172,13 @@ element *mbd_init(modbusport *mp)
 
 	/* read the remainder of conf file, if any, and initiate
  	 * modbus connection */
-	modbus_init(mp, p);
+	modbus_init(mp, p, lp);
 	return p;
 }
 
-void mbd_exit(modbusport *mp)
+void mbd_exit(modbusport *mp, logging *lp)
 {
-	logger("killed. Closing modbus connection & exiting.", mp);
+	logger("killed. Closing modbus connection & exiting.", lp);
 	modbus_close(mp->port);
 	modbus_free(mp->port);
 	free(inputs_raw);

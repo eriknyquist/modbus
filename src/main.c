@@ -27,12 +27,17 @@ modbusport mbport = {
 	.read_base =   DEFAULT_READ_BASE,
 	.read_count =  DEFAULT_READ_COUNT,
 	.secs =        DEFAULT_SECS,
-	.port_name =   {DEFAULT_PORT_NAME},
+	.port_name =   {DEFAULT_PORT_NAME}
+};
+
+logging loginfo = {
 	.logdir =      {DEFAULT_LOGDIR},
 	.uuidfile =    {DEFAULT_UUID_FILE},
-	.sens_logdir = {DEFAULT_SENS_LOGDIR}};
+	.sens_logdir = {DEFAULT_SENS_LOGDIR}
+};
 
 modbusport *mbp = &mbport;
+logging *lgp = &loginfo;
 
 void siginthandler()
 {
@@ -41,8 +46,8 @@ void siginthandler()
 
 void read_thread(void)
 {
-	mbd_read(mbp, pv);
-	write_registers_tofile(mbp, pv);
+	mbd_read(mbp, pv, lgp);
+	write_registers_tofile(mbp, pv, lgp);
 }
 
 int main (int argc, char *argv[])
@@ -68,21 +73,21 @@ int main (int argc, char *argv[])
 
 	/* get executable name, used for logging */
 	dname = basename(argv[0]);
-	strncpy(mbp->dname, dname, sizeof(mbp->dname));
+	strncpy(lgp->dname, dname, sizeof(lgp->dname));
 
 	/* get PID, also used for logging */
-	mbp->pid = (unsigned long) getpid();
+	lgp->pid = (unsigned long) getpid();
 
-	pv = mbd_init(mbp);
+	pv = mbd_init(mbp, lgp);
 
 	tstatus = create_periodic(mbp->secs, read_thread);
 	if (tstatus == -1)
-		fatal("can't create timer", mbp);
+		fatal("can't create timer", mbp, lgp);
 
 	while(1) {
 		if(gotkillsig) {
 			free(pv);
-			mbd_exit(mbp);
+			mbd_exit(mbp, lgp);
 			exit(0);
 		}
 		usleep(10000);
