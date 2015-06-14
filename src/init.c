@@ -12,12 +12,11 @@
 #include "time.h"
 #include "log.h"
 
-#define UUID_FILE "/uuid"
-#define INTERVAL_MIN 1
-#define INTERVAL_MAX 3600
-#define MB_DATABITS 8
-#define MB_STOPBITS 2
-#define MB_PARITY 'N'
+#define INTERVAL_MIN      1
+#define INTERVAL_MAX      3600
+#define MB_DATABITS       8
+#define MB_STOPBITS       2
+#define MB_PARITY         'N'
 
 int paramcount;
 double delaytime;
@@ -130,9 +129,9 @@ void ile_aip_init(modbusport *mp)
 {
 	FILE *fp;
 
-	if ((fp = fopen(UUID_FILE, "r")) == NULL) {
+	if ((fp = fopen(mp->uuidfile, "r")) == NULL) {
 		fprintf(stderr, "Failed to open UUID file %s:\n%s\n",
-			UUID_FILE, strerror(errno));
+			mp->uuidfile, strerror(errno));
 			exit(errno);
 	}
 
@@ -141,12 +140,12 @@ void ile_aip_init(modbusport *mp)
 	if (strlen(mp->uuid) != UUID_LENGTH - 1) {
 		fprintf(stderr, 
 			"Error : file '%s' does not contain a UUID in the expected format\n%s\n%zu\n",
-			UUID_FILE, mp->uuid, strlen(mp->uuid));
+			mp->uuidfile, mp->uuid, strlen(mp->uuid));
 		exit(-1);
 	}
 
-	if (access(SENSORDATA, F_OK) != 0) {
-		fprintf(stderr, "Error accessing '%s':\n%s\n", SENSORDATA, strerror(errno));
+	if (access(mp->sens_logdir, F_OK) != 0) {
+		fprintf(stderr, "Error accessing '%s':\n%s\n", mp->sens_logdir, strerror(errno));
 		exit(errno);
 	}
 }

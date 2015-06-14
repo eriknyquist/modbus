@@ -62,12 +62,12 @@ void write_registers_tofile(modbusport *mp, element *pv)
 	int i, j;
 	char *logfilename = gen_filename(mp->uuid);
 	char logpath[MAX_PATH_LEN];
-	snprintf(logpath, sizeof(logpath), "%s/%s", SENSORDATA, logfilename);
+	snprintf(logpath, sizeof(logpath), "%s/%s", mp->sens_logdir, logfilename);
 
-	logger("writing to " SENSORDATA, mp);
+	logger("writing to sensor log directory", mp);
 
 	if ((fp = fopen(logpath, "w")) == NULL)
-		err("can't open " SENSORDATA " to write data", mp);
+		err("can't open sensor log directory to write data", mp);
 
 	for (j = 0; j < mp->read_count; j++) {
 		int ix = posmatch(j, 0, mp->read_count, pv);

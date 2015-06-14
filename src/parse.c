@@ -9,15 +9,17 @@
 #include "time.h"
 #include "log.h"
 
-#define CONF_ID_BAUD         "modbus_rtu_baud"
-#define CONF_ID_STATION_ID   "modbus_station_id"
-#define CONF_ID_READ_BASE    "modbus_read_base"
-#define CONF_ID_READ_COUNT   "modbus_read_count"
-#define CONF_ID_INTERVAL     "interval_secs"
-#define CONF_ID_MODBUS_PORT  "modbus_port"
-#define CONF_ID_LOGPATH      "log_location"
-#define CONF_ID_TAG          "tag"
-#define CONF_ID_SCALE        "scale"
+#define CONF_ID_BAUD            "modbus_rtu_baud"
+#define CONF_ID_STATION_ID      "modbus_station_id"
+#define CONF_ID_READ_BASE       "modbus_read_base"
+#define CONF_ID_READ_COUNT      "modbus_read_count"
+#define CONF_ID_INTERVAL        "interval_secs"
+#define CONF_ID_MODBUS_PORT     "modbus_port"
+#define CONF_ID_LOGPATH         "log_directory"
+#define CONF_ID_UUIDPATH        "uuid_path"
+#define CONF_ID_SENSORLOGPATH   "sensor_log_directory"
+#define CONF_ID_TAG             "tag"
+#define CONF_ID_SCALE           "scale"
 
 #define MAX_PARAM_LEN        80
 #define MAX_ID_LEN           80
@@ -93,6 +95,10 @@ void assign (char *param, char *value, modbusport *mp)
 		strncpy(mp->port_name, value, sizeof(mp->port_name));
 	else if (strcmp(param, CONF_ID_LOGPATH) == 0)
 		strncpy(mp->logdir, value, sizeof(mp->logdir));
+	else if (strcmp(param, CONF_ID_UUIDPATH) == 0)
+		strncpy(mp->uuidfile, value, sizeof(mp->uuidfile));
+	else if (strcmp(param, CONF_ID_SENSORLOGPATH) == 0)
+		strncpy(mp->sens_logdir, value, sizeof(mp->sens_logdir));
 	else
 		nosuchparam(param);
 
@@ -315,7 +321,9 @@ void parse_modbus_params(FILE *fp, modbusport *mp)
 			} else if (c == '=') {
 				idbuf[idbufpos] = '\0';
 				state = (strcmp(idbuf, CONF_ID_MODBUS_PORT) == 0
-					|| strcmp(idbuf, CONF_ID_LOGPATH) == 0)
+					|| strcmp(idbuf, CONF_ID_LOGPATH) == 0
+					|| strcmp(idbuf, CONF_ID_UUIDPATH) == 0
+					|| strcmp(idbuf, CONF_ID_SENSORLOGPATH) == 0)
 					? 4 : 2;
 			} else {
 				syntaxerr(c);

@@ -7,19 +7,12 @@
 #include <sys/types.h>
 #include <libgen.h>
 #include <signal.h>
+#include "shared.h"
 #include "init.h"
 #include "parse.h"
 #include "time.h"
 #include "read.h"
 #include "log.h"
-
-#define DEFAULT_BAUD 9600
-#define DEFAULT_STATION_ID 0
-#define DEFAULT_READ_BASE 0
-#define DEFAULT_READ_COUNT 1
-#define DEFAULT_SECS 2
-#define DEFAULT_PORT_NAME "/dev/null"
-#define DEFAULT_LOGDIR 0
 
 volatile int gotkillsig = 0;
 char *dname;
@@ -29,13 +22,15 @@ char *dname;
 element *pv;
 
 modbusport mbport = {
-	.rtu_baud=   DEFAULT_BAUD,
-	.station_id= DEFAULT_STATION_ID,
-	.read_base=  DEFAULT_READ_BASE,
-	.read_count= DEFAULT_READ_COUNT,
-	.secs=       DEFAULT_SECS,
-	.port_name=  {DEFAULT_PORT_NAME},
-	.logdir[0]=     '\0'};
+	.rtu_baud =    DEFAULT_BAUD,
+	.station_id =  DEFAULT_STATION_ID,
+	.read_base =   DEFAULT_READ_BASE,
+	.read_count =  DEFAULT_READ_COUNT,
+	.secs =        DEFAULT_SECS,
+	.port_name =   {DEFAULT_PORT_NAME},
+	.logdir =      {DEFAULT_LOGDIR},
+	.uuidfile =    {DEFAULT_UUID_FILE},
+	.sens_logdir = {DEFAULT_SENS_LOGDIR}};
 
 modbusport *mbp = &mbport;
 
