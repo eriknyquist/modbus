@@ -41,6 +41,7 @@ typedef struct modbusport
         int read_base;
         int read_count;
         time_t secs;
+	unsigned long long readcount;
 
 } modbusport;
 

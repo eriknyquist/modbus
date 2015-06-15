@@ -101,6 +101,7 @@ void modbus_init (modbusport *mp, element *pv, logging *lp)
 		logger(msg, lp);
 	}
 
+	mp->readcount = 0;
 	
 /* NOMODBUS macro is handy for debugging conf file parsing & periodic 
  * timer on a system with no modbus slave- most development is done
@@ -128,17 +129,6 @@ void modbus_init (modbusport *mp, element *pv, logging *lp)
 
 	if (modbus_connect(mp->port))
 		fatal("Unable to connect to modbus server", mp, lp);
-#endif
-
-/* DEBUG macro useful for printing register reads to stdout. 
- * Remove before submission. */
-#ifdef DEBUG
-	printf("\n");
-	for (i = 0; i < mp->read_count; i++) {
-		printf("%16s", pv[i].id);
-	}
-
-	printf("\n");
 #endif
 }
 

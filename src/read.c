@@ -26,7 +26,8 @@
 #include "time.h"
 #include "log.h"
 
-#define SENSOR_READING_HEADER "<D>,SEC:PUBLIC"
+#define SENSOR_READING_HEADER   "<D>,SEC:PUBLIC"
+#define CLRLINE                 "\033[1A\033[2K"
 
 /* TODO: put this ptr inside modbusport struct */
 extern uint16_t *inputs_raw;
@@ -54,12 +55,22 @@ void mbd_read (modbusport *mp, element *pv, logging *lp)
 	}
 
 #ifdef DEBUG
-	printf("\r");
-	for (i = 0; i < mp->read_count; i++)
-		printf("%16.2f", pv[i].value_scaled);
+	if (mp->readcount > 0) {
+		for (i = 0; i < mp->read_count + 4; i++)
+			printf(CLRLINE);	
+	} else {
+		printf("\n");
+	}
 
-	fflush(stdout);	
+	printf("\n");
+	for (i = 0; i < mp->read_count; i++) {
+		printf("%24s : %.2f\n", pv[i].id, pv[i].value_scaled);
+	}
+
+	printf("\nread number : %lld\n\n", mp->readcount);
 #endif
+
+	mp->readcount++;	
 }
 
 int posmatch (int maj, int min, int read_count, element *pv)

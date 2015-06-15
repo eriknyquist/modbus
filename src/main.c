@@ -61,7 +61,7 @@ void siginthandler()
 	gotkillsig = 1;
 }
 
-void read_thread(void)
+void mbd_tick(void)
 {
 	mbd_read(mbp, pv, lgp);
 	write_registers_tofile(mbp, pv, lgp);
@@ -69,6 +69,7 @@ void read_thread(void)
 
 int main (int argc, char *argv[])
 {
+#ifndef NOFORK
 	pid_t pid = 0;
 
 	pid = fork();
@@ -79,6 +80,7 @@ int main (int argc, char *argv[])
 
 	if (pid > 0)
 		exit(0);
+#endif
 
   	int tstatus;
 
@@ -95,9 +97,16 @@ int main (int argc, char *argv[])
 	/* get PID, also used for logging */
 	lgp->pid = (unsigned long) getpid();
 
+	/* initialise modbus & application parameters, & set
+	 * up modbus port */
 	pv = mbd_init(mbp, lgp);
 
-	tstatus = create_periodic(mbp->secs, read_thread);
+	/* kick things off with an initial reading (otherwise
+	 * the first reading won't happen until the first timer
+	 * expires) */
+	mbd_tick();
+
+	tstatus = create_periodic(mbp->secs, mbd_tick);
 	if (tstatus == -1)
 		fatal("can't create timer", mbp, lgp);
 
