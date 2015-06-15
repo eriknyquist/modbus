@@ -45,30 +45,46 @@ char *gen_filename (char *uuid)
         return filename;
 }
 
-int create_periodic(time_t period, void (*thread))
+void ms_to_itimerspec(struct itimerspec *tp, unsigned long msecs)
+{
+	if (msecs < 1000) {
+		tp->it_value.tv_nsec = 
+		tp->it_interval.tv_nsec = 
+		msecs * 1000000L;
+
+		tp->it_value.tv_sec = 0;
+		tp->it_interval.tv_sec = 0;
+	} else {
+		tp->it_value.tv_nsec = tp->it_interval.tv_nsec =
+		(msecs % 1000L) * 1000000L;
+
+		tp->it_value.tv_sec = tp->it_interval.tv_sec = msecs / 1000L;
+	}
+}
+
+int create_periodic(unsigned long msecs, void (*thread))
 {
 	/* sets up the function pointed to by 'thread'
   	 * to run every 'period' seconds, via a new thread. */
         int status;
 	timer_t timer_id;
-        struct itimerspec ts;
+        struct itimerspec ts, *tp;
         struct sigevent se;
+
+	tp = &ts;
 
         se.sigev_notify = SIGEV_THREAD;
         se.sigev_value.sival_ptr = &timer_id;
         se.sigev_notify_function = thread;
         se.sigev_notify_attributes = NULL;
 
-        ts.it_value.tv_sec = period;
-        ts.it_value.tv_nsec = 0;
-        ts.it_interval.tv_sec = period;
-        ts.it_interval.tv_nsec = 0;
-
+	ms_to_itimerspec(tp, msecs);
+	
         status = timer_create(CLOCK_MONOTONIC, &se, &timer_id);
         if (status == -1)
                 return status;
 
-        status = timer_settime(timer_id, 0, &ts, 0);
+        status = timer_settime(timer_id, 0, tp, 0);
 
 	return status;
 }

@@ -30,7 +30,7 @@
 #define DEFAULT_STATION_ID    0
 #define DEFAULT_READ_BASE     0
 #define DEFAULT_READ_COUNT    1
-#define DEFAULT_SECS          2
+#define DEFAULT_MSECS         2000
 
 typedef struct modbusport
 {
@@ -40,7 +40,7 @@ typedef struct modbusport
         int station_id;
         int read_base;
         int read_count;
-        time_t secs;
+        unsigned long msecs;
 	unsigned long long readcount;
 
 } modbusport;

@@ -22,6 +22,7 @@
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
+#include <limits.h>
 #include "init.h"
 #include "time.h"
 #include "log.h"
@@ -30,7 +31,7 @@
 #define CONF_ID_STATION_ID      "modbus_station_id"
 #define CONF_ID_READ_BASE       "modbus_read_base"
 #define CONF_ID_READ_COUNT      "modbus_read_count"
-#define CONF_ID_INTERVAL        "interval_secs"
+#define CONF_ID_INTERVAL        "interval_msecs"
 #define CONF_ID_MODBUS_PORT     "modbus_port"
 #define CONF_ID_LOGPATH         "log_directory"
 #define CONF_ID_UUIDPATH        "uuid_path"
@@ -38,9 +39,10 @@
 #define CONF_ID_TAG             "tag"
 #define CONF_ID_SCALE           "scale"
 
-#define MAX_PARAM_LEN        80
-#define MAX_ID_LEN           80
-#define MAX_NUM_LEN          10
+#define MAX_PARAM_LEN           80
+#define MAX_ID_LEN              80
+#define MAX_NUM_LEN             10
+#define INTERVAL_MSECS_MIN      10
 
 int paramcount;
 double delaytime;
@@ -96,28 +98,43 @@ void doubleassn (char *id)
 	exit(-1);
 }
 
+void convert_and_assign_msecs(modbusport *mp, char *value)
+{
+	errno = 0;
+	mp->msecs = strtoul(value, NULL, 10);
+
+	if (errno != 0) {
+		fprintf(stderr, "%s : Please enter a number between %d and %lu\n",
+			CONF_ID_INTERVAL,
+			INTERVAL_MSECS_MIN,
+			ULONG_MAX);
+		exit(errno);
+	}	
+}
+
 void assign (char *param, char *value, modbusport *mp, logging *lp)
 {
-	if (strcmp(param, CONF_ID_BAUD) == 0)
+	if (strcmp(param, CONF_ID_BAUD) == 0) {
 		mp->rtu_baud = atoi(value);
-	else if (strcmp(param, CONF_ID_STATION_ID) == 0)
+	} else if (strcmp(param, CONF_ID_STATION_ID) == 0) {
 		mp->station_id = atoi(value);
-	else if (strcmp(param, CONF_ID_READ_BASE) == 0)
+	} else if (strcmp(param, CONF_ID_READ_BASE) == 0) {
 		mp->read_base = atoi(value);
-	else if (strcmp(param, CONF_ID_READ_COUNT) == 0)
+	} else if (strcmp(param, CONF_ID_READ_COUNT) == 0) {
 		mp->read_count = atoi(value);
-	else if (strcmp(param, CONF_ID_INTERVAL) == 0)
-		mp->secs = atoi(value);
-	else if (strcmp(param, CONF_ID_MODBUS_PORT) == 0)
+	} else if (strcmp(param, CONF_ID_INTERVAL) == 0) {
+		convert_and_assign_msecs(mp, value);		
+	} else if (strcmp(param, CONF_ID_MODBUS_PORT) == 0) {
 		strncpy(mp->port_name, value, sizeof(mp->port_name));
-	else if (strcmp(param, CONF_ID_LOGPATH) == 0)
+	} else if (strcmp(param, CONF_ID_LOGPATH) == 0) {
 		strncpy(lp->logdir, value, sizeof(lp->logdir));
-	else if (strcmp(param, CONF_ID_UUIDPATH) == 0)
+	} else if (strcmp(param, CONF_ID_UUIDPATH) == 0) {
 		strncpy(lp->uuidfile, value, sizeof(lp->uuidfile));
-	else if (strcmp(param, CONF_ID_SENSORLOGPATH) == 0)
+	} else if (strcmp(param, CONF_ID_SENSORLOGPATH) == 0) {
 		strncpy(lp->sens_logdir, value, sizeof(lp->sens_logdir));
-	else
+	} else {
 		nosuchparam(param);
+	}
 
 	char msg[MAX_LOG_LEN];
 	snprintf(msg, sizeof(msg), "%s set to '%s'", param, value);

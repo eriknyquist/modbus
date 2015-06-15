@@ -43,7 +43,7 @@ modbusport mbport = {
 	.station_id =  DEFAULT_STATION_ID,
 	.read_base =   DEFAULT_READ_BASE,
 	.read_count =  DEFAULT_READ_COUNT,
-	.secs =        DEFAULT_SECS,
+	.msecs =       DEFAULT_MSECS,
 	.port_name =   {DEFAULT_PORT_NAME}
 };
 
@@ -106,7 +106,7 @@ int main (int argc, char *argv[])
 	 * expires) */
 	mbd_tick();
 
-	tstatus = create_periodic(mbp->secs, mbd_tick);
+	tstatus = create_periodic(mbp->msecs, mbd_tick);
 	if (tstatus == -1)
 		fatal("can't create timer", mbp, lgp);
 

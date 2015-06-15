@@ -29,8 +29,6 @@
 #include "time.h"
 #include "log.h"
 
-#define INTERVAL_MIN      1
-#define INTERVAL_MAX      3600
 #define MB_DATABITS       8
 #define MB_STOPBITS       2
 #define MB_PARITY         'N'
@@ -55,15 +53,6 @@ void get_modbus_params(modbusport *mp, logging *lp)
 		/* parse 1st section of conf file, i.e. modbus paramaters */
                 parse_modbus_params(fp, mp, lp);
         }
-
-        if (mp->secs < INTERVAL_MIN || mp->secs > INTERVAL_MAX) {
-                fprintf(stderr, "Error in configuration file '%s' : parameter \n"
-                        "'interval_secs' must be between %d and %d.\n"
-                        "You have entered a value of %ld\n",
-                        CONF_FILE, INTERVAL_MIN, INTERVAL_MAX, mp->secs);
-                exit(-1);
-        }
-
 }
 
 void modbus_init (modbusport *mp, element *pv, logging *lp)
