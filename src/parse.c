@@ -244,8 +244,10 @@ int idcmp (char *idc, element *v, modbusport *mp)
 
 void parse_order (FILE *fp, element *v, modbusport *mp)
 {
-	int majc = 0, minc = 0;
-	char idbuf[MAX_ID_LEN], c;
+	int majc = 0;
+	int minc = 0;
+	char idbuf[MAX_ID_LEN];
+	char c;
 	int idbufpos = 0;
 	uint8_t state = 0;
 
@@ -307,8 +309,11 @@ void parse_order (FILE *fp, element *v, modbusport *mp)
 void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp)
 {
 	char c;
-	uint8_t state = 0, idbufpos = 0, valbufpos = 0;
-	char idbuf[MAX_PARAM_LEN], valbuf[MAX_PATH_LEN];
+	uint8_t state = 0;
+	uint8_t idbufpos = 0;
+	uint8_t valbufpos = 0;
+	char idbuf[MAX_PARAM_LEN];
+	char valbuf[MAX_PATH_LEN];
 
 	c = fgetc(fp);
 
