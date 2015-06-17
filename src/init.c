@@ -24,7 +24,7 @@
 #include <errno.h>
 #include <string.h>
 #include "init.h"
-#include "parse.h"
+#include "confparse.h"
 #include "read.h"
 #include "time.h"
 #include "log.h"

@@ -4,7 +4,7 @@ SRC=src
 BIN=bin
 CFLAGS = -Wall -lmodbus -lrt -lpthread
 
-FILES := main.c init.c time.c parse.c read.c log.c
+FILES := main.c init.c time.c confparse.c read.c log.c
 SRCFILES = $(FILES:%=$(SRC)/%)
 
 # default

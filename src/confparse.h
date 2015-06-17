@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PARSE_H_ 
-#define PARSE_H_ 
+#ifndef CONFPARSE_H_ 
+#define CONFPARSE_H_ 
 
 void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp);
 int get_next_regparam(FILE *fp, element *p);

@@ -26,7 +26,7 @@
 #include <signal.h>
 #include "shared.h"
 #include "init.h"
-#include "parse.h"
+#include "confparse.h"
 #include "time.h"
 #include "read.h"
 #include "log.h"
