@@ -27,6 +27,7 @@
 #include "shared.h"
 #include "init.h"
 #include "confparse.h"
+#include "argparse.h"
 #include "time.h"
 #include "read.h"
 #include "log.h"
@@ -50,7 +51,8 @@ modbusport mbport = {
 logging loginfo = {
 	.logdir =      {DEFAULT_LOGDIR},
 	.uuidfile =    {DEFAULT_UUID_FILE},
-	.sens_logdir = {DEFAULT_SENS_LOGDIR}
+	.sens_logdir = {DEFAULT_SENS_LOGDIR},
+	.verbose =     DEFAULT_VERBOSE
 };
 
 modbusport *mbp = &mbport;
@@ -69,6 +71,9 @@ void mbd_tick(void)
 
 int main (int argc, char *argv[])
 {
+	if (argc > 1)
+		parse_args(argc, argv, lgp);
+
 #ifndef NOFORK
 	pid_t pid = 0;
 

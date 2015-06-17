@@ -31,6 +31,7 @@
 #define DEFAULT_READ_BASE     0
 #define DEFAULT_READ_COUNT    1
 #define DEFAULT_MSECS         2000
+#define DEFAULT_VERBOSE       0
 
 typedef struct modbusport
 {
@@ -55,6 +56,7 @@ typedef struct logging
         char logfile[MAX_PATH_LEN];
         char errfile[MAX_PATH_LEN];
         unsigned long pid;
+	short verbose;
 } logging;
 
 typedef struct element
