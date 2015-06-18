@@ -25,6 +25,7 @@
 #include <string.h>
 #include "init.h"
 #include "confparse.h"
+#include "shared.h"
 #include "read.h"
 #include "time.h"
 #include "log.h"
@@ -34,6 +35,8 @@
 #define MB_PARITY         'N'
 
 int paramcount;
+int er;
+
 double delaytime;
 static FILE *fp = NULL;
 
@@ -41,16 +44,19 @@ uint16_t *inputs_raw;
 
 void get_modbus_params(modbusport *mp, logging *lp)
 {
-        if (access(CONF_FILE, F_OK) != 0) {
+        if (access(CONF_FILE, F_OK) != 0 && lp->verbosity != LOG_QUIET) {
 		logger("\"" CONF_FILE "\" no such file. Using defaults.", lp);
         } else {
                 if ((fp = fopen(CONF_FILE, "r")) == NULL) {
-                        fprintf(stderr, "'%s' for reading:\n%s\n",
-                                CONF_FILE, strerror(errno));
-                        exit(-1);
+			if (lp->verbosity != LOG_QUIET) {
+                        	fprintf(stderr, "'%s' for reading:\n%s\n",
+                                        CONF_FILE, strerror(errno));
+			}
+
+                        exit(ENOENT);
                 }
 
-		/* parse 1st section of conf file, i.e. modbus paramaters */
+		/* parse 1st section of conf file, i.e. modbus parameters */
                 parse_modbus_params(fp, mp, lp);
         }
 }
@@ -81,13 +87,15 @@ void modbus_init (modbusport *mp, element *pv, logging *lp)
 
 	fclose(fp);
 
-	/* report settings to the daemon's logfile */
-	for (i = 0; i < mp->read_count; i++) {
-		int msglen = 30 + strlen(pv[i].id) + strlen(pv[i].tag);
-		char msg[msglen];
-		snprintf(msg, msglen, "register #%d; id=\"%s\", tag=\"%s\"",
-			mp->read_base + i, pv[i].id, pv[i].tag);
-		logger(msg, lp);
+	if (lp->verbosity == LOG_VERBOSE) {
+		/* report settings to the daemon's logfile */
+		for (i = 0; i < mp->read_count; i++) {
+			int msglen = 30 + strlen(pv[i].id) + strlen(pv[i].tag);
+			char msg[msglen];
+			snprintf(msg, msglen, "register #%d; id=\"%s\", tag=\"%s\"",
+			         mp->read_base + i, pv[i].id, pv[i].tag);
+			logger(msg, lp);
+		}
 	}
 
 	mp->readcount = 0;
@@ -100,24 +108,44 @@ void modbus_init (modbusport *mp, element *pv, logging *lp)
 	/* configure modbus port settings & create modbus context */
 
 	if (access(mp->port_name, F_OK) != 0) {
-		printf("Error accessing '%s':\n%s\n", mp->port_name, strerror(errno));
-		exit(-1);
+		er = errno;
+		if (lp->verbosity != LOG_QUIET) {
+			fprintf(stderr, "Error accessing '%s':\n%s\n",
+		                        mp->port_name, strerror(errno));
+		}
+
+		exit(er);
 	}
 
-	mp->port = modbus_new_rtu(mp->port_name, mp->rtu_baud, MB_PARITY, MB_DATABITS, MB_STOPBITS);
+	mp->port = modbus_new_rtu(mp->port_name, mp->rtu_baud, MB_PARITY,
+	                          MB_DATABITS, MB_STOPBITS);
 
 	if (mp->port == NULL) {
-		fprintf(stderr, "Unable to create the libmodbus context on serial port %s\n%s\n",
-			mp->port_name, 
-			strerror(errno));
-		exit(-1);
+		er = errno;
+		if (lp->verbosity != LOG_QUIET) {
+			fprintf(stderr, "Unable to create the libmodbus "
+			                "context on serial port %s\n%s\n",
+		                        mp->port_name, strerror(errno));
+		}
+
+		exit(er);
 	}
 
-	if (modbus_set_slave(mp->port, mp->station_id))
-		fatal("Failed to set modbus slave address", mp, lp);
+	if (modbus_set_slave(mp->port, mp->station_id)) {
+		er = errno;
+		if (lp->verbosity != LOG_QUIET)
+			fprintf(stderr, "Failed to set modbus slave address");
 
-	if (modbus_connect(mp->port))
-		fatal("Unable to connect to modbus server", mp, lp);
+		exit(er);
+	}
+
+	if (modbus_connect(mp->port)) {
+		er = errno;
+		if (lp->verbosity != LOG_QUIET)
+			fprintf(stderr, "Unable to connect to modbus server");
+
+		exit(er);
+	}
 #endif
 }
 
@@ -127,21 +155,22 @@ void ile_aip_init(logging *lp)
 
 	if ((fp = fopen(lp->uuidfile, "r")) == NULL) {
 		fprintf(stderr, "Failed to open UUID file %s:\n%s\n",
-			lp->uuidfile, strerror(errno));
-			exit(errno);
+		                lp->uuidfile, strerror(errno));
+		exit(errno);
 	}
 
 	fgets(lp->uuid, UUID_LENGTH, fp);
 
 	if (strlen(lp->uuid) != UUID_LENGTH - 1) {
-		fprintf(stderr, 
-			"Error : file '%s' does not contain a UUID in the expected format\n%s\n%zu\n",
-			lp->uuidfile, lp->uuid, strlen(lp->uuid));
-		exit(-1);
+		fprintf(stderr, "Error : file '%s' does not contain a UUID in "
+		                "the expected format\n%s\n%zu\n", lp->uuidfile,
+		                lp->uuid, strlen(lp->uuid));
+		exit(EINVAL);
 	}
 
 	if (access(lp->sens_logdir, F_OK) != 0) {
-		fprintf(stderr, "Error accessing '%s':\n%s\n", lp->sens_logdir, strerror(errno));
+		fprintf(stderr, "Error accessing '%s':\n%s\n", lp->sens_logdir,
+		                strerror(errno));
 		exit(errno);
 	}
 }
@@ -149,14 +178,17 @@ void ile_aip_init(logging *lp)
 element *mbd_init(modbusport *mp, logging *lp)
 {
 	element *p;
+
 	/* initialisation for modbus register data logging */
 	ile_aip_init(lp);
 	
 	/* read the modbus params from conf file, so we know
  	 * how many modbus registers we're reading */
 	get_modbus_params(mp, lp);
+
 	/* initialisation for daemon logging */
-	log_init(lp);
+	if (lp->verbosity != LOG_QUIET)
+		log_init(lp);
 
 	/* Allocate space to store raw register reads */
 	inputs_raw = (uint16_t *) malloc(mp->read_count * sizeof(uint16_t));
@@ -174,7 +206,8 @@ element *mbd_init(modbusport *mp, logging *lp)
 
 void mbd_exit(modbusport *mp, logging *lp)
 {
-	logger("killed. Closing modbus connection & exiting.", lp);
+	if (lp->verbosity != LOG_QUIET)
+		logger("killed. Closing modbus connection & exiting.", lp);
 	modbus_close(mp->port);
 	modbus_free(mp->port);
 	free(inputs_raw);

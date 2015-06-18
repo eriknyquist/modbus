@@ -25,6 +25,7 @@
 #include "init.h"
 #include "time.h"
 #include "log.h"
+#include "shared.h"
 
 #define SENSOR_READING_HEADER   "<D>,SEC:PUBLIC"
 #define CLRLINE                 "\033[1A\033[2K"
@@ -38,7 +39,7 @@ void mbd_read (modbusport *mp, element *pv, logging *lp)
 #ifndef NOMODBUS
 	int n;
 
-	if (lp->verbose) {
+	if (lp->verbosity == LOG_VERBOSE) {
 		char msg[MAX_LOG_LEN];
 		snprintf(msg, sizeof(msg), "reading modbus registers %d to %d from '%s'",
 			mp->read_base, mp->read_base + mp->read_count, mp->port_name);
@@ -48,7 +49,7 @@ void mbd_read (modbusport *mp, element *pv, logging *lp)
 	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count, inputs_raw);
 
 	if (n <= 0)
-		fatal("Unable to read modbus registers", mp, lp);
+		fatal("Unable to read modbus registers", mp, lp, errno);
 #endif
 
 	for (i = 0; i < mp->read_count; i++) {
@@ -94,7 +95,7 @@ void write_registers_tofile(modbusport *mp, element *pv, logging *lp)
 	char logpath[MAX_PATH_LEN];
 	snprintf(logpath, sizeof(logpath), "%s/%s", lp->sens_logdir, logfilename);
 
-	if (lp->verbose)
+	if (lp->verbosity == LOG_VERBOSE)
 		logger("writing to sensor log directory", lp);
 
 	if ((fp = fopen(logpath, "w")) == NULL)

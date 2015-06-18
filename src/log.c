@@ -57,7 +57,7 @@ void logger (char *str, logging *lp)
 	}
 }
 
-void fatal (char * errstr, modbusport *mp, logging *lp)
+void fatal (char *errstr, modbusport *mp, logging *lp, int er)
 {
 	err(errstr, lp);
 
@@ -67,7 +67,7 @@ void fatal (char * errstr, modbusport *mp, logging *lp)
 	}
 
 	err("exiting.", lp);
-	exit(-1);
+	exit(er);
 }
 
 void log_init(logging *lp)

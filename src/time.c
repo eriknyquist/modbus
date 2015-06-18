@@ -22,6 +22,7 @@
 #include <sys/signal.h>
 #include <time.h>
 #include <string.h>
+#include <errno.h>
 #include "init.h"
 #include "time.h"
 
@@ -66,7 +67,6 @@ int create_periodic(unsigned long msecs, void (*thread))
 {
 	/* sets up the function pointed to by 'thread'
   	 * to run every 'period' seconds, via a new thread. */
-        int status;
 	timer_t timer_id;
         struct itimerspec ts, *tp;
         struct sigevent se;
@@ -80,13 +80,13 @@ int create_periodic(unsigned long msecs, void (*thread))
 
 	ms_to_itimerspec(tp, msecs);
 	
-        status = timer_create(CLOCK_MONOTONIC, &se, &timer_id);
-        if (status == -1)
-                return status;
+        if (timer_create(CLOCK_MONOTONIC, &se, &timer_id) == -1)
+                return errno;
 
-        status = timer_settime(timer_id, 0, tp, 0);
+        if (timer_settime(timer_id, 0, tp, 0) == -1)
+		return errno;
 
-	return status;
+	return 0;
 }
 
 char *timestamp()

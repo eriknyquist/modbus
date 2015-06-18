@@ -24,6 +24,7 @@
 #include <string.h>
 #include <limits.h>
 #include "init.h"
+#include "shared.h"
 #include "time.h"
 #include "log.h"
 
@@ -72,7 +73,7 @@ void syntaxerr (char c)
 {
 	fprintf(stderr, "Syntax error '%c' in configuration file %s, line %d, column %d\n",
 		c, CONF_FILE, line, column);
-	exit(-1);
+	exit(EINVAL);
 }
 
 void unrec_id(char *id)
@@ -80,14 +81,14 @@ void unrec_id(char *id)
 	fprintf(stderr,
 		"Unrecognised identifier '%s' in configuration file %s, line %d\n",
 		id, CONF_FILE, line);
-	exit(-1);
+	exit(EINVAL);
 }
 
 void nosuchparam(char *param)
 {
 	fprintf(stderr, "Error in configuration file %s, line %d\n", CONF_FILE, line);
 	fprintf(stderr, "'%s' : no such parameter.\n", param);
-	exit(-1);
+	exit(EINVAL);
 }
 
 void doubleassn (char *id)
@@ -95,7 +96,7 @@ void doubleassn (char *id)
 	fprintf(stderr, "Error in configuration file %s, line %d\n", CONF_FILE, line);
 	fprintf(stderr, "ID '%s' has already been assigned a position.\n", id);
 	fprintf(stderr, "You cannot assign two positions to the same ID.\n");
-	exit(-1);
+	exit(EINVAL);
 }
 
 void convert_and_assign_msecs(modbusport *mp, char *value)
@@ -136,10 +137,13 @@ void assign (char *param, char *value, modbusport *mp, logging *lp)
 		nosuchparam(param);
 	}
 
-	char msg[MAX_LOG_LEN];
-	snprintf(msg, sizeof(msg), "%s set to '%s'", param, value);
-	logger(msg, lp);
 	paramcount++;
+
+	if (lp->verbosity == LOG_VERBOSE) {
+		char msg[MAX_LOG_LEN];
+		snprintf(msg, sizeof(msg), "%s set to '%s'", param, value);
+		logger(msg, lp);
+	}
 }
 
 int get_next_regparam(FILE *fp, element *e)

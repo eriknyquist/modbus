@@ -26,7 +26,8 @@
 void usage(char *arg0)
 {
 	printf("Usage: %s [-v]\n\n", arg0);
-	printf("-v   verbose- record all modbus activity in logfile\n");
+	printf("-v   verbose - record all modbus activity in logfile\n");
+	printf("-q   quiet   - don't create any logfiles, and don't print to stdout\n");
 	exit(EINVAL);
 }
 
@@ -42,8 +43,11 @@ int parse_arg(char *arg, logging *lp)
 	numchars = strlen(arg);
 
 	for (i = 1; i < numchars; i++) {
-		if (arg[i] == 'v'){
-			lp->verbose = 1;
+		if (arg[i] == 'v') {
+			lp->verbosity = LOG_VERBOSE;
+			ret = 1;
+		} else if (arg[i] == 'q') {
+			lp->verbosity = LOG_QUIET;
 			ret = 1;
 		} else {
 			ret = -1;

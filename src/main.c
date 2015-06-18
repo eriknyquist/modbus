@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <libgen.h>
 #include <signal.h>
+#include <errno.h>
 #include "shared.h"
 #include "init.h"
 #include "confparse.h"
@@ -52,7 +53,7 @@ logging loginfo = {
 	.logdir =      {DEFAULT_LOGDIR},
 	.uuidfile =    {DEFAULT_UUID_FILE},
 	.sens_logdir = {DEFAULT_SENS_LOGDIR},
-	.verbose =     DEFAULT_VERBOSE
+	.verbosity =    DEFAULT_VERBOSITY
 };
 
 modbusport *mbp = &mbport;
@@ -79,8 +80,9 @@ int main (int argc, char *argv[])
 
 	pid = fork();
 	if (pid < 0) {
+		int er = errno;
 		fprintf(stderr, "fork failed.\n");
-		exit(-1);
+		exit(er);
 	}
 
 	if (pid > 0)
@@ -112,8 +114,8 @@ int main (int argc, char *argv[])
 	mbd_tick();
 
 	tstatus = create_periodic(mbp->msecs, mbd_tick);
-	if (tstatus == -1)
-		fatal("can't create timer", mbp, lgp);
+	if (tstatus != 0)
+		fatal("can't create timer", mbp, lgp, tstatus);
 
 	while(1) {
 		if(gotkillsig) {
