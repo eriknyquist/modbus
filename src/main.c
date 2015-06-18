@@ -50,10 +50,11 @@ modbusport mbport = {
 };
 
 logging loginfo = {
-	.logdir =      {DEFAULT_LOGDIR},
-	.uuidfile =    {DEFAULT_UUID_FILE},
-	.sens_logdir = {DEFAULT_SENS_LOGDIR},
-	.verbosity =    DEFAULT_VERBOSITY
+	.verbosity =    DEFAULT_VERBOSITY,
+	.logdir =       {DEFAULT_LOGDIR},
+	.uuidfile =     {DEFAULT_UUID_FILE},
+	.sens_logdir =  {DEFAULT_SENS_LOGDIR},
+	.conffile =     {DEFAULT_CONF_FILE}
 };
 
 modbusport *mbp = &mbport;

@@ -44,13 +44,14 @@ uint16_t *inputs_raw;
 
 void get_modbus_params(modbusport *mp, logging *lp)
 {
-        if (access(CONF_FILE, F_OK) != 0 && lp->verbosity != LOG_QUIET) {
-		logger("\"" CONF_FILE "\" no such file. Using defaults.", lp);
+        if (access(lp->conffile, F_OK) != 0 && lp->verbosity != LOG_QUIET) {
+		logger("Configuration file inaccessible. Using defaults.", lp);
         } else {
-                if ((fp = fopen(CONF_FILE, "r")) == NULL) {
+                if ((fp = fopen(lp->conffile, "r")) == NULL) {
 			if (lp->verbosity != LOG_QUIET) {
-                        	fprintf(stderr, "'%s' for reading:\n%s\n",
-                                        CONF_FILE, strerror(errno));
+                        	fprintf(stderr, "Error opening '%s' for "
+				                "reading:\n%s\n", lp->conffile,
+				                strerror(errno));
 			}
 
                         exit(ENOENT);
@@ -64,10 +65,9 @@ void get_modbus_params(modbusport *mp, logging *lp)
 void modbus_init (modbusport *mp, element *pv, logging *lp)
 {
 	int i;
-	int eof = 0;
 
 	for (i = 0; i < mp->read_count; i++) {
-		if (fp == NULL || eof || (eof = get_next_regparam(fp, &(pv[i])))) {
+		if (fp == NULL || feof(fp) || get_next_regparam(fp, &(pv[i])) == EOF) {
 			snprintf(pv[i].tag, sizeof(pv[i].tag), "SENS_REG_%d", i + mp->read_base);
 			snprintf(pv[i].id, sizeof(pv[i].id), "reg%d", i + mp->read_base);
 			pv[i].scale = 1;
@@ -79,7 +79,7 @@ void modbus_init (modbusport *mp, element *pv, logging *lp)
 		}
 	}
 
-	if (!eof) {
+	if (!feof(fp)) {
 		/* figure out the order in which readings should be
   		 * arranged in the logging of register data */
 		parse_order(fp, pv, mp);

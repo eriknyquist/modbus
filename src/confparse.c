@@ -71,29 +71,29 @@ uint8_t is_whitespace (char c)
 
 void syntaxerr (char c)
 {
-	fprintf(stderr, "Syntax error '%c' in configuration file %s, line %d, column %d\n",
-		c, CONF_FILE, line, column);
+	fprintf(stderr, "Syntax error '%c' in configuration file, line %d, column %d\n",
+		c, line, column);
 	exit(EINVAL);
 }
 
 void unrec_id(char *id)
 {
 	fprintf(stderr,
-		"Unrecognised identifier '%s' in configuration file %s, line %d\n",
-		id, CONF_FILE, line);
+		"Unrecognised identifier '%s' in configuration file, line %d\n",
+		id, line);
 	exit(EINVAL);
 }
 
 void nosuchparam(char *param)
 {
-	fprintf(stderr, "Error in configuration file %s, line %d\n", CONF_FILE, line);
+	fprintf(stderr, "Error in configuration file, line %d\n", line);
 	fprintf(stderr, "'%s' : no such parameter.\n", param);
 	exit(EINVAL);
 }
 
 void doubleassn (char *id)
 {
-	fprintf(stderr, "Error in configuration file %s, line %d\n", CONF_FILE, line);
+	fprintf(stderr, "Error in configuration file, line %d\n", line);
 	fprintf(stderr, "ID '%s' has already been assigned a position.\n", id);
 	fprintf(stderr, "You cannot assign two positions to the same ID.\n");
 	exit(EINVAL);

@@ -23,7 +23,7 @@
 #define LOG_VERBOSE           2
 
 #define DEFAULT_PORT_NAME     "/dev/null"
-#define CONF_FILE             "/etc/mbd.conf"
+#define DEFAULT_CONF_FILE     "/etc/mbd.conf"
 #define DEFAULT_SENS_LOGDIR   "/home/sensordata"
 #define DEFAULT_LOGDIR        "/home/root"
 
@@ -63,6 +63,7 @@ typedef struct logging
 	char logdir[MAX_PATH_LEN];
         char logfile[MAX_PATH_LEN];
         char errfile[MAX_PATH_LEN];
+	char conffile[MAX_PATH_LEN];
         unsigned long pid;
 	short verbosity;
 } logging;

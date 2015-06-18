@@ -25,19 +25,28 @@
 
 void usage(char *arg0)
 {
-	printf("Usage: %s [-v]\n\n", arg0);
-	printf("-v   verbose - record all modbus activity in logfile\n");
-	printf("-q   quiet   - don't create any logfiles, and don't print to stdout\n");
+	printf("\nUsage: %s [-vq -c <file>]\n\n", arg0);
+	printf("-v         verbose   - record all modbus activity in logfiles\n");
+	printf("                       (default is to log start/stop times, configuration\n");
+	printf("                       data and errors.)\n");
+	printf("-q         quiet     - don't create any logfiles or print to stdout\n");
+	printf("                       (with the exception of sensor logfiles)\n");
+	printf("-c <file>  conf file - read configuration from <file>\n");
+	printf("                       (default is " DEFAULT_CONF_FILE ")\n");
+	printf("\n");
 	exit(EINVAL);
 }
 
-int parse_arg(char *arg, logging *lp)
+int parse_arg(int pos, int argc, char *argv[], logging *lp)
 {
+	char *arg;
 	int numchars;
 	int ret = 0;
 	int i;
 
-	if (arg == NULL || arg[0] !=  '-')
+	arg = argv[pos];
+
+	if (arg == NULL || strlen(arg) < 2 || arg[0] !=  '-')
 		return ret;
 
 	numchars = strlen(arg);
@@ -49,8 +58,16 @@ int parse_arg(char *arg, logging *lp)
 		} else if (arg[i] == 'q') {
 			lp->verbosity = LOG_QUIET;
 			ret = 1;
+		} else if (arg[i] == 'c') {
+			if (numchars > 2 || argc < (pos + 2)) {
+				ret = 0;
+				break;
+			}
+
+			strncpy(lp->conffile, argv[pos + 1], sizeof(lp->conffile));
+			ret = 2;
 		} else {
-			ret = -1;
+			ret = 0;
 			break;
 		}
 	}
@@ -66,7 +83,7 @@ void parse_args(int argc, char *argv[], logging *lp)
 	argpos = 1;
 
 	while (argpos < argc) {
-		ret = parse_arg(argv[argpos], lp);
+		ret = parse_arg(argpos, argc, argv, lp);
 
 		if (ret < 1)
 			usage(argv[0]);
