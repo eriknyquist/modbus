@@ -54,7 +54,8 @@ logging loginfo = {
 	.logdir =       {DEFAULT_LOGDIR},
 	.uuidfile =     {DEFAULT_UUID_FILE},
 	.sens_logdir =  {DEFAULT_SENS_LOGDIR},
-	.conffile =     {DEFAULT_CONF_FILE}
+	.conffile =     {DEFAULT_CONF_FILE},
+	.shouldfork =   DEFAULT_SHOULDFORK
 };
 
 modbusport *mbp = &mbport;
@@ -76,19 +77,19 @@ int main (int argc, char *argv[])
 	if (argc > 1)
 		parse_args(argc, argv, lgp);
 
-#ifndef NOFORK
-	pid_t pid = 0;
+	if (lgp->shouldfork) {
+		pid_t pid = 0;
 
-	pid = fork();
-	if (pid < 0) {
-		int er = errno;
-		fprintf(stderr, "fork failed.\n");
-		exit(er);
+		pid = fork();
+		if (pid < 0) {
+			int er = errno;
+			fprintf(stderr, "fork failed.\n");
+			exit(er);
+		}
+
+		if (pid > 0)
+			exit(0);
 	}
-
-	if (pid > 0)
-		exit(0);
-#endif
 
   	int tstatus;
 

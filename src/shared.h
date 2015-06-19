@@ -22,6 +22,7 @@
 #define LOG_NORMAL            1
 #define LOG_VERBOSE           2
 
+#define DEFAULT_SHOULDFORK    1
 #define DEFAULT_PORT_NAME     "/dev/null"
 #define DEFAULT_CONF_FILE     "/etc/mbd.conf"
 #define DEFAULT_SENS_LOGDIR   "/home/sensordata"
@@ -56,16 +57,20 @@ typedef struct modbusport
 
 typedef struct logging
 {
-        char uuid[38];
-        char dname[32];
-	char uuidfile[MAX_PATH_LEN];
 	char sens_logdir[MAX_PATH_LEN];
 	char logdir[MAX_PATH_LEN];
         char logfile[MAX_PATH_LEN];
         char errfile[MAX_PATH_LEN];
-	char conffile[MAX_PATH_LEN];
-        unsigned long pid;
 	short verbosity;
+
+	/* TODO: create 'mbdinfo' struct for this stuff */
+        unsigned long pid;
+	char conffile[MAX_PATH_LEN];
+        char uuid[38];
+        char dname[32];
+	char uuidfile[MAX_PATH_LEN];
+	int shouldfork;
+	
 } logging;
 
 typedef struct element

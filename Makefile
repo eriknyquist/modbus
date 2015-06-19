@@ -21,7 +21,7 @@ dnomodbus: pre-build
 
 # no modbus ioctls, and print to stdout
 vnomodbus: pre-build
-	$(CC) -I$(MODBUS_H) $(SRCFILES) -o $(BIN)/$(OUTPUT) $(CFLAGS) -D NOFORK -D NOMODBUS -D DEBUG
+	$(CC) -I$(MODBUS_H) $(SRCFILES) -o $(BIN)/$(OUTPUT) $(CFLAGS) -D NOMODBUS -D DEBUG
 
 pre-build:
 	[ -d $(BIN) ] || mkdir $(BIN)
