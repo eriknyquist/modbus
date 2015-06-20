@@ -161,7 +161,7 @@ int get_next_regparam(FILE *fp, element *e)
 	while (state != 6) {
 
 		if ((c = fgetc(fp)) == EOF )
-			return 1;
+			return EOF;
 
 		if (c == '\n') {
 			line++;
