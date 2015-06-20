@@ -40,7 +40,7 @@ int er;
 double delaytime;
 static FILE *fp = NULL;
 
-void get_modbus_params(modbusport *mp, logging *lp, mbdinfo *mip)
+void get_modbus_params(mbdport *mp, logging *lp, mbdinfo *mip)
 {
         if (access(mip->conffile, F_OK) != 0 && lp->verbosity != LOG_QUIET) {
 		logger("Configuration file inaccessible. Using defaults.", lp, mip);
@@ -60,7 +60,7 @@ void get_modbus_params(modbusport *mp, logging *lp, mbdinfo *mip)
         }
 }
 
-void modbus_init (modbusport *mp, element *pv, logging *lp, mbdinfo *mip)
+void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
 	int i;
 
@@ -173,7 +173,7 @@ void ile_aip_init(logging *lp, mbdinfo *mip)
 	}
 }
 
-element *mbd_init(modbusport *mp, logging *lp, mbdinfo *mip)
+element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 {
 	size_t inputs_raw_size;
 	size_t inputs_scaled_size;
@@ -231,7 +231,7 @@ element *mbd_init(modbusport *mp, logging *lp, mbdinfo *mip)
 	return inputs_scaled;
 }
 
-void mbd_exit(modbusport *mp, logging *lp, mbdinfo *mip)
+void mbd_exit(mbdport *mp, logging *lp, mbdinfo *mip)
 {
 	if (lp->verbosity != LOG_QUIET)
 		logger("killed. Closing modbus connection & exiting.", lp, mip);

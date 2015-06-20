@@ -40,7 +40,7 @@ char *dname;
  * register reads. */
 element *pv;
 
-modbusport mbport = {
+mbdport mbport = {
 	.rtu_baud =    DEFAULT_BAUD,
 	.station_id =  DEFAULT_STATION_ID,
 	.read_base =   DEFAULT_READ_BASE,
@@ -61,7 +61,7 @@ mbdinfo minfo = {
 	.shouldfork =   DEFAULT_SHOULDFORK
 };
 
-modbusport *mbp = &mbport;
+mbdport *mbp = &mbport;
 logging *lgp = &loginfo;
 mbdinfo *mip = &minfo;
 

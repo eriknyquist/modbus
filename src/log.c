@@ -57,7 +57,7 @@ void logger (char *str, logging *lp, mbdinfo *mip)
 	}
 }
 
-void fatal (char *errstr, modbusport *mp, logging *lp, mbdinfo *mip, int er)
+void fatal (char *errstr, mbdport *mp, logging *lp, mbdinfo *mip, int er)
 {
 	err(errstr, lp, mip, er);
 

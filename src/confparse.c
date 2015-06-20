@@ -99,7 +99,7 @@ void doubleassn (char *id)
 	exit(EINVAL);
 }
 
-void convert_and_assign_msecs(modbusport *mp, char *value)
+void convert_and_assign_msecs(mbdport *mp, char *value)
 {
 	errno = 0;
 	mp->msecs = strtoul(value, NULL, 10);
@@ -113,7 +113,7 @@ void convert_and_assign_msecs(modbusport *mp, char *value)
 	}	
 }
 
-void assign (char *param, char *value, modbusport *mp, logging *lp,
+void assign (char *param, char *value, mbdport *mp, logging *lp,
              mbdinfo *mip)
 {
 	if (strcmp(param, CONF_ID_BAUD) == 0) {
@@ -252,7 +252,7 @@ int get_next_regparam(FILE *fp, element *e)
 	return 0;
 }
 
-int idcmp (char *idc, element *v, modbusport *mp)
+int idcmp (char *idc, element *v, mbdport *mp)
 {
 	int i;
 
@@ -264,7 +264,7 @@ int idcmp (char *idc, element *v, modbusport *mp)
 	return -1;
 }
 
-void parse_order (FILE *fp, element *v, modbusport *mp)
+void parse_order (FILE *fp, element *v, mbdport *mp)
 {
 	int majc = 0;
 	int minc = 0;
@@ -328,7 +328,7 @@ void parse_order (FILE *fp, element *v, modbusport *mp)
 	}
 }
 
-void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp, mbdinfo *mip)
+void parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip)
 {
 	char c;
 	uint8_t state = 0;

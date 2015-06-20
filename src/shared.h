@@ -42,7 +42,7 @@
 
 #define DEFAULT_VERBOSITY     LOG_NORMAL
 
-typedef struct modbusport
+typedef struct mbdport
 {
         modbus_t *port;
         char port_name[128];
@@ -54,7 +54,7 @@ typedef struct modbusport
         unsigned long msecs;
 	unsigned long long readcount;
 
-} modbusport;
+} mbdport;
 
 typedef struct logging
 {
