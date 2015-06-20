@@ -32,6 +32,7 @@
 #define CONF_ID_STATION_ID      "modbus_station_id"
 #define CONF_ID_READ_BASE       "modbus_read_base"
 #define CONF_ID_READ_COUNT      "modbus_read_count"
+#define CONF_ID_RETRIES         "retries"
 #define CONF_ID_INTERVAL        "interval_msecs"
 #define CONF_ID_MODBUS_PORT     "modbus_port"
 #define CONF_ID_LOGPATH         "log_directory"
@@ -101,16 +102,33 @@ void doubleassn (char *id)
 
 void convert_and_assign_msecs(mbdport *mp, char *value)
 {
+	int saved_err;
 	errno = 0;
 	mp->msecs = strtoul(value, NULL, 10);
 
 	if (errno != 0) {
+		saved_err = errno;
 		fprintf(stderr, "%s : Please enter a number between %d and %lu\n",
 			CONF_ID_INTERVAL,
 			INTERVAL_MSECS_MIN,
 			ULONG_MAX);
-		exit(errno);
+		exit(saved_err);
 	}	
+}
+
+void convert_and_assign_retries(mbdport *mp, char *value)
+{
+	int saved_err;
+	errno = 0;
+	mp->maxretries = (unsigned int) strtoul(value, NULL, 10);
+
+	if (errno != 0) {
+		saved_err = errno;
+		fprintf(stderr, "%s : Please enter a number between %d and %u\n",
+			CONF_ID_RETRIES,
+			0, UINT_MAX);
+		exit(saved_err);
+	}
 }
 
 void assign (char *param, char *value, mbdport *mp, logging *lp,
@@ -125,7 +143,9 @@ void assign (char *param, char *value, mbdport *mp, logging *lp,
 	} else if (strcmp(param, CONF_ID_READ_COUNT) == 0) {
 		mp->read_count = atoi(value);
 	} else if (strcmp(param, CONF_ID_INTERVAL) == 0) {
-		convert_and_assign_msecs(mp, value);		
+		convert_and_assign_msecs(mp, value);
+	} else if (strcmp(param, CONF_ID_RETRIES) == 0) {
+		convert_and_assign_retries(mp, value);
 	} else if (strcmp(param, CONF_ID_MODBUS_PORT) == 0) {
 		strncpy(mp->port_name, value, sizeof(mp->port_name));
 	} else if (strcmp(param, CONF_ID_LOGPATH) == 0) {

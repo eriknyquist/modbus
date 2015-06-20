@@ -39,6 +39,7 @@
 #define DEFAULT_READ_BASE     0
 #define DEFAULT_READ_COUNT    1
 #define DEFAULT_MSECS         2000
+#define DEFAULT_MAX_RETRIES   10
 
 #define DEFAULT_VERBOSITY     LOG_NORMAL
 
@@ -51,6 +52,8 @@ typedef struct mbdport
         int station_id;
         int read_base;
         int read_count;
+	unsigned int retries;
+	unsigned int maxretries;
         unsigned long msecs;
 	unsigned long long readcount;
 

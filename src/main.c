@@ -41,12 +41,14 @@ char *dname;
 element *pv;
 
 mbdport mbport = {
-	.rtu_baud =    DEFAULT_BAUD,
-	.station_id =  DEFAULT_STATION_ID,
-	.read_base =   DEFAULT_READ_BASE,
-	.read_count =  DEFAULT_READ_COUNT,
-	.msecs =       DEFAULT_MSECS,
-	.port_name =   {DEFAULT_PORT_NAME}
+	.rtu_baud =     DEFAULT_BAUD,
+	.station_id =   DEFAULT_STATION_ID,
+	.read_base =    DEFAULT_READ_BASE,
+	.read_count =   DEFAULT_READ_COUNT,
+	.msecs =        DEFAULT_MSECS,
+	.port_name =    {DEFAULT_PORT_NAME},
+	.maxretries =   DEFAULT_MAX_RETRIES,
+	.retries =      0
 };
 
 logging loginfo = {
@@ -72,8 +74,11 @@ void siginthandler()
 
 void mbd_tick(void)
 {
-	mbd_read(mbp, pv, lgp, mip);
-	write_registers_tofile(mbp, pv, lgp, mip);
+	int ret;
+
+	ret = mbd_read(mbp, pv, lgp, mip);
+	if (ret == 0)
+		write_registers_tofile(mbp, pv, lgp, mip);
 }
 
 int main (int argc, char *argv[])

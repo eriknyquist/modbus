@@ -30,8 +30,9 @@
 #define SENSOR_READING_HEADER   "<D>,SEC:PUBLIC"
 #define CLRLINE                 "\033[1A\033[2K"
 
-void mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
+int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
+	int ret = 1;
 	int i;
 #ifndef NOMODBUS
 	int n;
@@ -46,8 +47,23 @@ void mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count,
 	                          mp->inputs_raw);
 
-	if (n <= 0)
-		fatal("Unable to read modbus registers", mp, lp, mip, errno);
+	if (n <= 0) {
+		if (mp->retries <= mp->maxretries) {
+			char msg[80];
+
+			snprintf(msg, sizeof(msg), mp->retries > 0 ?
+			         "retrying..." : "reading modbus registers failed");
+
+			mp->retries++;
+			logger(msg, lp, mip);
+		} else {
+			fatal("Unable to read modbus registers", mp, lp, mip, errno);
+		}
+	} else {
+		ret = 0;
+		if (mp->retries != 0)
+			mp->retries = 0;
+	}
 #endif
 
 	for (i = 0; i < mp->read_count; i++) {
@@ -73,7 +89,9 @@ void mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	printf("\nread number : %lld\n\n", mp->readcount);
 #endif
 
-	mp->readcount++;	
+	mp->readcount++;
+
+	return ret;
 }
 
 int posmatch (int maj, int min, int read_count, element *pv)
