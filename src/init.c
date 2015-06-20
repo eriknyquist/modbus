@@ -40,8 +40,6 @@ int er;
 double delaytime;
 static FILE *fp = NULL;
 
-uint16_t *inputs_raw;
-
 void get_modbus_params(modbusport *mp, logging *lp, mbdinfo *mip)
 {
         if (access(mip->conffile, F_OK) != 0 && lp->verbosity != LOG_QUIET) {
@@ -177,7 +175,12 @@ void ile_aip_init(logging *lp, mbdinfo *mip)
 
 element *mbd_init(modbusport *mp, logging *lp, mbdinfo *mip)
 {
-	element *p;
+	size_t inputs_raw_size;
+	size_t inputs_scaled_size;
+	element *inputs_scaled;
+	char msg[120];
+	int pos;
+	int saved_err;
 
 	/* initialisation for modbus register data logging */
 	ile_aip_init(lp, mip);
@@ -190,18 +193,42 @@ element *mbd_init(modbusport *mp, logging *lp, mbdinfo *mip)
 	if (lp->verbosity != LOG_QUIET)
 		log_init(lp, mip);
 
+	inputs_raw_size = mp->read_count * sizeof(uint16_t);
+	inputs_scaled_size = mp->read_count * sizeof(element);
+
 	/* Allocate space to store raw register reads */
-	inputs_raw = (uint16_t *) malloc(mp->read_count * sizeof(uint16_t));
-	memset(inputs_raw, 0, mp->read_count * sizeof(uint16_t));
+	mp->inputs_raw = (uint16_t *) malloc(inputs_raw_size);
+
+	if (mp->inputs_raw == NULL) {
+		saved_err = errno;
+		pos = snprintf(msg, sizeof(msg), "Can't allocate %zu bytes "
+		               "for mapping modbus registers", inputs_raw_size);
+		if (sizeof(msg) <= pos)
+			msg[sizeof(msg) -1] = '\0';
+
+		fatal(msg, mp, lp, mip, saved_err);
+	}
+
+	memset(mp->inputs_raw, 0, mp->read_count * sizeof(uint16_t));
 
 	/* allocate space to store scaled register reads, along 
  	 * with additional information (IDs, tags etc) */
-	p = malloc(sizeof(element) * mp->read_count);
+	inputs_scaled = malloc(inputs_scaled_size);
+
+	if (inputs_scaled == NULL) {
+		saved_err = errno;
+		pos = snprintf(msg, sizeof(msg), "Can't allocate %zu bytes for "
+		         "scaled register reads", inputs_scaled_size);
+		if (sizeof(msg) <= pos)
+			msg[sizeof(msg) - 1] = '\0';
+
+		fatal(msg, mp, lp, mip, saved_err);
+	}
 
 	/* read the remainder of conf file, if any, and initiate
  	 * modbus connection */
-	modbus_init(mp, p, lp, mip);
-	return p;
+	modbus_init(mp, inputs_scaled, lp, mip);
+	return inputs_scaled;
 }
 
 void mbd_exit(modbusport *mp, logging *lp, mbdinfo *mip)
@@ -210,5 +237,5 @@ void mbd_exit(modbusport *mp, logging *lp, mbdinfo *mip)
 		logger("killed. Closing modbus connection & exiting.", lp, mip);
 	modbus_close(mp->port);
 	modbus_free(mp->port);
-	free(inputs_raw);
+	free(mp->inputs_raw);
 }

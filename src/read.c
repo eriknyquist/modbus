@@ -30,9 +30,6 @@
 #define SENSOR_READING_HEADER   "<D>,SEC:PUBLIC"
 #define CLRLINE                 "\033[1A\033[2K"
 
-/* TODO: put this ptr inside modbusport struct */
-extern uint16_t *inputs_raw;
-
 void mbd_read (modbusport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
 	int i;
@@ -46,15 +43,16 @@ void mbd_read (modbusport *mp, element *pv, logging *lp, mbdinfo *mip)
 		logger(msg, lp, mip);
 	}
 
-	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count, inputs_raw);
+	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count,
+	                          mp->inputs_raw);
 
 	if (n <= 0)
 		fatal("Unable to read modbus registers", mp, lp, mip, errno);
 #endif
 
 	for (i = 0; i < mp->read_count; i++) {
-		pv[i].value_raw = inputs_raw[i];
-		pv[i].value_scaled = (float) inputs_raw[i] * pv[i].scale;
+		pv[i].value_raw = mp->inputs_raw[i];
+		pv[i].value_scaled = (float) mp->inputs_raw[i] * pv[i].scale;
 	}
 
 #ifdef DEBUG
@@ -101,7 +99,7 @@ void write_registers_tofile(modbusport *mp, element *pv, logging *lp, mbdinfo *m
 		logger("writing to sensor log directory", lp, mip);
 
 	if ((fp = fopen(logpath, "w")) == NULL)
-		err("can't open sensor log directory to write data", lp, mip);
+		err("can't open sensor log directory to write data", lp, mip, errno);
 
 	for (j = 0; j < mp->read_count; j++) {
 		int ix = posmatch(j, 0, mp->read_count, pv);

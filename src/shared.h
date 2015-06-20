@@ -46,6 +46,7 @@ typedef struct modbusport
 {
         modbus_t *port;
         char port_name[128];
+	uint16_t *inputs_raw;
         int rtu_baud;
         int station_id;
         int read_base;

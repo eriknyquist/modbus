@@ -19,7 +19,7 @@
 #define LOG_H_
 
 void fatal (char *errstr, modbusport *mp, logging *lp, mbdinfo *mip, int er);
-void err (char *errstr, logging *lp, mbdinfo *mip);
+void err (char *errstr, logging *lp, mbdinfo *mip, int er);
 void logger (char *str, logging *lp, mbdinfo *mip);
 void log_init (logging *lp, mbdinfo *mip);
 

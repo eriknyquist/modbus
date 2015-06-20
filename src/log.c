@@ -23,13 +23,13 @@
 #include "init.h"
 #include "time.h"
 
-void err (char *errstr, logging *lp, mbdinfo *mip)
+void err (char *errstr, logging *lp, mbdinfo *mip, int err)
 {
 	char msg[MAX_LOG_LEN];
 	FILE *fp;
 
-	snprintf(msg, sizeof(msg), "[%s][%s.%ld] error: %s %s",
-			timestamp(), mip->dname, mip->pid, errstr, strerror(errno));
+	snprintf(msg, sizeof(msg), "[%s][%s.%ld] error: %s-- %s",
+			timestamp(), mip->dname, mip->pid, errstr, strerror(err));
 
 	/* if log location not defined or inaccessible, print to stderr */
 	if (strlen(lp->logdir) == 0 || (fp = fopen(lp->errfile, "a")) == NULL) {
@@ -59,14 +59,14 @@ void logger (char *str, logging *lp, mbdinfo *mip)
 
 void fatal (char *errstr, modbusport *mp, logging *lp, mbdinfo *mip, int er)
 {
-	err(errstr, lp, mip);
+	err(errstr, lp, mip, er);
 
 	if (mp != NULL) {
 		modbus_close(mp->port);
 		modbus_free(mp->port);
 	}
 
-	err("exiting.", lp, mip);
+	err("exiting", lp, mip, er);
 	exit(er);
 }
 
