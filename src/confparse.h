@@ -18,7 +18,7 @@
 #ifndef CONFPARSE_H_ 
 #define CONFPARSE_H_ 
 
-void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp);
+void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp, mbdinfo *mip);
 int get_next_regparam(FILE *fp, element *p);
 void parse_order (FILE *fp, element *v, modbusport *mp);
 

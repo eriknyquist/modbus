@@ -20,7 +20,7 @@
 
 #include "shared.h"
 
-element *mbd_init(modbusport *mp, logging *lp);
-void mbd_exit(modbusport *mp, logging *lp);
+element *mbd_init(modbusport *mp, logging *lp, mbdinfo *mip);
+void mbd_exit(modbusport *mp, logging *lp, mbdinfo *mip);
 
 #endif

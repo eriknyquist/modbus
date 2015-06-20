@@ -18,6 +18,6 @@
 #ifndef ARGPARSE_H_
 #define ARGPARSE_H_
 
-void parse_args(int argc, char *argv[], logging *lp);
+void parse_args(int argc, char *argv[], logging *lp, mbdinfo *mip);
 
 #endif

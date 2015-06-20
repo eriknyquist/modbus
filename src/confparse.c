@@ -113,7 +113,8 @@ void convert_and_assign_msecs(modbusport *mp, char *value)
 	}	
 }
 
-void assign (char *param, char *value, modbusport *mp, logging *lp)
+void assign (char *param, char *value, modbusport *mp, logging *lp,
+             mbdinfo *mip)
 {
 	if (strcmp(param, CONF_ID_BAUD) == 0) {
 		mp->rtu_baud = atoi(value);
@@ -130,7 +131,7 @@ void assign (char *param, char *value, modbusport *mp, logging *lp)
 	} else if (strcmp(param, CONF_ID_LOGPATH) == 0) {
 		strncpy(lp->logdir, value, sizeof(lp->logdir));
 	} else if (strcmp(param, CONF_ID_UUIDPATH) == 0) {
-		strncpy(lp->uuidfile, value, sizeof(lp->uuidfile));
+		strncpy(mip->uuidfile, value, sizeof(mip->uuidfile));
 	} else if (strcmp(param, CONF_ID_SENSORLOGPATH) == 0) {
 		strncpy(lp->sens_logdir, value, sizeof(lp->sens_logdir));
 	} else {
@@ -142,7 +143,7 @@ void assign (char *param, char *value, modbusport *mp, logging *lp)
 	if (lp->verbosity == LOG_VERBOSE) {
 		char msg[MAX_LOG_LEN];
 		snprintf(msg, sizeof(msg), "%s set to '%s'", param, value);
-		logger(msg, lp);
+		logger(msg, lp, mip);
 	}
 }
 
@@ -327,7 +328,7 @@ void parse_order (FILE *fp, element *v, modbusport *mp)
 	}
 }
 
-void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp)
+void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp, mbdinfo *mip)
 {
 	char c;
 	uint8_t state = 0;
@@ -379,7 +380,7 @@ void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp)
 				valbufpos++;
 			} else if (c == ',') {
 				valbuf[valbufpos] = '\0';
-				assign(idbuf, valbuf, mp, lp);
+				assign(idbuf, valbuf, mp, lp, mip);
 				state = 0;
 				idbufpos = 0;
 				valbufpos = 0;
@@ -395,7 +396,7 @@ void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp)
 		case 4:
 			if (c == ',') {
 				valbuf[valbufpos] = '\0';
-				assign(idbuf, valbuf, mp, lp);
+				assign(idbuf, valbuf, mp, lp, mip);
 				state = 0;
 				idbufpos = 0;
 				valbufpos = 0;
@@ -410,5 +411,5 @@ void parse_modbus_params(FILE *fp, modbusport *mp, logging *lp)
 		c = fgetc(fp);
 	}
 	valbuf[valbufpos] = '\0';
-	assign(idbuf, valbuf, mp, lp);
+	assign(idbuf, valbuf, mp, lp, mip);
 }

@@ -52,14 +52,18 @@ modbusport mbport = {
 logging loginfo = {
 	.verbosity =    DEFAULT_VERBOSITY,
 	.logdir =       {DEFAULT_LOGDIR},
-	.uuidfile =     {DEFAULT_UUID_FILE},
 	.sens_logdir =  {DEFAULT_SENS_LOGDIR},
+};
+
+mbdinfo minfo = {
+	.uuidfile =     {DEFAULT_UUID_FILE},
 	.conffile =     {DEFAULT_CONF_FILE},
 	.shouldfork =   DEFAULT_SHOULDFORK
 };
 
 modbusport *mbp = &mbport;
 logging *lgp = &loginfo;
+mbdinfo *mip = &minfo;
 
 void siginthandler()
 {
@@ -68,16 +72,16 @@ void siginthandler()
 
 void mbd_tick(void)
 {
-	mbd_read(mbp, pv, lgp);
-	write_registers_tofile(mbp, pv, lgp);
+	mbd_read(mbp, pv, lgp, mip);
+	write_registers_tofile(mbp, pv, lgp, mip);
 }
 
 int main (int argc, char *argv[])
 {
 	if (argc > 1)
-		parse_args(argc, argv, lgp);
+		parse_args(argc, argv, lgp, mip);
 
-	if (lgp->shouldfork) {
+	if (mip->shouldfork) {
 		pid_t pid = 0;
 
 		pid = fork();
@@ -101,14 +105,14 @@ int main (int argc, char *argv[])
 
 	/* get executable name, used for logging */
 	dname = basename(argv[0]);
-	strncpy(lgp->dname, dname, sizeof(lgp->dname));
+	strncpy(mip->dname, dname, sizeof(mip->dname));
 
 	/* get PID, also used for logging */
-	lgp->pid = (unsigned long) getpid();
+	mip->pid = (unsigned long) getpid();
 
 	/* initialise modbus & application parameters, & set
 	 * up modbus port */
-	pv = mbd_init(mbp, lgp);
+	pv = mbd_init(mbp, lgp, mip);
 
 	/* kick things off with an initial reading (otherwise
 	 * the first reading won't happen until the first timer
@@ -117,12 +121,12 @@ int main (int argc, char *argv[])
 
 	tstatus = create_periodic(mbp->msecs, mbd_tick);
 	if (tstatus != 0)
-		fatal("can't create timer", mbp, lgp, tstatus);
+		fatal("can't create timer", mbp, lgp, mip, tstatus);
 
 	while(1) {
 		if(gotkillsig) {
 			free(pv);
-			mbd_exit(mbp, lgp);
+			mbd_exit(mbp, lgp, mip);
 			exit(0);
 		}
 		usleep(10000);

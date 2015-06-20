@@ -40,7 +40,7 @@ void usage(char *arg0)
 	exit(EINVAL);
 }
 
-int parse_arg(int pos, int argc, char *argv[], logging *lp)
+int parse_arg(int pos, int argc, char *argv[], logging *lp, mbdinfo *mip)
 {
 	char *arg;
 	int numchars;
@@ -67,10 +67,10 @@ int parse_arg(int pos, int argc, char *argv[], logging *lp)
 				break;
 			}
 
-			strncpy(lp->conffile, argv[pos + 1], sizeof(lp->conffile));
+			strncpy(mip->conffile, argv[pos + 1], sizeof(mip->conffile));
 			ret = 2;
 		} else if (arg[i] == 'f') {
-			lp->shouldfork = 0;
+			mip->shouldfork = 0;
 			ret = 1;
 		} else {
 			ret = 0;
@@ -81,7 +81,7 @@ int parse_arg(int pos, int argc, char *argv[], logging *lp)
 	return ret;
 }
 
-void parse_args(int argc, char *argv[], logging *lp)
+void parse_args(int argc, char *argv[], logging *lp, mbdinfo *mip)
 {
 	int argpos;
 	int ret;
@@ -89,7 +89,7 @@ void parse_args(int argc, char *argv[], logging *lp)
 	argpos = 1;
 
 	while (argpos < argc) {
-		ret = parse_arg(argpos, argc, argv, lp);
+		ret = parse_arg(argpos, argc, argv, lp, mip);
 
 		if (ret < 1)
 			usage(argv[0]);

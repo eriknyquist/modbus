@@ -62,16 +62,19 @@ typedef struct logging
         char logfile[MAX_PATH_LEN];
         char errfile[MAX_PATH_LEN];
 	short verbosity;
+	
+} logging;
 
-	/* TODO: create 'mbdinfo' struct for this stuff */
+typedef struct mbdinfo
+{
         unsigned long pid;
 	char conffile[MAX_PATH_LEN];
         char uuid[38];
         char dname[32];
 	char uuidfile[MAX_PATH_LEN];
 	int shouldfork;
-	
-} logging;
+
+} mbdinfo;
 
 typedef struct element
 {
