@@ -77,11 +77,8 @@ void mbd_tick(void)
 	int ret;
 
 	ret = mbd_read(mbp, pv, lgp, mip);
-	if (ret == 0) {
+	if (ret == 0)
 		write_registers_tofile(mbp, pv, lgp, mip);
-	} else {
-		printf("NOT WRITING SENSOR DATA!!!\n");
-	}
 }
 
 int main (int argc, char *argv[])
