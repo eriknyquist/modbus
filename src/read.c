@@ -32,7 +32,7 @@
 
 int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
-	int ret = 1;
+	int ret = 0;
 	int i;
 #ifndef NOMODBUS
 	int n;
@@ -56,11 +56,11 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 
 			mp->retries++;
 			logger(msg, lp, mip);
+			ret = 1;
 		} else {
 			fatal("Unable to read modbus registers", mp, lp, mip, errno);
 		}
 	} else {
-		ret = 0;
 		if (mp->retries != 0)
 			mp->retries = 0;
 	}

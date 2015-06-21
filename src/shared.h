@@ -48,10 +48,10 @@ typedef struct mbdport
         modbus_t *port;
         char port_name[128];
 	uint16_t *inputs_raw;
-        int rtu_baud;
-        int station_id;
-        int read_base;
-        int read_count;
+        unsigned int rtu_baud;
+        unsigned int station_id;
+        unsigned int read_base;
+        unsigned int read_count;
 	unsigned int retries;
 	unsigned int maxretries;
         unsigned long msecs;

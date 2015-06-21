@@ -61,7 +61,7 @@ uint8_t is_id (char c)
 
 uint8_t is_dec (char c)
 {
-	return ((c <= '9' && c >= '0') || (c == '.')) ? 1 : 0 ;
+	return (c <= '9' && c >= '0') ? 1 : 0 ;
 }
 
 uint8_t is_whitespace (char c)
@@ -100,33 +100,44 @@ void doubleassn (char *id)
 	exit(EINVAL);
 }
 
-void convert_and_assign_msecs(mbdport *mp, char *value)
+int only_has_digits(char *s)
+{
+	while (*s) {
+		if (is_dec(*s++) == 0) return 0;
+	}
+
+	return 1;
+}
+
+void convert_and_assign_ul(unsigned long *dest, char *source,
+                           const char *conf_id, unsigned long min)
 {
 	int saved_err;
 	errno = 0;
-	mp->msecs = strtoul(value, NULL, 10);
+	*dest = strtoul(source, NULL, 10);
 
-	if (errno != 0) {
+	if (!only_has_digits(source) || errno != 0) {
 		saved_err = errno;
-		fprintf(stderr, "%s : Please enter a number between %d and %lu\n",
-			CONF_ID_INTERVAL,
-			INTERVAL_MSECS_MIN,
+		fprintf(stderr, "%s : Please enter a number between %lu and %lu\n",
+			conf_id,
+			min,
 			ULONG_MAX);
 		exit(saved_err);
 	}	
 }
 
-void convert_and_assign_retries(mbdport *mp, char *value)
+void convert_and_assign_uint(unsigned int *dest, char *source,
+                             const char *conf_id, unsigned int min)
 {
 	int saved_err;
 	errno = 0;
-	mp->maxretries = (unsigned int) strtoul(value, NULL, 10);
+	*dest = (unsigned int) strtoul(source, NULL, 10);
 
-	if (errno != 0) {
+	if (!only_has_digits(source) || errno != 0) {
 		saved_err = errno;
-		fprintf(stderr, "%s : Please enter a number between %d and %u\n",
-			CONF_ID_RETRIES,
-			0, UINT_MAX);
+		fprintf(stderr, "%s : Please enter a number between %u and %u\n",
+			conf_id,
+			min, UINT_MAX);
 		exit(saved_err);
 	}
 }
@@ -135,17 +146,17 @@ void assign (char *param, char *value, mbdport *mp, logging *lp,
              mbdinfo *mip)
 {
 	if (strcmp(param, CONF_ID_BAUD) == 0) {
-		mp->rtu_baud = atoi(value);
+		convert_and_assign_uint(&mp->rtu_baud, value, CONF_ID_BAUD, 300);
 	} else if (strcmp(param, CONF_ID_STATION_ID) == 0) {
-		mp->station_id = atoi(value);
+		convert_and_assign_uint(&mp->station_id, value, CONF_ID_STATION_ID, 0);
 	} else if (strcmp(param, CONF_ID_READ_BASE) == 0) {
-		mp->read_base = atoi(value);
+		convert_and_assign_uint(&mp->read_base, value, CONF_ID_READ_BASE, 0);
 	} else if (strcmp(param, CONF_ID_READ_COUNT) == 0) {
-		mp->read_count = atoi(value);
+		convert_and_assign_uint(&mp->read_count, value, CONF_ID_READ_COUNT, 1);
 	} else if (strcmp(param, CONF_ID_INTERVAL) == 0) {
-		convert_and_assign_msecs(mp, value);
+		convert_and_assign_ul(&mp->msecs, value, CONF_ID_INTERVAL, 10);
 	} else if (strcmp(param, CONF_ID_RETRIES) == 0) {
-		convert_and_assign_retries(mp, value);
+		convert_and_assign_uint(&mp->retries, value, CONF_ID_RETRIES, 0);
 	} else if (strcmp(param, CONF_ID_MODBUS_PORT) == 0) {
 		strncpy(mp->port_name, value, sizeof(mp->port_name));
 	} else if (strcmp(param, CONF_ID_LOGPATH) == 0) {
@@ -384,36 +395,13 @@ void parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip)
 				idbufpos++;
 			} else if (c == '=') {
 				idbuf[idbufpos] = '\0';
-				state = (strcmp(idbuf, CONF_ID_MODBUS_PORT) == 0
-					|| strcmp(idbuf, CONF_ID_LOGPATH) == 0
-					|| strcmp(idbuf, CONF_ID_UUIDPATH) == 0
-					|| strcmp(idbuf, CONF_ID_SENSORLOGPATH) == 0)
-					? 4 : 2;
+				state = 2;
 			} else {
 				syntaxerr(c);
 			}
 
 			break;
 		case 2:
-			if (is_dec(c)) {
-				valbuf[valbufpos] = c;
-				valbufpos++;
-			} else if (c == ',') {
-				valbuf[valbufpos] = '\0';
-				assign(idbuf, valbuf, mp, lp, mip);
-				state = 0;
-				idbufpos = 0;
-				valbufpos = 0;
-			} else if (! is_whitespace(c)) {
-				syntaxerr(c);
-			}
-
-			break;
-		case 3:
-			if (c == '\n')
-				state = 0;
-			break;
-		case 4:
 			if (c == ',') {
 				valbuf[valbufpos] = '\0';
 				assign(idbuf, valbuf, mp, lp, mip);
@@ -425,6 +413,10 @@ void parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip)
 				valbufpos++;
 			}
 
+			break;
+		case 3:
+			if (c == '\n')
+				state = 0;
 			break;
 		}
 		column++;
