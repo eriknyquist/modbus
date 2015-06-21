@@ -33,18 +33,19 @@
 int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
 	int ret;
-	int increment;
 	int i;
-	int n;
+	int n = 1;
 
 	ret = 0;
-	increment = (mp->retries >= 0) ? 1 : 0;
 #ifndef NOMODBUS
 
 	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count,
 	                          mp->inputs_raw);
 
 	if (n <= 0) {
+		int increment;
+		increment = (mp->retries >= 0) ? 1 : 0;
+
 		if (mp->retries <= mp->maxretries) {
 			char msg[80];
 
@@ -68,23 +69,23 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 		pv[i].value_scaled = (float) mp->inputs_raw[i] * pv[i].scale;
 	}
 
-#ifdef DEBUG
-	if (mp->readcount > 0) {
-		for (i = 0; i < mp->read_count + 4; i++)
-			printf(CLRLINE);	
-	} else {
+	if (mip->monitor && n > 0) {
+		if (mp->readcount > 0) {
+			for (i = 0; i < mp->read_count + 4; i++)
+				printf(CLRLINE);	
+		} else {
+			printf("\n");
+			printf("%-16s%-16s%-16s%-16s\n", "ID", "Tag", "Raw value", "Scaled value");
+		}
+
 		printf("\n");
-		printf("%-16s%-16s%-16s%-16s\n", "ID", "Tag", "Raw value", "Scaled value");
-	}
+		for (i = 0; i < mp->read_count; i++) {
+			printf("%-16s%-16s%-1s%-16x%-15.2f\n", pv[i].id, pv[i].tag,
+			       "0x", pv[i].value_raw, pv[i].value_scaled);
+		}
 
-	printf("\n");
-	for (i = 0; i < mp->read_count; i++) {
-		printf("%-16s%-16s%-1s%-16x%-15.2f\n", pv[i].id, pv[i].tag,
-		       "0x", pv[i].value_raw, pv[i].value_scaled);
+		printf("\nread number : %lld\n\n", mp->readcount);
 	}
-
-	printf("\nread number : %lld\n\n", mp->readcount);
-#endif
 
 	mp->readcount++;
 

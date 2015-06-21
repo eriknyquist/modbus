@@ -60,6 +60,7 @@ logging loginfo = {
 mbdinfo minfo = {
 	.uuidfile =     {DEFAULT_UUID_FILE},
 	.conffile =     {DEFAULT_CONF_FILE},
+	.monitor =      DEFAULT_MONITOR,
 	.shouldfork =   DEFAULT_SHOULDFORK
 };
 
@@ -77,7 +78,7 @@ void mbd_tick(void)
 	int ret;
 
 	ret = mbd_read(mbp, pv, lgp, mip);
-	if (ret == 0)
+	if (!mip->monitor && ret == 0)
 		write_registers_tofile(mbp, pv, lgp, mip);
 }
 

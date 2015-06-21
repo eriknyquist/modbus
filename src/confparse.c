@@ -191,7 +191,7 @@ void assign (char *param, char *value, mbdport *mp, logging *lp,
 
 	paramcount++;
 
-	if (lp->verbosity == LOG_VERBOSE) {
+	if (lp->verbosity != LOG_QUIET) {
 		char msg[MAX_LOG_LEN];
 		snprintf(msg, sizeof(msg), "%s set to '%s'", param, value);
 		logger(msg, lp, mip);

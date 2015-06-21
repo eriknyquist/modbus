@@ -40,6 +40,7 @@
 #define DEFAULT_READ_COUNT    1
 #define DEFAULT_MSECS         2000
 #define DEFAULT_MAX_RETRIES   10
+#define DEFAULT_MONITOR       0
 
 #define DEFAULT_VERBOSITY     LOG_NORMAL
 
@@ -72,6 +73,7 @@ typedef struct logging
 typedef struct mbdinfo
 {
         unsigned long pid;
+	unsigned short monitor;
 	char conffile[MAX_PATH_LEN];
         char uuid[38];
         char dname[32];

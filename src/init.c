@@ -190,7 +190,7 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 	get_modbus_params(mp, lp, mip);
 
 	/* initialisation for daemon logging */
-	if (lp->verbosity != LOG_QUIET)
+	if (!mip->monitor && lp->verbosity != LOG_QUIET)
 		log_init(lp, mip);
 
 	inputs_raw_size = mp->read_count * sizeof(uint16_t);

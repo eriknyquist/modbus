@@ -25,14 +25,17 @@
 
 void usage(char *arg0)
 {
-	printf("\nUsage: %s [-vqf -c <file>]\n\n", arg0);
+	printf("\nUsage: %s [-vqmf -c <file>]\n\n", arg0);
 	printf("-v         verbose    - record all modbus activity in logfiles\n");
 	printf("                        (default is to log start/stop times, configuration\n");
-	printf("                        data and errors.)\n");
+	printf("                        data and errors.)\n\n");
 	printf("-q         quiet      - don't create any logfiles or print to stdout\n");
-	printf("                        (with the exception of sensor logfiles)\n");
+	printf("                        (with the exception of sensor logfiles)\n\n");
+	printf("-m         monitor    - Don't log any daemon activity or modbus reads,\n");
+	printf("                        stay in the foreground, and dump all modbus\n");
+	printf("                        register data to stdout\n\n");
 	printf("-c <file>  conf file  - read configuration from <file>\n");
-	printf("                        (default is " DEFAULT_CONF_FILE ")\n");
+	printf("                        (default is " DEFAULT_CONF_FILE ")\n\n");
 	printf("-f         don't fork - don't run as a forked child process.\n");
 	printf("                        (program stays in the foreground, and can be\n");
 	printf("                        killed with Ctrl-C)\n");
@@ -71,6 +74,11 @@ int parse_arg(int pos, int argc, char *argv[], logging *lp, mbdinfo *mip)
 			ret = 2;
 		} else if (arg[i] == 'f') {
 			mip->shouldfork = 0;
+			ret = 1;
+		} else if (arg[i] == 'm') {
+			mip->shouldfork = 0;
+			lp->verbosity = LOG_QUIET;
+			mip->monitor = 1;
 			ret = 1;
 		} else {
 			ret = 0;
