@@ -40,6 +40,7 @@
 #define CONF_ID_SENSORLOGPATH   "sensor_log_directory"
 #define CONF_ID_TAG             "tag"
 #define CONF_ID_SCALE           "scale"
+#define CONF_RETRIES_INFINITY   "infinity"
 
 #define MAX_PARAM_LEN           80
 #define MAX_ID_LEN              80
@@ -109,7 +110,7 @@ int only_has_digits(char *s)
 	return 1;
 }
 
-void convert_and_assign_ul(unsigned long *dest, char *source,
+void convert_assign_ul(unsigned long *dest, char *source,
                            const char *conf_id, unsigned long min)
 {
 	int saved_err;
@@ -126,7 +127,7 @@ void convert_and_assign_ul(unsigned long *dest, char *source,
 	}	
 }
 
-void convert_and_assign_uint(unsigned int *dest, char *source,
+void convert_assign_uint(unsigned int *dest, char *source,
                              const char *conf_id, unsigned int min)
 {
 	int saved_err;
@@ -142,21 +143,40 @@ void convert_and_assign_uint(unsigned int *dest, char *source,
 	}
 }
 
+void convert_assign_retries(int *dest, char *source)
+{
+	int saved_err;
+
+	if (strcmp(source, CONF_RETRIES_INFINITY) == 0) {
+		*dest = -1;
+	} else {
+		errno = 0;
+		*dest = (int) strtol(source, NULL, 10);
+
+		if (!only_has_digits(source) || errno != 0) {
+			saved_err = errno;
+			fprintf(stderr, "%s : Please enter a number between %u and %u, or '%s'\n",
+			        CONF_ID_RETRIES, 0, INT_MAX, CONF_RETRIES_INFINITY);
+			exit(saved_err);
+		}
+	}
+}
+
 void assign (char *param, char *value, mbdport *mp, logging *lp,
              mbdinfo *mip)
 {
 	if (strcmp(param, CONF_ID_BAUD) == 0) {
-		convert_and_assign_uint(&mp->rtu_baud, value, CONF_ID_BAUD, 300);
+		convert_assign_uint(&mp->rtu_baud, value, CONF_ID_BAUD, 300);
 	} else if (strcmp(param, CONF_ID_STATION_ID) == 0) {
-		convert_and_assign_uint(&mp->station_id, value, CONF_ID_STATION_ID, 0);
+		convert_assign_uint(&mp->station_id, value, CONF_ID_STATION_ID, 0);
 	} else if (strcmp(param, CONF_ID_READ_BASE) == 0) {
-		convert_and_assign_uint(&mp->read_base, value, CONF_ID_READ_BASE, 0);
+		convert_assign_uint(&mp->read_base, value, CONF_ID_READ_BASE, 0);
 	} else if (strcmp(param, CONF_ID_READ_COUNT) == 0) {
-		convert_and_assign_uint(&mp->read_count, value, CONF_ID_READ_COUNT, 1);
+		convert_assign_uint(&mp->read_count, value, CONF_ID_READ_COUNT, 1);
 	} else if (strcmp(param, CONF_ID_INTERVAL) == 0) {
-		convert_and_assign_ul(&mp->msecs, value, CONF_ID_INTERVAL, 10);
+		convert_assign_ul(&mp->msecs, value, CONF_ID_INTERVAL, 10);
 	} else if (strcmp(param, CONF_ID_RETRIES) == 0) {
-		convert_and_assign_uint(&mp->retries, value, CONF_ID_RETRIES, 0);
+		convert_assign_retries(&mp->maxretries, value);
 	} else if (strcmp(param, CONF_ID_MODBUS_PORT) == 0) {
 		strncpy(mp->port_name, value, sizeof(mp->port_name));
 	} else if (strcmp(param, CONF_ID_LOGPATH) == 0) {

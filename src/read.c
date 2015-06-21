@@ -32,17 +32,14 @@
 
 int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
-	int ret = 0;
+	int ret;
+	int increment;
 	int i;
-#ifndef NOMODBUS
 	int n;
 
-	if (lp->verbosity == LOG_VERBOSE) {
-		char msg[MAX_LOG_LEN];
-		snprintf(msg, sizeof(msg), "reading modbus registers %d to %d from '%s'",
-			mp->read_base, mp->read_base + mp->read_count, mp->port_name);
-		logger(msg, lp, mip);
-	}
+	ret = 0;
+	increment = (mp->retries >= 0) ? 1 : 0;
+#ifndef NOMODBUS
 
 	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count,
 	                          mp->inputs_raw);
@@ -54,7 +51,7 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 			snprintf(msg, sizeof(msg), mp->retries > 0 ?
 			         "retrying..." : "reading modbus registers failed");
 
-			mp->retries++;
+			mp->retries += increment;
 			logger(msg, lp, mip);
 			ret = 1;
 		} else {

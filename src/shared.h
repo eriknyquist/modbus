@@ -52,10 +52,10 @@ typedef struct mbdport
         unsigned int station_id;
         unsigned int read_base;
         unsigned int read_count;
-	unsigned int retries;
-	unsigned int maxretries;
         unsigned long msecs;
 	unsigned long long readcount;
+	unsigned int retries;
+	int maxretries;
 
 } mbdport;
 
