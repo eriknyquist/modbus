@@ -30,6 +30,7 @@
 #define SENSOR_READING_HEADER   "<D>,SEC:PUBLIC"
 #define CLRLINE                 "\033[1A\033[2K"
 
+/* mbd_read */
 int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
 	int ret;
@@ -39,27 +40,38 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	ret = 0;
 #ifndef NOMODBUS
 
+	/* try to perform a read */
 	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count,
 	                          mp->inputs_raw);
 
 	if (n <= 0) {
-		int increment;
-		increment = (mp->retries >= 0) ? 1 : 0;
 
-		if (mp->retries <= mp->maxretries) {
+		/* log the failure and start incrementing the retry counter */
+		if (mp->maxretries < 0 || mp->retries <= mp->maxretries) {
 			char msg[80];
 
 			snprintf(msg, sizeof(msg), mp->retries > 0 ?
-			         "retrying..." : "reading modbus registers failed");
+			         "retrying..." : "reading modbus registers "
+			         "failed");
 
-			mp->retries += increment;
+			/* if the number of retries is set to 'infinity', only
+			 * increment the retry counter once, and no more. */
+			if (mp->maxretries >= 0 || mp->retries == 0)
+				mp->retries++;
+
 			logger(msg, lp, mip);
 			ret = 1;
 		} else {
-			fatal("Unable to read modbus registers", mp, lp, mip, errno);
+
+			/* retries finished- abort. */
+			fatal("Unable to read modbus registers", mp, lp, mip,
+			      errno);
 		}
 	} else {
 		if (mp->retries != 0)
+
+			/* recovery- reset the
+			 * retry counter */
 			mp->retries = 0;
 	}
 #endif
@@ -70,18 +82,22 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	}
 
 	if (mip->monitor && n > 0) {
+
+		/* monitor mode: pretty-print modbus register data */
 		if (mp->readcount > 0) {
 			for (i = 0; i < mp->read_count + 4; i++)
 				printf(CLRLINE);	
 		} else {
 			printf("\n");
-			printf("%-16s%-16s%-16s%-16s\n", "ID", "Tag", "Raw value", "Scaled value");
+			printf("%-16s%-16s%-16s%-16s\n", "ID", "Tag",
+			       "Raw value", "Scaled value");
 		}
 
 		printf("\n");
 		for (i = 0; i < mp->read_count; i++) {
-			printf("%-16s%-16s%-1s%-16x%-15.2f\n", pv[i].id, pv[i].tag,
-			       "0x", pv[i].value_raw, pv[i].value_scaled);
+			printf("%-16s%-16s%-1s%-16x%-15.2f\n", pv[i].id,
+			       pv[i].tag, "0x", pv[i].value_raw,
+			       pv[i].value_scaled);
 		}
 
 		printf("\nread number : %lld\n\n", mp->readcount);
@@ -111,13 +127,15 @@ void write_registers_tofile(mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	char logpath[MAX_PATH_LEN];
 
 	logfilename = gen_filename(mip->uuid);
-	snprintf(logpath, sizeof(logpath), "%s/%s", lp->sens_logdir, logfilename);
+	snprintf(logpath, sizeof(logpath), "%s/%s", lp->sens_logdir,
+	         logfilename);
 
 	if (lp->verbosity == LOG_VERBOSE)
 		logger("writing to sensor log directory", lp, mip);
 
 	if ((fp = fopen(logpath, "w")) == NULL)
-		err("can't open sensor log directory to write data", lp, mip, errno);
+		err("can't open sensor log directory to write data", lp, mip,
+		    errno);
 
 	for (j = 0; j < mp->read_count; j++) {
 		int ix = posmatch(j, 0, mp->read_count, pv);
