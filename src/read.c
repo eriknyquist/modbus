@@ -89,13 +89,13 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 				printf(CLRLINE);	
 		} else {
 			printf("\n");
-			printf("%-16s%-16s%-16s%-16s\n", "ID", "Tag",
+			printf("%-18s%-30s%-18s%-8s\n", "ID", "Tag",
 			       "Raw value", "Scaled value");
 		}
 
 		printf("\n");
 		for (i = 0; i < mp->read_count; i++) {
-			printf("%-16s%-16s%-1s%-16x%-15.2f\n", pv[i].id,
+			printf("%-18s%-30s%-1s%-18x%-8.2f\n", pv[i].id,
 			       pv[i].tag, "0x", pv[i].value_raw,
 			       pv[i].value_scaled);
 		}
