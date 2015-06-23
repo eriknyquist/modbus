@@ -70,7 +70,8 @@ int parse_arg(int pos, int argc, char *argv[], logging *lp, mbdinfo *mip)
 				break;
 			}
 
-			strncpy(mip->conffile, argv[pos + 1], sizeof(mip->conffile));
+			strncpy(mip->conffile, argv[pos + 1],
+			        sizeof(mip->conffile));
 			ret = 2;
 		} else if (arg[i] == 'f') {
 			mip->shouldfork = 0;

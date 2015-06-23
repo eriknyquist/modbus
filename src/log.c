@@ -28,8 +28,8 @@ void err (char *errstr, logging *lp, mbdinfo *mip, int err)
 	char msg[MAX_LOG_LEN];
 	FILE *fp;
 
-	snprintf(msg, sizeof(msg), "[%s][%s.%ld] error: %s-- %s",
-			timestamp(), mip->dname, mip->pid, errstr, strerror(err));
+	snprintf(msg, sizeof(msg), "[%s][%s.%ld] error: %s-- %s", timestamp(),
+	         mip->dname, mip->pid, errstr, strerror(err));
 
 	/* if log location not defined or inaccessible, print to stderr */
 	if (strlen(lp->logdir) == 0 || (fp = fopen(lp->errfile, "a")) == NULL) {

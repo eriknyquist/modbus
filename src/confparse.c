@@ -73,8 +73,9 @@ uint8_t is_whitespace (char c)
 
 void syntaxerr (char c)
 {
-	fprintf(stderr, "Syntax error '%c' in configuration file, line %d, column %d\n",
-		c, line, column);
+	fprintf(stderr,
+	        "Syntax error '%c' in configuration file, line %d, column %d\n",
+	        c, line, column);
 	exit(EINVAL);
 }
 
@@ -111,7 +112,7 @@ int only_has_digits(char *s)
 }
 
 void convert_assign_ul(unsigned long *dest, char *source,
-                           const char *conf_id, unsigned long min)
+                       const char *conf_id, unsigned long min)
 {
 	int saved_err;
 	errno = 0;
@@ -119,10 +120,9 @@ void convert_assign_ul(unsigned long *dest, char *source,
 
 	if (!only_has_digits(source) || errno != 0) {
 		saved_err = errno;
-		fprintf(stderr, "%s : Please enter a number between %lu and %lu\n",
-			conf_id,
-			min,
-			ULONG_MAX);
+		fprintf(stderr,
+		        "%s : Please enter a number between %lu and %lu\n",
+		        conf_id, min, ULONG_MAX);
 		exit(saved_err);
 	}	
 }
@@ -136,9 +136,9 @@ void convert_assign_uint(unsigned int *dest, char *source,
 
 	if (!only_has_digits(source) || errno != 0) {
 		saved_err = errno;
-		fprintf(stderr, "%s : Please enter a number between %u and %u\n",
-			conf_id,
-			min, UINT_MAX);
+		fprintf(stderr,
+		        "%s : Please enter a number between %u and %u\n",
+		        conf_id, min, UINT_MAX);
 		exit(saved_err);
 	}
 }
@@ -155,8 +155,10 @@ void convert_assign_retries(int *dest, char *source)
 
 		if (!only_has_digits(source) || errno != 0) {
 			saved_err = errno;
-			fprintf(stderr, "%s : Please enter a number between %u and %u, or '%s'\n",
-			        CONF_ID_RETRIES, 0, INT_MAX, CONF_RETRIES_INFINITY);
+			fprintf(stderr,
+			        "%s : Please enter a number between %u and %u,"
+			        " or '%s'\n", CONF_ID_RETRIES, 0, INT_MAX,
+			        CONF_RETRIES_INFINITY);
 			exit(saved_err);
 		}
 	}

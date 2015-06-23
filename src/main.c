@@ -36,32 +36,32 @@
 volatile int gotkillsig = 0;
 char *dname;
 
-/* this is where mbd_read will put scaled 
+/* this is where mbd_read will put scaled
  * register reads. */
 element *pv;
 
 mbdport mbport = {
-	.rtu_baud =     DEFAULT_BAUD,
-	.station_id =   DEFAULT_STATION_ID,
-	.read_base =    DEFAULT_READ_BASE,
-	.read_count =   DEFAULT_READ_COUNT,
-	.msecs =        DEFAULT_MSECS,
-	.port_name =    {DEFAULT_PORT_NAME},
-	.maxretries =   DEFAULT_MAX_RETRIES,
-	.retries =      0
+	.rtu_baud =        DEFAULT_BAUD,
+	.station_id =      DEFAULT_STATION_ID,
+	.read_base =       DEFAULT_READ_BASE,
+	.read_count =      DEFAULT_READ_COUNT,
+	.msecs =           DEFAULT_MSECS,
+	.port_name =       {DEFAULT_PORT_NAME},
+	.maxretries =      DEFAULT_MAX_RETRIES,
+	.retries =         0
 };
 
 logging loginfo = {
-	.verbosity =    DEFAULT_VERBOSITY,
-	.logdir =       {DEFAULT_LOGDIR},
-	.sens_logdir =  {DEFAULT_SENS_LOGDIR},
+	.verbosity =       DEFAULT_VERBOSITY,
+	.logdir =          {DEFAULT_LOGDIR},
+	.sens_logdir =     {DEFAULT_SENS_LOGDIR},
 };
 
 mbdinfo minfo = {
-	.uuidfile =     {DEFAULT_UUID_FILE},
-	.conffile =     {DEFAULT_CONF_FILE},
-	.monitor =      DEFAULT_MONITOR,
-	.shouldfork =   DEFAULT_SHOULDFORK
+	.uuidfile =        {DEFAULT_UUID_FILE},
+	.conffile =        {DEFAULT_CONF_FILE},
+	.monitor =         DEFAULT_MONITOR,
+	.shouldfork =      DEFAULT_SHOULDFORK
 };
 
 mbdport *mbp = &mbport;
@@ -82,7 +82,7 @@ void mbd_tick(void)
 		write_registers_tofile(mbp, pv, lgp, mip);
 }
 
-int main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	if (argc > 1)
 		parse_args(argc, argv, lgp, mip);
@@ -93,6 +93,7 @@ int main (int argc, char *argv[])
 		pid = fork();
 		if (pid < 0) {
 			int er = errno;
+
 			fprintf(stderr, "fork failed.\n");
 			exit(er);
 		}
@@ -101,7 +102,7 @@ int main (int argc, char *argv[])
 			exit(0);
 	}
 
-  	int tstatus;
+	int tstatus;
 
 	/* Catch sigint (ctrl-c) */
 	signal(SIGINT, siginthandler);
@@ -129,8 +130,8 @@ int main (int argc, char *argv[])
 	if (tstatus != 0)
 		fatal("can't create timer", mbp, lgp, mip, tstatus);
 
-	while(1) {
-		if(gotkillsig) {
+	while (1) {
+		if (gotkillsig) {
 			free(pv);
 			mbd_exit(mbp, lgp, mip);
 			exit(0);

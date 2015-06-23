@@ -31,26 +31,28 @@
 char *gen_filename (char *uuid)
 {
 	/* generates the file name for logged register reads, 
- 	 * which is comprised of a timestamp & the system's UUID */
+	 * which is comprised of a timestamp & the system's UUID */
 	char timestamp[40];
 	char *filename = malloc(80);
-        struct timeval tv;
+	struct timeval tv;
 
-        gettimeofday (&tv, NULL);
+	gettimeofday (&tv, NULL);
 
-	snprintf(timestamp, sizeof(timestamp), "%ld%ld-", tv.tv_sec, tv.tv_usec / 1000);
+	snprintf(timestamp, sizeof(timestamp), "%ld%ld-", tv.tv_sec,
+	         tv.tv_usec / 1000);
+
 	strcpy(filename, timestamp);
 	strcat(filename, uuid);
 	strcat(filename, ".log");
 
-        return filename;
+	return filename;
 }
 
 void ms_to_itimerspec(struct itimerspec *tp, unsigned long msecs)
 {
 	if (msecs < 1000) {
-		tp->it_value.tv_nsec = 
-		tp->it_interval.tv_nsec = 
+		tp->it_value.tv_nsec =
+		tp->it_interval.tv_nsec =
 		msecs * 1000000L;
 
 		tp->it_value.tv_sec = 0;
@@ -66,24 +68,24 @@ void ms_to_itimerspec(struct itimerspec *tp, unsigned long msecs)
 int create_periodic(unsigned long msecs, void (*thread))
 {
 	/* sets up the function pointed to by 'thread'
-  	 * to run every 'period' seconds, via a new thread. */
+	 * to run every 'period' seconds, via a new thread. */
 	timer_t timer_id;
-        struct itimerspec ts, *tp;
-        struct sigevent se;
+	struct itimerspec ts, *tp;
+	struct sigevent se;
 
 	tp = &ts;
 
-        se.sigev_notify = SIGEV_THREAD;
-        se.sigev_value.sival_ptr = &timer_id;
-        se.sigev_notify_function = thread;
-        se.sigev_notify_attributes = NULL;
+	se.sigev_notify = SIGEV_THREAD;
+	se.sigev_value.sival_ptr = &timer_id;
+	se.sigev_notify_function = thread;
+	se.sigev_notify_attributes = NULL;
 
 	ms_to_itimerspec(tp, msecs);
 	
-        if (timer_create(CLOCK_MONOTONIC, &se, &timer_id) == -1)
-                return errno;
+	if (timer_create(CLOCK_MONOTONIC, &se, &timer_id) == -1)
+		return errno;
 
-        if (timer_settime(timer_id, 0, tp, 0) == -1)
+	if (timer_settime(timer_id, 0, tp, 0) == -1)
 		return errno;
 
 	return 0;
@@ -92,7 +94,7 @@ int create_periodic(unsigned long msecs, void (*thread))
 char *timestamp()
 {
 	/* plain-text calendar timestamp.
- 	 * used for logging. */
+	 * used for logging. */
 	time_t rawtime;
 	struct tm *info;
 

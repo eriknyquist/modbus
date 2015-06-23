@@ -46,12 +46,15 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 
 	if (n <= 0) {
 
+		/* save the error state */
+		int saved_err = errno;
+
 		/* log the failure and start incrementing the retry counter */
 		if (mp->maxretries < 0 || mp->retries <= mp->maxretries) {
 			char msg[80];
 
 			snprintf(msg, sizeof(msg), mp->retries > 0 ?
-			         "retrying..." : "reading modbus registers "
+			         "retrying" : "reading modbus registers "
 			         "failed");
 
 			/* if the number of retries is set to 'infinity', only
@@ -59,13 +62,13 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 			if (mp->maxretries >= 0 || mp->retries == 0)
 				mp->retries++;
 
-			logger(msg, lp, mip);
+			err(msg, lp, mip, saved_err);
 			ret = 1;
 		} else {
 
 			/* retries finished- abort. */
 			fatal("Unable to read modbus registers", mp, lp, mip,
-			      errno);
+			      saved_err);
 		}
 	} else {
 		if (mp->retries != 0)
@@ -122,7 +125,9 @@ int posmatch (int maj, int min, int read_count, element *pv)
 void write_registers_tofile(mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
 	FILE *fp;
-	int i, j;
+	int i;
+	int j;
+	int saved_err;
 	char *logfilename;
 	char logpath[MAX_PATH_LEN];
 
@@ -133,9 +138,12 @@ void write_registers_tofile(mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	if (lp->verbosity == LOG_VERBOSE)
 		logger("writing to sensor log directory", lp, mip);
 
-	if ((fp = fopen(logpath, "w")) == NULL)
+	if ((fp = fopen(logpath, "w")) == NULL) {
+		saved_err = errno;
+
 		err("can't open sensor log directory to write data", lp, mip,
-		    errno);
+		    saved_err);
+	}
 
 	for (j = 0; j < mp->read_count; j++) {
 		int ix = posmatch(j, 0, mp->read_count, pv);

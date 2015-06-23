@@ -35,29 +35,31 @@
 #define MB_PARITY         'N'
 
 int paramcount;
-int er;
 
 double delaytime;
-static FILE *fp = NULL;
+static FILE *fp;
 
 void get_modbus_params(mbdport *mp, logging *lp, mbdinfo *mip)
 {
-        if (access(mip->conffile, F_OK) != 0 && lp->verbosity != LOG_QUIET) {
-		logger("Configuration file inaccessible. Using defaults.", lp, mip);
-        } else {
-                if ((fp = fopen(mip->conffile, "r")) == NULL) {
+	if (access(mip->conffile, F_OK) != 0 && lp->verbosity != LOG_QUIET) {
+		logger("Configuration file inaccessible. Using defaults.",
+		       lp, mip);
+	} else {
+		if ((fp = fopen(mip->conffile, "r")) == NULL) {
+			int saved_err = errno;
+
 			if (lp->verbosity != LOG_QUIET) {
-                        	fprintf(stderr, "Error opening '%s' for "
-				                "reading:\n%s\n", mip->conffile,
-				                strerror(errno));
+				fprintf(stderr, "Error opening '%s' for "
+				        "reading:\n%s\n", mip->conffile,
+				        strerror(saved_err));
 			}
 
-                        exit(ENOENT);
-                }
+			exit(ENOENT);
+		}
 
 		/* parse 1st section of conf file, i.e. modbus parameters */
-                parse_modbus_params(fp, mp, lp, mip);
-        }
+		parse_modbus_params(fp, mp, lp, mip);
+	}
 }
 
 void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
@@ -65,9 +67,13 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	int i;
 
 	for (i = 0; i < mp->read_count; i++) {
-		if (fp == NULL || feof(fp) || get_next_regparam(fp, &(pv[i])) == EOF) {
-			snprintf(pv[i].tag, sizeof(pv[i].tag), "SENS_REG_%d", i + mp->read_base);
-			snprintf(pv[i].id, sizeof(pv[i].id), "reg%d", i + mp->read_base);
+		if (fp == NULL || feof(fp) ||
+		    get_next_regparam(fp, &(pv[i])) == EOF) {
+
+			snprintf(pv[i].tag, sizeof(pv[i].tag), "SENS_REG_%d",
+			         i + mp->read_base);
+			snprintf(pv[i].id, sizeof(pv[i].id), "reg%d",
+			         i + mp->read_base);
 			pv[i].scale = 1;
 			pv[i].major = 0;
 			pv[i].minor = i;
@@ -79,7 +85,7 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 
 	if (!feof(fp)) {
 		/* figure out the order in which readings should be
-  		 * arranged in the logging of register data */
+		 * arranged in the logging of register data */
 		parse_order(fp, pv, mp);
 	}
 
@@ -90,7 +96,8 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 		for (i = 0; i < mp->read_count; i++) {
 			int msglen = 30 + strlen(pv[i].id) + strlen(pv[i].tag);
 			char msg[msglen];
-			snprintf(msg, msglen, "register #%d; id=\"%s\", tag=\"%s\"",
+			snprintf(msg, msglen,
+			         "register #%d; id=\"%s\", tag=\"%s\"",
 			         mp->read_base + i, pv[i].id, pv[i].tag);
 			logger(msg, lp, mip);
 		}
@@ -103,58 +110,62 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
  * on a VM. Remove before submission. */
 #ifndef NOMODBUS
 
+	int saved_err;
+
 	/* configure modbus port settings & create modbus context */
 
 	if (access(mp->port_name, F_OK) != 0) {
-		er = errno;
+		saved_err = errno;
 		if (lp->verbosity != LOG_QUIET) {
 			fprintf(stderr, "Error accessing '%s':\n%s\n",
-		                        mp->port_name, strerror(errno));
+		                        mp->port_name, strerror(saved_err));
 		}
 
-		exit(er);
+		exit(saved_err);
 	}
 
 	mp->port = modbus_new_rtu(mp->port_name, mp->rtu_baud, MB_PARITY,
 	                          MB_DATABITS, MB_STOPBITS);
 
 	if (mp->port == NULL) {
-		er = errno;
+		saved_err = errno;
 		if (lp->verbosity != LOG_QUIET) {
 			fprintf(stderr, "Unable to create the libmodbus "
 			                "context on serial port %s\n%s\n",
-		                        mp->port_name, strerror(errno));
+		                        mp->port_name, strerror(saved_err));
 		}
 
-		exit(er);
+		exit(saved_err);
 	}
 
 	if (modbus_set_slave(mp->port, mp->station_id)) {
-		er = errno;
+		saved_err = errno;
 		if (lp->verbosity != LOG_QUIET)
 			fprintf(stderr, "Failed to set modbus slave address");
 
-		exit(er);
+		exit(saved_err);
 	}
 
 	if (modbus_connect(mp->port)) {
-		er = errno;
+		saved_err = errno;
 		if (lp->verbosity != LOG_QUIET)
 			fprintf(stderr, "Unable to connect to modbus server");
 
-		exit(er);
+		exit(saved_err);
 	}
 #endif
 }
 
 void ile_aip_init(logging *lp, mbdinfo *mip)
 {
+	int saved_err;
 	FILE *fp;
 
 	if ((fp = fopen(mip->uuidfile, "r")) == NULL) {
+		saved_err = errno;
 		fprintf(stderr, "Failed to open UUID file %s:\n%s\n",
-		                mip->uuidfile, strerror(errno));
-		exit(errno);
+		                mip->uuidfile, strerror(saved_err));
+		exit(saved_err);
 	}
 
 	fgets(mip->uuid, UUID_LENGTH, fp);
@@ -167,9 +178,10 @@ void ile_aip_init(logging *lp, mbdinfo *mip)
 	}
 
 	if (access(lp->sens_logdir, F_OK) != 0) {
+		saved_err = errno;
 		fprintf(stderr, "Error accessing '%s':\n%s\n", lp->sens_logdir,
-		                strerror(errno));
-		exit(errno);
+		                strerror(saved_err));
+		exit(saved_err);
 	}
 }
 
@@ -186,7 +198,7 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 	ile_aip_init(lp, mip);
 	
 	/* read the modbus params from conf file, so we know
- 	 * how many modbus registers we're reading */
+	 * how many modbus registers we're reading */
 	get_modbus_params(mp, lp, mip);
 
 	/* initialisation for daemon logging */
@@ -212,7 +224,7 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 	memset(mp->inputs_raw, 0, mp->read_count * sizeof(uint16_t));
 
 	/* allocate space to store scaled register reads, along 
- 	 * with additional information (IDs, tags etc) */
+	 * with additional information (IDs, tags etc) */
 	inputs_scaled = malloc(inputs_scaled_size);
 
 	if (inputs_scaled == NULL) {
@@ -226,7 +238,7 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 	}
 
 	/* read the remainder of conf file, if any, and initiate
- 	 * modbus connection */
+	 * modbus connection */
 	modbus_init(mp, inputs_scaled, lp, mip);
 	return inputs_scaled;
 }
