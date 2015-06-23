@@ -77,7 +77,11 @@ void mbd_tick(void)
 {
 	int ret;
 
+	/* read modbus registers */
 	ret = mbd_read(mbp, pv, lgp, mip);
+
+	/* if read was successful, and if not in monitor
+	 * mode, write readings to sensor log file. */
 	if (!mip->monitor && ret == 0)
 		write_registers_tofile(mbp, pv, lgp, mip);
 }
@@ -131,11 +135,17 @@ int main(int argc, char *argv[])
 		fatal("can't create timer", mbp, lgp, mip, tstatus);
 
 	while (1) {
+		/* All the work is done in the mbd_tick routine, in a new
+		 * thread spawned by timer_create (called by create_periodic).
+		 * The only thing the main thread needs to do is check
+		 * for a received kill signal every 100ms, and sleep
+		 * the rest of the time. */
 		if (gotkillsig) {
 			free(pv);
 			mbd_exit(mbp, lgp, mip);
 			exit(0);
 		}
-		usleep(10000);
+
+		usleep(100000);
 	}
 }

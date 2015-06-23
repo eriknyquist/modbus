@@ -28,10 +28,10 @@
 
 #define CLOCKID CLOCK_MONOTONIC
 
+/* generates the file name for logged register reads, 
+ * which is comprised of a timestamp & the system's UUID */
 char *gen_filename (char *uuid)
 {
-	/* generates the file name for logged register reads, 
-	 * which is comprised of a timestamp & the system's UUID */
 	char timestamp[40];
 	char *filename = malloc(80);
 	struct timeval tv;
@@ -65,10 +65,10 @@ void ms_to_itimerspec(struct itimerspec *tp, unsigned long msecs)
 	}
 }
 
+/* sets up the function pointed to by 'thread'
+ * to run every 'period' seconds, via a new thread. */
 int create_periodic(unsigned long msecs, void (*thread))
 {
-	/* sets up the function pointed to by 'thread'
-	 * to run every 'period' seconds, via a new thread. */
 	timer_t timer_id;
 	struct itimerspec ts, *tp;
 	struct sigevent se;
@@ -91,10 +91,10 @@ int create_periodic(unsigned long msecs, void (*thread))
 	return 0;
 }
 
+/* plain-text calendar timestamp.
+ * used for logging. */
 char *timestamp()
 {
-	/* plain-text calendar timestamp.
-	 * used for logging. */
 	time_t rawtime;
 	struct tm *info;
 
