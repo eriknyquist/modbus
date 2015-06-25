@@ -19,10 +19,6 @@ nomodbus: pre-build
 dnomodbus: pre-build
 	$(CC) -I$(MODBUS_H) $(SRCFILES) -g -o $(BIN)/$(OUTPUT) $(CFLAGS) -D NOMODBUS
 
-# no modbus ioctls, and print to stdout
-vnomodbus: pre-build
-	$(CC) -I$(MODBUS_H) $(SRCFILES) -o $(BIN)/$(OUTPUT) $(CFLAGS) -D NOMODBUS -D DEBUG
-
 pre-build:
 	[ -d $(BIN) ] || mkdir $(BIN)
 
