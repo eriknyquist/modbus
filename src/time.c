@@ -67,7 +67,7 @@ void ms_to_itimerspec(struct itimerspec *tp, unsigned long msecs)
 
 /* sets up the function pointed to by 'thread'
  * to run every 'period' seconds, via a new thread. */
-int start_periodic_task(unsigned long msecs, void (*thread))
+int start_periodic_task(unsigned long msecs, void (*task))
 {
 	timer_t timer_id;
 	struct itimerspec ts, *tp;
@@ -77,7 +77,7 @@ int start_periodic_task(unsigned long msecs, void (*thread))
 
 	se.sigev_notify = SIGEV_THREAD;
 	se.sigev_value.sival_ptr = &timer_id;
-	se.sigev_notify_function = thread;
+	se.sigev_notify_function = task;
 	se.sigev_notify_attributes = NULL;
 
 	ms_to_itimerspec(tp, msecs);
