@@ -67,7 +67,7 @@ void ms_to_itimerspec(struct itimerspec *tp, unsigned long msecs)
 
 /* sets up the function pointed to by 'thread'
  * to run every 'period' seconds, via a new thread. */
-int create_periodic(unsigned long msecs, void (*thread))
+int start_periodic_task(unsigned long msecs, void (*thread))
 {
 	timer_t timer_id;
 	struct itimerspec ts, *tp;

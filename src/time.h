@@ -21,7 +21,7 @@
 #define TIMESTAMP_LEN 25
 
 char *gen_filename(char *uuid);
-int create_periodic(unsigned long msecs, void (*thread));
+int start_periodic_task(unsigned long msecs, void (*thread));
 char *timestamp();
 
 #endif
