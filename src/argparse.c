@@ -55,7 +55,7 @@ int parse_arg(int pos, int argc, char *argv[], logging *lp, mbdinfo *mip)
 	if (arg == NULL || strlen(arg) < 2 || arg[0] !=  '-')
 		return ret;
 
-	numchars = strlen(arg);
+	numchars = (int) strlen(arg);
 
 	for (i = 1; i < numchars; i++) {
 		if (arg[i] == 'v') {

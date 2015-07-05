@@ -54,18 +54,18 @@ char uuid[38];
 static int line = 1;
 static int column = 1;
 
-uint8_t is_id (char c)
+int is_id (char c)
 {
 	return ((c <= 'z'&& c >= 'a') || (c <= 'Z' && c >= 'A' ) ||
 		c == '_') ? 1 : 0;
 }
 
-uint8_t is_dec (char c)
+int is_dec (char c)
 {
 	return (c <= '9' && c >= '0') ? 1 : 0 ;
 }
 
-uint8_t is_whitespace (char c)
+int is_whitespace (char c)
 {
 	return (c == ' ' || c == '\t' || c == '\r' ||
 		c == '\v' || c == '\n') ? 1 : 0;
@@ -104,8 +104,14 @@ void doubleassn (char *id)
 
 int only_has_digits(char *s)
 {
-	while (*s) {
-		if (is_dec(*s++) == 0) return 0;
+	unsigned int len;
+	unsigned int i;
+
+	len = (unsigned int) strlen(s);
+
+	for (i = 0; i < len; i++) {
+		if (is_dec(s[i]) == 0)
+			return 0;
 	}
 
 	return 1;
@@ -118,7 +124,7 @@ void convert_assign_ul(unsigned long *dest, char *source,
 	errno = 0;
 	*dest = strtoul(source, NULL, 10);
 
-	if (!only_has_digits(source) || errno != 0) {
+	if (only_has_digits(source) == 0 || errno != 0) {
 		saved_err = errno;
 		fprintf(stderr,
 		        "%s : Please enter a number between %lu and %lu\n",
@@ -134,7 +140,7 @@ void convert_assign_uint(unsigned int *dest, char *source,
 	errno = 0;
 	*dest = (unsigned int) strtoul(source, NULL, 10);
 
-	if (!only_has_digits(source) || errno != 0) {
+	if (only_has_digits(source) == 0 || errno != 0) {
 		saved_err = errno;
 		fprintf(stderr,
 		        "%s : Please enter a number between %u and %u\n",
@@ -153,10 +159,10 @@ void convert_assign_retries(int *dest, char *source)
 		errno = 0;
 		*dest = (int) strtol(source, NULL, 10);
 
-		if (!only_has_digits(source) || errno != 0) {
+		if (only_has_digits(source) == 0 || errno != 0) {
 			saved_err = errno;
 			fprintf(stderr,
-			        "%s : Please enter a number between %u and %u,"
+			        "%s : Please enter a number between %d and %d,"
 			        " or '%s'\n", CONF_ID_RETRIES, 0, INT_MAX,
 			        CONF_RETRIES_INFINITY);
 			exit(saved_err);
@@ -195,7 +201,12 @@ void assign (char *param, char *value, mbdport *mp, logging *lp,
 
 	if (lp->verbosity != LOG_QUIET) {
 		char msg[MAX_LOG_LEN];
-		snprintf(msg, sizeof(msg), "%s set to '%s'", param, value);
+		int count;
+
+		count = snprintf(msg, MAX_LOG_LEN, "%s set to '%s'", param, value);
+		if (MAX_LOG_LEN <= count)
+			msg[MAX_LOG_LEN -1] = '\0';
+
 		logger(msg, lp, mip);
 	}
 }
@@ -223,31 +234,31 @@ int get_next_regparam(FILE *fp, element *e)
 
 		switch (state) {
 		case 0:
-			if (is_id(c)) {
+			if (is_id(c) == 1) {
 				e->id[idbufpos] = c;
 				idbufpos++;
 				state = 1;
 			} else if (c == '#') {
 				state = 5;
-			} else if (! is_whitespace(c)) {
+			} else if (is_whitespace(c) == 0) {
 				syntaxerr(c);
 			}
 
 			break;
 		case 1:
-			if (is_id(c)) {
+			if (is_id(c) == 1) {
 				e->id[idbufpos] = c;
 				idbufpos++;
 			} else if (c == '{') {
 				e->id[idbufpos] = '\0';
 				state = 2;
-			} else if (! is_whitespace(c)) {
+			} else if (is_whitespace(c) == 0) {
 				syntaxerr(c);
 			}
 
 			break;
 		case 2:
-			if (is_id(c)) {
+			if (is_id(c) == 1) {
 				pbuf[pbufpos] = c;
 				pbufpos++;
 			} else if (c == '=') {
@@ -260,13 +271,13 @@ int get_next_regparam(FILE *fp, element *e)
 				else
 					nosuchparam(pbuf);
 				pbufpos = 0;
-			} else if (! is_whitespace(c)) {
+			} else if (is_whitespace(c) == 0) {
 				syntaxerr(c);
 			}
 
 			break;
 		case 3:
-			if (is_id(c)) {
+			if (is_id(c) == 1) {
 				e->tag[tagpos] = c;
 					tagpos++;
 			} else if (c == ',') {
@@ -275,13 +286,13 @@ int get_next_regparam(FILE *fp, element *e)
 			} else if (c == '}') {
 				e->tag[tagpos] = '\0';
 				state = 6;
-			} else if (! is_whitespace(c)) {
+			} else if (is_whitespace(c) == 0) {
 					syntaxerr(c);
 			}
 
 			break;
 		case 4:
-			if (is_dec(c)) {
+			if (is_dec(c) == 1) {
 				scale[scalepos] = c;
 				scalepos++;
 			} else if (c == ',') {
@@ -300,18 +311,18 @@ int get_next_regparam(FILE *fp, element *e)
 		}
 		column++;
 	}
-	e->scale = atof(scale);
+	e->scale = (float) atof(scale);
 
 	return 0;
 }
 
 int idcmp (char *idc, element *v, mbdport *mp)
 {
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < mp->read_count; i++) {
 		if (strcmp(idc, v[i].id) == 0)
-			return i;
+			return (int) i;
 	}
 
 	return -1;
@@ -338,12 +349,12 @@ void parse_order (FILE *fp, element *v, mbdport *mp)
 				state = 1;
 			else if (c == '#')
 				state = 2;
-			else if (! is_whitespace(c))
+			else if (is_whitespace(c) == 0)
 				syntaxerr(c);
 
 			break;
 		case 1:
-			if (is_id(c)) {
+			if (is_id(c) == 1) {
 				idbuf[idbufpos] = c;
 				idbufpos++;
 			} else if (c == ',' || c == '}') {

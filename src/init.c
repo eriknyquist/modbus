@@ -69,11 +69,18 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	for (i = 0; i < mp->read_count; i++) {
 		if (fp == NULL || feof(fp) ||
 		    get_next_regparam(fp, &(pv[i])) == EOF) {
+			int count;
 
-			snprintf(pv[i].tag, sizeof(pv[i].tag), "SENS_REG_%d",
+			count = snprintf(pv[i].tag, sizeof(pv[i].tag),
+			        "SENS_REG_%d", i + mp->read_base);
+			if ((int) sizeof(pv[i].tag) <= count)
+				pv[i].tag[((int) sizeof(pv[i].tag)) - 1] = '\0';
+
+			count = snprintf(pv[i].id, sizeof(pv[i].id), "reg%d",
 			         i + mp->read_base);
-			snprintf(pv[i].id, sizeof(pv[i].id), "reg%d",
-			         i + mp->read_base);
+			if ((int) sizeof(pv[i].id) <= count)
+				pv[i].id[((int) sizeof(pv[i].id)) -1] = '\0';
+
 			pv[i].scale = 1;
 			pv[i].major = 0;
 			pv[i].minor = i;
