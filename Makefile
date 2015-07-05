@@ -1,13 +1,14 @@
-OUTPUT = mbd
-MODBUS_H = /usr/include/modbus
-INSTALLDIR = /usr/bin
+OUTPUT =         mbd
+MODBUS_H =       /usr/include/modbus
+INSTALLDIR =     /usr/bin
 
-CONFFILE = $(OUTPUT).conf
-CONFPATH = /etc/$(CONFFILE)
-SENSORLOGDIR = /home/sensordata
-UUIDPATH = /uuid
-SRC=src
-BIN=bin
+CONFFILE =       $(OUTPUT).conf
+CONFPATH =       /etc/$(CONFFILE)
+SENSORLOGDIR =   /home/sensordata
+UUIDPATH =       /uuid
+SRC=             src
+BIN=             bin
+
 CFLAGS = -Wall -lmodbus -lrt -lpthread
 
 FILES := main.c init.c time.c confparse.c argparse.c read.c log.c
