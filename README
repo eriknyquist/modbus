@@ -4,20 +4,29 @@ Dependencies:
 Installing dependencies:
 	apt-get install libmodbus5
 	apt-get install libmodbus-dev
+	apt-get install uuid-runtime
 
 Build:
-	run 'make' to build mbd daemon. If you want to
-	build a debug version of the daemon that performs
-	no modbus communication, use 'nomodbus' target i.e.
-	'make nomodbus'.
+	run 'make' to build mbd daemon.
+	
+		make
 
-This program will look for a configuration file named '/etc/mbd.conf'
-(example included with source).
+	If you want to build a debug version of the daemon that performs
+	no modbus communication, use 'nomodbus' target:
 
-In the absence of a confniguration file, defaults will be used, however they
-almost certainly won't do what you want them to, so inspect the sample
-configuration file included with the source and set all parameters to
-appropriate values.
+		make nomodbus
+
+	run either of these targets followed by the 'install' target to install
+	the program. This will copy the executable into /usr/bin, copy the
+	sample configuration file to /etc/mbd.conf, and create the UUID file &
+	sensor log directory if required.
+
+		make install
+
+
+The default values in the sample configuration file placed in '/etc/mbd.conf'
+almost certainly won't do what you want them to, so please inspect the file and
+set all parameters to appropriate values.
 
 
 		

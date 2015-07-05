@@ -1,5 +1,11 @@
 OUTPUT = mbd
 MODBUS_H = /usr/include/modbus
+INSTALLDIR = /usr/bin
+
+CONFFILE = $(OUTPUT).conf
+CONFPATH = /etc/$(CONFFILE)
+SENSORLOGDIR = /home/sensordata
+UUIDPATH = /uuid
 SRC=src
 BIN=bin
 CFLAGS = -Wall -lmodbus -lrt -lpthread
@@ -18,6 +24,14 @@ nomodbus: pre-build
 # no modbus ioctls, and compile with debug symbols
 dnomodbus: pre-build
 	$(CC) -I$(MODBUS_H) $(SRCFILES) -g -o $(BIN)/$(OUTPUT) $(CFLAGS) -D NOMODBUS
+
+install:
+	[ -f $(BIN)/$(OUTPUT) ] || exit 1
+	cp $(BIN)/$(OUTPUT) $(INSTALLDIR)
+	[ -f $(CONFPATH) ] || cp $(CONFFILE) $(CONFPATH)
+	[ -f $(UUIDPATH) ] || uuidgen > $(UUIDPATH)
+	[ -d $(SENSORLOGDIR) ] || mkdir $(SENSORLOGDIR)
+
 
 pre-build:
 	[ -d $(BIN) ] || mkdir $(BIN)
