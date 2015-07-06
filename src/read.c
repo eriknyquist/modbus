@@ -127,9 +127,11 @@ void write_registers_tofile(mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	FILE *fp;
 	int i;
 	int j;
+	int count;
 	int saved_err;
 	char *logfilename;
 	char logpath[MAX_PATH_LEN];
+	size_t ldelta;
 
 	logfilename = gen_filename(mip->uuid);
 	snprintf(logpath, sizeof(logpath), "%s/%s", lp->sens_logdir,
@@ -151,22 +153,31 @@ void write_registers_tofile(mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 		if (ix == -1)
 			continue;
 
-		char outstring[512];
-		char buf[80];
-		strcpy(outstring, SENSOR_READING_HEADER);
+		char line[MAX_SENS_LOGLEN];
+
+		strncpy(line, SENSOR_READING_HEADER, sizeof(line));
+		if ((int) sizeof(line) > 0)
+			line[MAX_SENS_LOGLEN - 1] = '\0';		
 
 		for (i = 0; i < mp->read_count; i++) {
+			char buf[MAX_SENS_RLEN];
+
 			ix = posmatch(j, i, mp->read_count, pv);
 
 			if (ix == -1)
 				continue;
 
-			snprintf(buf, sizeof(buf), ",%s:%.2f",
+			count = snprintf(buf, sizeof(buf), ",%s:%.2f",
 				pv[ix].tag, pv[ix].value_scaled);
-			strcat(outstring, buf);
+			if ((int) sizeof(buf) <= count)
+				buf[((int) sizeof(buf)) - 1] = '\0';
+
+			ldelta = sizeof(line) - strlen(line);
+
+			strncat(line, buf, ldelta - 1);
 		}
 
-		fputs(outstring, fp);
+		fputs(line, fp);
 		fputc('\n', fp);
 	}
 	fclose(fp);

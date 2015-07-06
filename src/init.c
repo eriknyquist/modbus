@@ -238,8 +238,8 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 		saved_err = errno;
 		pos = snprintf(msg, sizeof(msg), "Can't allocate %zu bytes for "
 		         "scaled register reads", inputs_scaled_size);
-		if (sizeof(msg) <= pos)
-			msg[sizeof(msg) - 1] = '\0';
+		if ((int) sizeof(msg) <= pos)
+			msg[((int) sizeof(msg)) - 1] = '\0';
 
 		fatal(msg, mp, lp, mip, saved_err);
 	}

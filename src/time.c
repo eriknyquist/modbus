@@ -24,6 +24,7 @@
 #include <string.h>
 #include <errno.h>
 #include "init.h"
+#include "shared.h"
 #include "time.h"
 
 #define CLOCKID CLOCK_MONOTONIC
@@ -32,18 +33,29 @@
  * which is comprised of a timestamp & the system's UUID */
 char *gen_filename (char *uuid)
 {
-	char timestamp[40];
-	char *filename = malloc(80);
+	int count;
+	char timestamp[MAX_TIMESTAMP_LEN];
+	char *filename = malloc(MAX_SENS_LOGFNAME);
 	struct timeval tv;
+	size_t ldelta;
 
 	gettimeofday (&tv, NULL);
 
-	snprintf(timestamp, sizeof(timestamp), "%ld%ld-", tv.tv_sec,
+	count = snprintf(timestamp, MAX_TIMESTAMP_LEN, "%ld%ld-", tv.tv_sec,
 	         tv.tv_usec / 1000);
+	if (MAX_TIMESTAMP_LEN <= count)
+		timestamp[MAX_TIMESTAMP_LEN - 1] = '\0';
 
-	strcpy(filename, timestamp);
-	strcat(filename, uuid);
-	strcat(filename, ".log");
+	strncpy(filename, timestamp, MAX_SENS_LOGFNAME);
+	if (MAX_SENS_LOGFNAME > 0)
+		filename[MAX_SENS_LOGFNAME - 1] = '\0';
+
+	ldelta = sizeof(filename) - strlen(filename);
+	strncat(filename, uuid, ldelta - 1);
+
+	
+	ldelta = sizeof(filename) - strlen(filename);
+	strncat(filename, ".log", ldelta - 1);
 
 	return filename;
 }

@@ -33,6 +33,10 @@
 
 #define MAX_LOG_LEN           256
 #define MAX_PATH_LEN          256
+#define MAX_SENS_LOGLEN       512
+#define MAX_SENS_RLEN         32
+#define MAX_SENS_LOGFNAME     80
+#define MAX_TIMESTAMP_LEN     40
 
 #define DEFAULT_BAUD          9600
 #define DEFAULT_STATION_ID    0
