@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <errno.h>
 #include <modbus.h>
 #include <sys/types.h>
@@ -41,6 +42,16 @@ void usage(char *arg0)
 	printf("                        killed with Ctrl-C)\n");
 	printf("\n");
 	exit(EINVAL);
+}
+
+int file_accessible(char *fn)
+{
+	int ret = 0;
+
+	if (access(fn, F_OK) != 0)
+		ret = -1;
+
+	return ret;
 }
 
 int parse_arg(int pos, int argc, char *argv[], logging *lp, mbdinfo *mip)
@@ -72,7 +83,15 @@ int parse_arg(int pos, int argc, char *argv[], logging *lp, mbdinfo *mip)
 
 			strncpy(mip->conffile, argv[pos + 1],
 			        sizeof(mip->conffile));
-			ret = 2;
+
+			
+			if (file_accessible(mip->conffile) < 0) {
+				printf("%s: %s\n", mip->conffile,
+				       strerror(ENOENT));
+				ret = -ENOENT;
+			} else {
+				ret = 2;
+			}
 		} else if (arg[i] == 'f') {
 			mip->shouldfork = 0;
 			ret = 1;
@@ -100,8 +119,10 @@ void parse_args(int argc, char *argv[], logging *lp, mbdinfo *mip)
 	while (argpos < argc) {
 		ret = parse_arg(argpos, argc, argv, lp, mip);
 
-		if (ret < 1)
-			usage(argv[0]);
+		if (ret < 0)
+			exit(ret);
+		else if (ret < 1)
+			usage(argv[0]);			
 		else
 			argpos += ret;
 	}
