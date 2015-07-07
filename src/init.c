@@ -109,8 +109,6 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 			logger(msg, lp, mip);
 		}
 	}
-
-	mp->readcount = 0;
 	
 /* NOMODBUS macro is handy for debugging conf file parsing & periodic 
  * timer on a system with no modbus slave- most development is done
@@ -161,6 +159,9 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 		exit(saved_err);
 	}
 #endif
+
+	mp->rticks = 0;
+	mp->wticks = 0;
 }
 
 void ile_aip_init(logging *lp, mbdinfo *mip)

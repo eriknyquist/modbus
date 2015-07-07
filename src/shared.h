@@ -58,7 +58,8 @@ typedef struct mbdport
         unsigned int read_base;
         unsigned int read_count;
         unsigned long msecs;
-	unsigned long long readcount;
+	unsigned long long rticks;
+	unsigned long long wticks;
 	unsigned int retries;
 	int maxretries;
 

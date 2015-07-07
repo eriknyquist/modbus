@@ -106,7 +106,7 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 		printf("\nread number : %lld\n\n", mp->readcount);
 	}
 
-	mp->readcount++;
+	mp->rticks++;
 
 	return ret;
 }
