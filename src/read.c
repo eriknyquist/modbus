@@ -30,6 +30,29 @@
 #define SENSOR_READING_HEADER   "<D>,SEC:PUBLIC"
 #define CLRLINE                 "\033[1A\033[2K"
 
+void update_monitor(mbdport *mp, mbdinfo *mip, element *pv)
+{
+	int i;
+
+	if (mp->rticks > 0) {
+		for (i = 0; i < mp->read_count + 4; i++)
+			printf(CLRLINE);	
+	} else {
+		printf("\n");
+		printf("%-18s%-30s%-18s%-8s\n", "ID", "Tag",
+		       "Raw value", "Scaled value");
+	}
+
+	printf("\n");
+	for (i = 0; i < mp->read_count; i++) {
+		printf("%-18s%-30s%-1s%-18x%-8.2f\n", pv[i].id,
+		       pv[i].tag, "0x", pv[i].value_raw,
+		       pv[i].value_scaled);
+	}
+
+	printf("\nread number : %lld\n\n", mp->rticks);
+}
+
 /* mbd_read */
 int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
@@ -84,27 +107,9 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 		pv[i].value_scaled = (float) mp->inputs_raw[i] * pv[i].scale;
 	}
 
-	if (mip->monitor && n > 0) {
-
+	if (mip->monitor && n > 0)
 		/* monitor mode: pretty-print modbus register data */
-		if (mp->readcount > 0) {
-			for (i = 0; i < mp->read_count + 4; i++)
-				printf(CLRLINE);	
-		} else {
-			printf("\n");
-			printf("%-18s%-30s%-18s%-8s\n", "ID", "Tag",
-			       "Raw value", "Scaled value");
-		}
-
-		printf("\n");
-		for (i = 0; i < mp->read_count; i++) {
-			printf("%-18s%-30s%-1s%-18x%-8.2f\n", pv[i].id,
-			       pv[i].tag, "0x", pv[i].value_raw,
-			       pv[i].value_scaled);
-		}
-
-		printf("\nread number : %lld\n\n", mp->readcount);
-	}
+		update_monitor(mp, mip, pv);
 
 	mp->rticks++;
 
