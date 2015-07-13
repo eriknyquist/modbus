@@ -2,12 +2,14 @@ OUTPUT =         mbd
 MODBUS_H =       /usr/include/modbus
 INSTALLDIR =     /usr/bin
 
-CONFFILE =       $(OUTPUT).conf
-CONFPATH =       /etc/$(CONFFILE)
-SENSORLOGDIR =   /home/sensordata
 UUIDPATH =       /uuid
 SRC=             src
 BIN=             bin
+CONF=            conf
+CONFFILE =       $(OUTPUT).conf
+CONFPATH =       /etc/$(CONFFILE)
+SENSORLOGDIR =   /home/sensordata
+SAMPLECONF=      $(CONF)/$(CONFFILE)
 
 CFLAGS = -Wall -lmodbus -lrt -lpthread
 
@@ -29,7 +31,7 @@ dnomodbus: pre-build
 install:
 	[ -f $(BIN)/$(OUTPUT) ] || exit 1
 	cp $(BIN)/$(OUTPUT) $(INSTALLDIR)
-	[ -f $(CONFPATH) ] || cp $(CONFFILE) $(CONFPATH)
+	[ -f $(CONFPATH) ] || cp $(SAMPLECONF) $(CONFPATH)
 	[ -f $(UUIDPATH) ] || uuidgen > $(UUIDPATH)
 	[ -d $(SENSORLOGDIR) ] || mkdir $(SENSORLOGDIR)
 

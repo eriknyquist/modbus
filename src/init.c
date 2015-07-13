@@ -118,7 +118,6 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 	int saved_err;
 
 	/* configure modbus port settings & create modbus context */
-
 	if (access(mp->port_name, F_OK) != 0) {
 		saved_err = errno;
 		if (lp->verbosity != LOG_QUIET) {
@@ -169,10 +168,17 @@ void ile_aip_init(logging *lp, mbdinfo *mip)
 	int saved_err;
 	FILE *fp;
 
+	if (access(mip->uuidfile, F_OK) != 0) {
+		saved_err = errno;
+		printf("Can't access UUID file %s:\n%s\n", mip->uuidfile,
+		       strerror(saved_err));
+		exit(saved_err);
+	}
+
 	if ((fp = fopen(mip->uuidfile, "r")) == NULL) {
 		saved_err = errno;
-		fprintf(stderr, "Failed to open UUID file %s:\n%s\n",
-		                mip->uuidfile, strerror(saved_err));
+		printf("Failed to open UUID file %s:\n%s\n", mip->uuidfile,
+		       strerror(saved_err));
 		exit(saved_err);
 	}
 
@@ -202,12 +208,12 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 	int pos;
 	int saved_err;
 
-	/* initialisation for modbus register data logging */
-	ile_aip_init(lp, mip);
-	
 	/* read the modbus params from conf file, so we know
 	 * how many modbus registers we're reading */
 	get_modbus_params(mp, lp, mip);
+
+	/* initialisation for modbus register data logging */
+	ile_aip_init(lp, mip);
 
 	/* initialisation for daemon logging */
 	if (!mip->monitor && lp->verbosity != LOG_QUIET)
