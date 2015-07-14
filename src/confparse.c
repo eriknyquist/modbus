@@ -127,8 +127,8 @@ void convert_assign_ul(unsigned long *dest, char *source,
 	if (only_has_digits(source) == 0 || errno != 0) {
 		saved_err = errno;
 		fprintf(stderr,
-		        "%s : Please enter a number between %lu and %lu\n",
-		        conf_id, min, ULONG_MAX);
+		        "%s : Please enter an unsigned integer between %lu "
+		        "and %lu\n", conf_id, min, ULONG_MAX);
 		exit(saved_err);
 	}	
 }
@@ -143,8 +143,8 @@ void convert_assign_uint(unsigned int *dest, char *source,
 	if (only_has_digits(source) == 0 || errno != 0) {
 		saved_err = errno;
 		fprintf(stderr,
-		        "%s : Please enter a number between %u and %u\n",
-		        conf_id, min, UINT_MAX);
+		        "%s : Please enter an unsigned integer between %u "
+		        "and %u\n", conf_id, min, UINT_MAX);
 		exit(saved_err);
 	}
 }
@@ -162,9 +162,9 @@ void convert_assign_retries(int *dest, char *source)
 		if (only_has_digits(source) == 0 || errno != 0) {
 			saved_err = errno;
 			fprintf(stderr,
-			        "%s : Please enter a number between %d and %d,"
-			        " or '%s'\n", CONF_ID_RETRIES, 0, INT_MAX,
-			        CONF_RETRIES_INFINITY);
+			        "%s : Please enter an unsigned integer between"
+			        " %d and %d, or '%s'\n", CONF_ID_RETRIES, 0,
+			        INT_MAX, CONF_RETRIES_INFINITY);
 			exit(saved_err);
 		}
 	}
