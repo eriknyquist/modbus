@@ -57,7 +57,7 @@ ncheck() {
 			exit 1
 		fi
 
-		kill $(ps aux | grep [m]bd | awk '{print $2}')	
+		kill $(ps aux | grep [m]bd | awk '{print $2}')
 		FAILED=$((FAILED + 1))
 	else
 		NRESULTS="$NRESULTS#File '$bfile' passed."
@@ -82,7 +82,7 @@ runtests () {
 		NUMTESTS=$((NUMTESTS + 1))
 		if [ $SHOULDRUN -eq 1 ]
 		then
-			pcheck "$file"	
+			pcheck "$file"
 		else
 			ncheck "$file"
 		fi
@@ -102,7 +102,7 @@ dump_results() {
 	else
 		echo "--------------------------TEST RUN FAILED------------------------"
 	fi
-		
+
 	echo
 	echo
 	echo "positive tests (daemon should run using these configurations)"
