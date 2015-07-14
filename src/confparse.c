@@ -395,7 +395,7 @@ void parse_order (FILE *fp, element *v, mbdport *mp)
 	}
 }
 
-void parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip)
+int parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip)
 {
 	char c;
 	uint8_t state = 0;
@@ -404,9 +404,10 @@ void parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip)
 	char idbuf[MAX_PARAM_LEN];
 	char valbuf[MAX_PATH_LEN];
 
-	c = fgetc(fp);
+	if ((c = fgetc(fp)) == EOF)
+		return EOF;
 
-	while (c != ';') {
+	while (c != ';' && c != EOF) {
 		if (c == '\n') {
 			line++;
 			column = 1;
@@ -460,4 +461,6 @@ void parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip)
 	}
 	valbuf[valbufpos] = '\0';
 	assign(idbuf, valbuf, mp, lp, mip);
+
+	return 0;
 }

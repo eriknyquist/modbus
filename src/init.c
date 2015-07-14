@@ -58,7 +58,9 @@ void get_modbus_params(mbdport *mp, logging *lp, mbdinfo *mip)
 		}
 
 		/* parse 1st section of conf file, i.e. modbus parameters */
-		parse_modbus_params(fp, mp, lp, mip);
+		if (parse_modbus_params(fp, mp, lp, mip) == EOF)
+			logger("Configuration file contains no settings. "
+			       "Using defaults", lp, mip);
 	}
 }
 
