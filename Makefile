@@ -6,6 +6,7 @@ UUIDPATH =       /uuid
 SRC=             src
 BIN=             bin
 CONF=            conf
+TEST=            test.sh
 CONFFILE =       $(OUTPUT).conf
 CONFPATH =       /etc/$(CONFFILE)
 SENSORLOGDIR =   /home/sensordata
@@ -27,6 +28,9 @@ nomodbus: pre-build
 # no modbus ioctls, and compile with debug symbols
 dnomodbus: pre-build
 	$(CC) -I$(MODBUS_H) $(SRCFILES) -g -o $(BIN)/$(OUTPUT) $(CFLAGS) -D NOMODBUS
+
+test: 
+	./$(TEST)
 
 install:
 	[ -f $(BIN)/$(OUTPUT) ] || exit 1
