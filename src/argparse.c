@@ -26,21 +26,33 @@
 
 void usage(char *arg0)
 {
-	printf("\nUsage: %s [-vqmf -c <file>]\n\n", arg0);
-	printf("-v         verbose    - record all modbus activity in logfiles\n");
-	printf("                        (default is to log start/stop times, configuration\n");
-	printf("                        data and errors.)\n\n");
-	printf("-q         quiet      - don't create any logfiles or print to stdout\n");
+	printf("\nUsage: %s [-vqmfh -c <file>]\n\n", arg0);
+	printf("-v         verbose    - Record all modbus activity in logfiles\n");
+	printf("                        (default is to log start/stop times,\n");
+	printf("                        configuration data and errors.)\n\n");
+	printf("-q         quiet      - Don't create any logfiles or print to stdout\n");
 	printf("                        (with the exception of sensor logfiles)\n\n");
 	printf("-m         monitor    - Don't log any daemon activity or modbus reads,\n");
 	printf("                        stay in the foreground, and dump all modbus\n");
 	printf("                        register data to stdout\n\n");
-	printf("-c <file>  conf file  - read configuration from <file>\n");
+	printf("-c <file>  conf file  - Read configuration from <file>\n");
 	printf("                        (default is " DEFAULT_CONF_FILE ")\n\n");
-	printf("-f         don't fork - don't run as a forked child process.\n");
+	printf("-f         don't fork - Don't run as a forked child process.\n");
 	printf("                        (program stays in the foreground, and can be\n");
-	printf("                        killed with Ctrl-C)\n");
-	printf("\n");
+	printf("                        killed with Ctrl-C)\n\n");
+	printf("-h         help       - Show this guide\n\n");
+
+	printf("Copyright (C) 2015 Erik Nyquist\n\n");
+	printf("This program is free software: you can redistribute it and/or modify\n");
+	printf("it under the terms of the GNU General Public License as published by\n");
+	printf("the Free Software Foundation, either version 3 of the License, or\n");
+	printf("at your option) any later version.\n\n");
+	printf("This program is distributed in the hope that it will be useful,\n");
+	printf("but WITHOUT ANY WARRANTY; without even the implied warranty of\n");
+	printf("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n");
+	printf("GNU General Public License for more details.\n\n");
+ 	printf("You should have received a copy of the GNU General Public License\n");
+	printf("along with this program.  If not, see <http://www.gnu.org/licenses/>.\n\n");
 	exit(EINVAL);
 }
 
