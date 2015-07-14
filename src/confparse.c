@@ -292,7 +292,7 @@ int get_next_regparam(FILE *fp, element *e)
 
 			break;
 		case 4:
-			if (is_dec(c) == 1) {
+			if (is_dec(c) == 1 || c == '.') {
 				scale[scalepos] = c;
 				scalepos++;
 			} else if (c == ',') {
@@ -301,6 +301,8 @@ int get_next_regparam(FILE *fp, element *e)
 			} else if (c == '}') {
 				scale[scalepos] = '\0';
 				state = 6;
+			} else if (is_whitespace(c) == 0) {
+				syntaxerr(c);
 			}
 
 			break;
@@ -311,6 +313,7 @@ int get_next_regparam(FILE *fp, element *e)
 		}
 		column++;
 	}
+
 	e->scale = (float) atof(scale);
 
 	return 0;
