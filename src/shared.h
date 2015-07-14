@@ -80,7 +80,7 @@ typedef struct mbdinfo
         unsigned long pid;
 	unsigned short monitor;
 	char conffile[MAX_PATH_LEN];
-        char uuid[38];
+        char uuid[UUID_LENGTH + 1];
         char dname[32];
 	char uuidfile[MAX_PATH_LEN];
 	int shouldfork;

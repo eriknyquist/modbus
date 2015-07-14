@@ -42,7 +42,7 @@ static FILE *fp;
 void get_modbus_params(mbdport *mp, logging *lp, mbdinfo *mip)
 {
 	if (access(mip->conffile, F_OK) != 0 && lp->verbosity != LOG_QUIET) {
-		logger("Configuration file inaccessible. Using defaults.",
+		logger("Configuration file inaccessible. Using defaults",
 		       lp, mip);
 	} else {
 		if ((fp = fopen(mip->conffile, "r")) == NULL) {
@@ -184,12 +184,13 @@ void ile_aip_init(logging *lp, mbdinfo *mip)
 		exit(saved_err);
 	}
 
-	fgets(mip->uuid, UUID_LENGTH, fp);
+	fgets(mip->uuid, sizeof(mip->uuid), fp);
 
-	if (strlen(mip->uuid) != UUID_LENGTH - 1) {
+	if (strlen(mip->uuid) != UUID_LENGTH) {
 		fprintf(stderr, "Error : file '%s' does not contain a UUID in "
-		                "the expected format\n%s\n%zu\n", mip->uuidfile,
-		                mip->uuid, strlen(mip->uuid));
+		                "the expected format\n%s\n(Looking for %d "
+			        "characters, found %zu)\n", mip->uuidfile,
+		                mip->uuid, UUID_LENGTH, strlen(mip->uuid));
 		exit(EINVAL);
 	}
 
