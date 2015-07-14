@@ -100,7 +100,10 @@ int parse_arg(int pos, int argc, char *argv[], logging *lp, mbdinfo *mip)
 			lp->verbosity = LOG_QUIET;
 			mip->monitor = 1;
 			ret = 1;
+		} else if (arg[i] == 'h') {
+			usage(argv[0]);
 		} else {
+			printf("Unrecognised option '%c'\n", arg[i]);
 			ret = 0;
 			break;
 		}
