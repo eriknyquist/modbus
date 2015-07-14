@@ -17,16 +17,30 @@ Build:
 		make nomodbus
 
 	run either of these targets followed by the 'install' target to install
-	the program. This will copy the executable into /usr/bin, copy the
-	sample configuration file to /etc/mbd.conf, and create the UUID file &
-	sensor log directory if required.
+	the program.
 
 		make install
 
+	The install target performs the following actions:
+
+	* Copy the compiled executable file into /usr/bin
+	* Copy the sample configuration file to /etc/mbd.conf
+	* Generate a UUID, using 'genuuid', and place it into a file /uuid
+	* Create the default sensor log directory /home/sensordata
+
+	None of the above files or directories will be overwritten if they
+	already exist, EXCEPT for the compiled executable file in /usr/bin,
+	which will always be overwritten.
+
+Test:
+	The tests included are very basic- mostly simple regression tests
+	to help ensure that configuration file parsing and other initialisation
+	routines don't break during development. It's a good idea to run them
+	before and after making any changes.
+
+		make nomodbus
+		make test
 
 The default values in the sample configuration file placed in '/etc/mbd.conf'
 almost certainly won't do what you want them to, so please inspect the file and
 set all parameters to appropriate values.
-
-
-		
