@@ -433,7 +433,7 @@ int parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip)
 			} else if (c == '=') {
 				idbuf[idbufpos] = '\0';
 				state = 2;
-			} else {
+			} else if (is_whitespace(c) == 0) {
 				syntaxerr(c);
 			}
 
@@ -445,7 +445,7 @@ int parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip)
 				state = 0;
 				idbufpos = 0;
 				valbufpos = 0;
-			} else if (! is_whitespace(c)) {
+			} else if (is_whitespace(c) == 0) {
 				valbuf[valbufpos] = c;
 				valbufpos++;
 			}
