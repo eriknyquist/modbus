@@ -29,7 +29,7 @@
 #define DEFAULT_LOGDIR        "/home/root"
 
 #define DEFAULT_UUID_FILE     "/uuid"
-#define UUID_LENGTH           37
+#define UUID_LENGTH           36
 
 #define MAX_LOG_LEN           256
 #define MAX_PATH_LEN          256

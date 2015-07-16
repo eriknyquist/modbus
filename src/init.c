@@ -39,6 +39,12 @@ int paramcount;
 double delaytime;
 static FILE *fp;
 
+int is_uuid (char c)
+{
+	return ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') ||
+	        (c >= '0' && c <= '9') || c == '-') ? 1 : 0;
+}
+
 void get_modbus_params(mbdport *mp, logging *lp, mbdinfo *mip)
 {
 	if (access(mip->conffile, F_OK) != 0 && lp->verbosity != LOG_QUIET) {
@@ -167,6 +173,8 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 
 void ile_aip_init(logging *lp, mbdinfo *mip)
 {
+	int i = 0;
+	char c;
 	int saved_err;
 	FILE *fp;
 
@@ -184,7 +192,14 @@ void ile_aip_init(logging *lp, mbdinfo *mip)
 		exit(saved_err);
 	}
 
-	fgets(mip->uuid, sizeof(mip->uuid), fp);
+
+	while ((c = fgetc(fp)) != EOF && i < UUID_LENGTH)
+		if (is_uuid(c) > 0)
+			mip->uuid[i++] = c;
+
+	mip->uuid[i] = '\0';
+
+	fclose(fp);
 
 	if (strlen(mip->uuid) != UUID_LENGTH) {
 		fprintf(stderr, "Error : file '%s' does not contain a UUID in "
