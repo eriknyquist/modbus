@@ -7,11 +7,12 @@
 #include <inttypes.h>
 #include <modbus.h>
 #include <regex.h>
+#include <time.h>
 #include "shared.h"
 #include "confparse.h"
 #include "time.h"
 
-#define NUM_TESTS             4
+#define NUM_TESTS             5
 #define NUM_ITER              5
 #define SENSOR_LOGFILE_REGEX  "[0-9]\\+-[0-9a-fA-F]\\{8\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{4\\}-[0-9a-fA-F]\\{12\\}\\.log"
 
@@ -99,7 +100,9 @@ int verify_convert_assign_retries (void)
 	int ret = 0;
 	int i;
 	int count;
-	char inputs[NUM_ITER][80] = {"", "129678", "986687", "2469866", "infinity"};
+	char inputs[NUM_ITER][80] = {"", "129678", "986687", "2469866",
+                                     "infinity"};
+
 	int expected[NUM_ITER] = {INT_MAX, 129678, 986687, 2469866, -1};
 
 	count = snprintf(inputs[0], sizeof(inputs[0]), "%d", INT_MAX);
@@ -138,10 +141,43 @@ int verify_gen_filename (void)
 	if (ret == 0)
 		printf("%s passed\n", __func__);
 	else if (ret == REG_NOMATCH)
-		printf("%s error: generated filename \"%s\" does not match the expected pattern\n",
-		       __func__, gen);
+		printf("%s error: generated filename \"%s\" does not match the "
+		       "expected pattern\n", __func__, gen);
 	else
 		printf("%s error while trying to match regex\n", __func__);
+
+	return ret;
+}
+
+int verify_ms_to_itimerspec (void)
+{
+	int i;
+	int ret = 0;
+	struct itimerspec ts;
+	unsigned long msecs[NUM_ITER] = {1000, 100000, 900, 12343, 985741};
+	long int expected[NUM_ITER][2] =
+	{
+		{1, 0},
+		{100, 0},
+		{0, 900000000},
+		{12, 343000000},
+		{985, 741000000}
+	};
+
+	for (i = 0; i < NUM_ITER; i++) {
+		ms_to_itimerspec(&ts, msecs[i]);
+
+		if (ts.it_value.tv_sec == expected[i][0] &&
+		    ts.it_interval.tv_sec == expected[i][0] &&
+		    ts.it_value.tv_nsec == expected[i][1] &&
+		    ts.it_interval.tv_nsec == expected[i][1]) {
+			printf("%s iteration %d passed\n", __func__, i + 1);
+		} else {
+			printf("%s iteration %d millisecond conversion failed\n",
+			       __func__, i + 1);
+			ret++;
+		}
+	}
 
 	return ret;
 }
@@ -162,7 +198,8 @@ int main (int argc, char *argv[])
 	int ret = 0;
 	int (*tests[NUM_TESTS]) (void) =
 		{verify_convert_assign_uint, verify_convert_assign_ul,
-		 verify_convert_assign_retries, verify_gen_filename};
+		 verify_convert_assign_retries, verify_gen_filename,
+	         verify_ms_to_itimerspec};
 
 	if (argc > 1) {
 		if (strcmp(argv[1], "-n") == 0) {

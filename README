@@ -1,45 +1,59 @@
-Dependencies:
-	libmodbus
+Dependencies
+------------
 
-Installing dependencies:
-	apt-get install libmodbus5
-	apt-get install libmodbus-dev
-	apt-get install uuid-runtime
+libmodbus
+uuidgen
 
-Build:
-	run 'make' to build mbd daemon.
+
+Installing dependencies
+-----------------------
+
+apt-get install libmodbus5
+apt-get install libmodbus-dev
+apt-get install uuid-runtime
+
+
+Compiling
+---------
+
+run 'make' to build mbd daemon.
 	
-		make
+    $ make
 
-	If you want to build a debug version of the daemon that performs
-	no modbus communication, use 'nomodbus' target:
+If you want to build a version of the daemon that performs no modbus
+communication, use 'nomodbus' target:
 
-		make nomodbus
+    $ make nomodbus
 
-	run either of these targets followed by the 'install' target to install
-	the program.
+run either of these targets followed by the 'install' target to install the
+program.
 
-		make install
+    $ make install
 
-	The install target performs the following actions:
+The install target performs the following actions:
 
-	* Copy the compiled executable file into /usr/bin
-	* Copy the sample configuration file to /etc/mbd.conf
-	* Generate a UUID, using 'genuuid', and place it into a file /uuid
-	* Create the default sensor log directory /home/sensordata
+    * Copy the compiled executable file into /usr/bin
+    * Copy the sample configuration file to /etc/mbd.conf
+    * Generate a UUID, using 'genuuid', and place it into a file /uuid
+    * Create the default sensor log directory /home/sensordata
 
-	None of the above files or directories will be overwritten if they
-	already exist, EXCEPT for the compiled executable file in /usr/bin,
-	which will always be overwritten.
+None of the above files or directories will be overwritten if they already
+exist, EXCEPT for the compiled executable file in /usr/bin, which will always be
+overwritten.
 
-Test:
-	The tests included are very basic- mostly simple regression tests
-	to help ensure that configuration file parsing and other initialisation
-	routines don't break during development. It's a good idea to run them
-	before and after making any changes.
 
-		make nomodbus
-		make test
+Running tests
+-------------
+
+The tests included are very basic- some simple regression tests to help ensure
+that configuration file parsing and other initialisation routines don't break
+during development, and some unit tests to ensure the most important (and error
+prone) pieces are working correctly. It's a good idea to run them before and
+after making any changes (none of the tests use any of the libmodbus functions,
+so build using the 'nomodbus' target before running tests).
+
+    $ make nomodbus
+    $ make test
 
 The default values in the sample configuration file placed in '/etc/mbd.conf'
 almost certainly won't do what you want them to, so please inspect the file and
