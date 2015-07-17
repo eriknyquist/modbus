@@ -6,7 +6,9 @@ UUIDPATH =       /uuid
 SRC=             src
 BIN=             bin
 CONF=            conf
-TEST=            $(CONF)/test/test.sh
+TEST_SH =        $(CONF)/test/test.sh
+UNITTEST_SRC =   $(SRC)/unit_test.c
+UNITTEST_BIN =   $(BIN)/unit_test
 CONFFILE =       $(OUTPUT).conf
 CONFPATH =       /etc/$(CONFFILE)
 SENSORLOGDIR =   /home/sensordata
@@ -14,8 +16,10 @@ SAMPLECONF=      $(CONF)/$(CONFFILE)
 
 CFLAGS = -Wall -lmodbus -lrt -lpthread
 
-FILES := main.c init.c time.c confparse.c argparse.c read.c log.c
-SRCFILES = $(FILES:%=$(SRC)/%)
+FILES :=           main.c init.c time.c confparse.c argparse.c read.c log.c
+FILES_TEST :=      init.c time.c confparse.c argparse.c read.c log.c
+SRCFILES =         $(FILES:%=$(SRC)/%)
+SRCFILES_TEST =    $(FILES_TEST:%=$(SRC)/%)
 
 # default
 $(OUTPUT): pre-build
@@ -29,8 +33,9 @@ nomodbus: pre-build
 dnomodbus: pre-build
 	$(CC) -I$(MODBUS_H) $(SRCFILES) -g -o $(BIN)/$(OUTPUT) $(CFLAGS) -D NOMODBUS
 
-test: 
-	./$(TEST)
+test: pre-build 
+	$(CC) -I$(MODBUS_H) $(UNITTEST_SRC) $(SRCFILES_TEST) -g -o $(UNITTEST_BIN) $(CFLAGS)
+	./$(TEST_SH)
 
 install:
 	[ -f $(BIN)/$(OUTPUT) ] || exit 1

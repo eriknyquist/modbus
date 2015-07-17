@@ -22,4 +22,12 @@ int parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip);
 int get_next_regparam(FILE *fp, element *p);
 void parse_order (FILE *fp, element *v, mbdport *mp);
 
+/* For unit testing */
+int only_has_digits(char *s);
+void convert_assign_ul(unsigned long *dest, char *source, const char *conf_id,
+	unsigned long min);
+void convert_assign_uint(unsigned int *dest, char *source, const char *conf_id,
+	unsigned int min);
+void convert_assign_retries(int *dest, char *source);
+
 #endif

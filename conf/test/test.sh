@@ -1,6 +1,7 @@
 #!/bin/sh
 
 dname=bin/mbd
+unittests=bin/unit_test
 this="$0"
 testconf=conf/test
 pconf="$testconf"/shouldrun
@@ -18,7 +19,8 @@ then
 	exit 1
 fi
 
-pcheck() {
+pcheck()
+{
 	file="$1"
 	bfile=$(basename $file)
 
@@ -38,7 +40,8 @@ pcheck() {
 	fi
 }
 
-ncheck() {
+ncheck()
+{
 	file="$1"
 	bfile=$(basename $file)
 
@@ -64,7 +67,8 @@ ncheck() {
 	fi
 }
 
-runtests () {
+run_conftests ()
+{
 	dir="$1"
 	running=$(ps aux | grep [m]bd)
 	num=$(ps aux | grep [m]bd | wc -l)
@@ -89,28 +93,49 @@ runtests () {
 	done
 }
 
-dump_results() {
+run_unittests ()
+{
+	echo
+	echo "                           Unit tests"
+	echo "================================================================="
+	echo
+
+	if [ ! -f "$unittests" ]
+	then
+		echo "Unit tests $unittests not found"
+		exit 1
+	fi
+
+	num_ut=$($unittests -n)
+	ret=""
+
+	for i in $(seq $num_ut)
+	do
+		$unittests $i
+		ret=$?
+
+		NUMTESTS=$((NUMTESTS + 1))
+		[ $ret -eq 0 ] || FAILED=$((FAILED + 1))
+	done
+}
+
+dump_results()
+{
 	finished="$1"
 	PASSED=$((NUMTESTS - FAILED))
 
 	echo
 	echo
-
-	if [ $finished -eq 1 ]
-	then
-		echo "-------------------------TEST RUN FINISHED-----------------------"
-	else
-		echo "--------------------------TEST RUN FAILED------------------------"
-	fi
-
+	echo "                     regression tests"
+	echo "================================================================="
 	echo
 	echo
-	echo "positive tests (daemon should run using these configurations)"
+	echo "  positive tests (daemon should run using these configurations)"
 	echo "-----------------------------------------------------------------"
 	echo "$PRESULTS" | tr '#' '\n'
 	echo
 	echo
-	echo "negative tests (daemon should refuse to run and terminate)"
+	echo "   negative tests (daemon should refuse to run and terminate)"
 	echo "-----------------------------------------------------------------"
 	echo "$NRESULTS" | tr '#' '\n'
 	echo
@@ -122,8 +147,8 @@ dump_results() {
 	echo
 }
 
-runtests "$pconf"
+run_conftests "$pconf"
 SHOULDRUN=0
-runtests "$nconf"
-
+run_conftests "$nconf"
+run_unittests
 dump_results 1

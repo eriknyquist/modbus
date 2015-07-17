@@ -20,8 +20,15 @@
 
 #define TIMESTAMP_LEN 25
 
+struct itimerspec;
+
 char *gen_filename(char *uuid);
 int start_periodic_task(unsigned long msecs, void (*task));
 char *timestamp();
+
+/* For unit testing */
+
+char *gen_filename (char *uuid);
+void ms_to_itimerspec(struct itimerspec *tp, unsigned long msecs);
 
 #endif
