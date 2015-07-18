@@ -62,6 +62,7 @@ typedef struct mbdport
 	unsigned long long wticks;
 	unsigned int retries;
 	int maxretries;
+	pthread_mutex_t lock;
 
 } mbdport;
 

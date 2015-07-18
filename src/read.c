@@ -22,6 +22,7 @@
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
 #include "init.h"
 #include "time.h"
 #include "log.h"
@@ -64,8 +65,10 @@ int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 #ifndef NOMODBUS
 
 	/* try to perform a read */
+	pthread_mutex_lock(&mp->lock);
 	n = modbus_read_registers(mp->port, mp->read_base, mp->read_count,
 	                          mp->inputs_raw);
+	pthread_mutex_unlock(&mp->lock);
 
 	if (n <= 0) {
 

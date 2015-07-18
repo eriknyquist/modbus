@@ -23,6 +23,7 @@
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
+#include <pthread.h>
 #include "init.h"
 #include "confparse.h"
 #include "shared.h"
@@ -169,6 +170,8 @@ void modbus_init (mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 
 	mp->rticks = 0;
 	mp->wticks = 0;
+
+	pthread_mutex_init (&mp->lock, NULL);
 }
 
 void ile_aip_init(logging *lp, mbdinfo *mip)
