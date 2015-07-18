@@ -34,6 +34,7 @@
 #include "log.h"
 
 volatile int gotkillsig = 0;
+volatile int gotsigusr1 = 0;
 char *dname;
 
 /* this is where mbd_read will put scaled
@@ -73,6 +74,11 @@ void siginthandler()
 	gotkillsig = 1;
 }
 
+void sigusr1handler()
+{
+	gotsigusr1 = 1;
+}
+
 void mbd_tick(void)
 {
 	int ret;
@@ -108,12 +114,6 @@ int main(int argc, char *argv[])
 
 	int tstatus;
 
-	/* Catch sigint (ctrl-c) */
-	signal(SIGINT, siginthandler);
-
-	/* Catch sigterm (kill) */
-	signal(SIGTERM, siginthandler);
-
 	/* get executable name, used for logging */
 	dname = basename(argv[0]);
 	strncpy(mip->dname, dname, sizeof(mip->dname));
@@ -134,18 +134,27 @@ int main(int argc, char *argv[])
 	if (tstatus != 0)
 		fatal("can't create timer", mbp, lgp, mip, tstatus);
 
+	/* Catch sigint (ctrl-c) */
+	signal(SIGINT, siginthandler);
+
+	/* Catch sigterm (kill) */
+	signal(SIGTERM, siginthandler);
+
+	/* Catch SIGUSR1, for writing control data */
+	signal(SIGUSR1, sigusr1handler);
+
 	while (1) {
 		/* All the work is done in the mbd_tick routine, in a new
 		 * thread spawned by timer_create (called by start_periodic_task).
 		 * The only thing the main thread needs to do is check
 		 * for a received kill signal every 100ms, and sleep
 		 * the rest of the time. */
-		if (gotkillsig) {
+		if (gotkillsig == 1) {
 			free(pv);
 			mbd_exit(mbp, lgp, mip);
 			exit(0);
 		}
 
-		usleep(100000);
+		usleep(50000);
 	}
 }
