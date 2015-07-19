@@ -30,6 +30,7 @@
 #include "init.h"
 #include "confparse.h"
 #include "argparse.h"
+#include "control.h"
 #include "time.h"
 #include "read.h"
 #include "log.h"
@@ -93,21 +94,6 @@ void mbd_tick (void)
 		write_registers_tofile(mbp, pv, lgp, mip);
 }
 
-void read_stdin (void)
-{
-	size_t n;
-	char buf[80];
-	int fd;
-
-	fd = open(CONTROL_FIFO_PATH, O_RDONLY);
-	n = read(fd, &buf, sizeof(buf) - 1);
-	close(fd);
-
-	buf[n] = '\0';
-
-	printf("got \"%s\" from FIFO!\n", buf);
-}
-
 int main(int argc, char *argv[])
 {
 	if (argc > 1)
@@ -166,13 +152,14 @@ int main(int argc, char *argv[])
 		 * for a received kill signal every 100ms, and sleep
 		 * the rest of the time. */
 		if (gotsigusr1 == 1) {
-			read_stdin();
+			read_fifo();
 			gotsigusr1 = 0;
 		}
 
 		if (gotkillsig == 1) {
 			free(pv);
 			mbd_exit(mbp, lgp, mip);
+			unlink(CONTROL_FIFO_PATH);
 			exit(0);
 		}
 

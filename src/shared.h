@@ -22,6 +22,7 @@
 #define LOG_NORMAL            1
 #define LOG_VERBOSE           2
 
+#define HOLDING_REG_OFFSET    40001
 #define DEFAULT_SHOULDFORK    1
 #define DEFAULT_PORT_NAME     "/dev/null"
 #define DEFAULT_CONF_FILE     "/etc/mbd.conf"
