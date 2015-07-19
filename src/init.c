@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <modbus.h>
 #include <errno.h>
 #include <string.h>
@@ -275,6 +276,12 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 	/* read the remainder of conf file, if any, and initiate
 	 * modbus connection */
 	modbus_init(mp, inputs_scaled, lp, mip);
+
+	/* create FIFO for receiving control data */
+	if (access(CONTROL_FIFO_PATH, F_OK) != 0) {
+		mkfifo(CONTROL_FIFO_PATH, 0777);
+	}
+
 	return inputs_scaled;
 }
 

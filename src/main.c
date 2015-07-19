@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
 #include <modbus.h>
@@ -79,7 +80,7 @@ void sigusr1handler()
 	gotsigusr1 = 1;
 }
 
-void mbd_tick(void)
+void mbd_tick (void)
 {
 	int ret;
 
@@ -90,6 +91,21 @@ void mbd_tick(void)
 	 * mode, write readings to sensor log file. */
 	if (!mip->monitor && ret == 0)
 		write_registers_tofile(mbp, pv, lgp, mip);
+}
+
+void read_stdin (void)
+{
+	size_t n;
+	char buf[80];
+	int fd;
+
+	fd = open(CONTROL_FIFO_PATH, O_RDONLY);
+	n = read(fd, &buf, sizeof(buf) - 1);
+	close(fd);
+
+	buf[n] = '\0';
+
+	printf("got \"%s\" from FIFO!\n", buf);
 }
 
 int main(int argc, char *argv[])
@@ -149,6 +165,11 @@ int main(int argc, char *argv[])
 		 * The only thing the main thread needs to do is check
 		 * for a received kill signal every 100ms, and sleep
 		 * the rest of the time. */
+		if (gotsigusr1 == 1) {
+			read_stdin();
+			gotsigusr1 = 0;
+		}
+
 		if (gotkillsig == 1) {
 			free(pv);
 			mbd_exit(mbp, lgp, mip);

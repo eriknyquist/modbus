@@ -27,6 +27,7 @@
 #define DEFAULT_CONF_FILE     "/etc/mbd.conf"
 #define DEFAULT_SENS_LOGDIR   "/home/sensordata"
 #define DEFAULT_LOGDIR        "/home/root"
+#define CONTROL_FIFO_PATH     "/tmp/mbdfifo"
 
 #define DEFAULT_UUID_FILE     "/uuid"
 #define UUID_LENGTH           36
