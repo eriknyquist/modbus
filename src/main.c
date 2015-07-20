@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
 		 * for a received kill signal every 100ms, and sleep
 		 * the rest of the time. */
 		if (gotsigusr1 == 1) {
-			read_fifo();
+			send_ctrl_msg(mbp, mip, lgp);
 			gotsigusr1 = 0;
 		}
 

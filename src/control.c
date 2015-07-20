@@ -48,7 +48,6 @@ int do_write (mbdport *mp, mbdinfo *mip, logging *lp, uint16_t and, uint16_t or)
 int perform_action (mbdport *mp, mbdinfo *mip, logging *lp, char *cmd)
 {
 	int ret;
-	int status;
 	uint16_t and;
 	uint16_t or;
 
@@ -66,13 +65,14 @@ int perform_action (mbdport *mp, mbdinfo *mip, logging *lp, char *cmd)
 		ret = -1;
 	}
 
+
 	if (ret == 0)
 		ret = do_write(mp, mip, lp, and, or);
 
 	return ret;
 }
 
-void read_fifo (mbdport *mp, mbdinfo *mip, logging *lp)
+void send_ctrl_msg (mbdport *mp, mbdinfo *mip, logging *lp)
 {
 	size_t n;
 	char buf[80];
@@ -84,5 +84,9 @@ void read_fifo (mbdport *mp, mbdinfo *mip, logging *lp)
 
 	buf[n] = '\0';
 
+#ifdef NOMODBUS
+	printf("%s: got '%s' from %s\n", __func__, buf, CONTROL_FIFO_PATH);
+#else
 	perform_action(mp, mip, lp, buf);
+#endif
 }

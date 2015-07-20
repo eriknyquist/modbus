@@ -18,6 +18,6 @@
 #ifndef CONTROL_H_
 #define CONTROL_H_
 
-void read_fifo (void);
+void send_ctrl_msg (mbdport *mp, mbdinfo *mip, logging *lp);
 
 #endif
