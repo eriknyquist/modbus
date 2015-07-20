@@ -14,7 +14,7 @@ CONFPATH =       /etc/$(CONFFILE)
 SENSORLOGDIR =   /home/sensordata
 SAMPLECONF=      $(CONF)/$(CONFFILE)
 
-CFLAGS = -Wall -lmodbus -lrt -lpthread
+CFLAGS = -Wall -lrt -lpthread /usr/local/lib/libmodbus.so.5.1.0
 
 FILES :=           main.c init.c time.c confparse.c argparse.c read.c log.c control.c
 FILES_TEST :=      init.c time.c confparse.c argparse.c read.c log.c
