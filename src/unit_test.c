@@ -11,6 +11,7 @@
 #include "shared.h"
 #include "confparse.h"
 #include "time.h"
+#include "control.h"
 
 #define NUM_TESTS             5
 #define NUM_ITER              5

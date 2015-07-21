@@ -277,6 +277,13 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 	 * modbus connection */
 	modbus_init(mp, inputs_scaled, lp, mip);
 
+	/* Enable drive for operation */
+	ret = init_drive_ready(mp, mip, lp);
+	if (ret != 0) {
+		fatal("Error initialising drive to ready state", mp, lp, mip,
+		      ret);
+	}
+
 	/* create FIFO for receiving control data */
 	if (access(CONTROL_FIFO_PATH, F_OK) != 0) {
 		mkfifo(CONTROL_FIFO_PATH, 0777);

@@ -146,11 +146,6 @@ int main(int argc, char *argv[])
 	signal(SIGUSR1, sigusr1handler);
 
 	while (1) {
-		/* All the work is done in the mbd_tick routine, in a new
-		 * thread spawned by timer_create (called by start_periodic_task).
-		 * The only thing the main thread needs to do is check
-		 * for a received kill signal every 100ms, and sleep
-		 * the rest of the time. */
 		if (gotsigusr1 == 1) {
 			send_ctrl_msg(mbp, mip, lgp);
 			gotsigusr1 = 0;

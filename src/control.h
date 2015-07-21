@@ -19,5 +19,6 @@
 #define CONTROL_H_
 
 void send_ctrl_msg (mbdport *mp, mbdinfo *mip, logging *lp);
+int init_drive_ready (mbdport *mp, mbdinfo *mip, logging *lp);
 
 #endif

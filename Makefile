@@ -17,7 +17,7 @@ SAMPLECONF=      $(CONF)/$(CONFFILE)
 CFLAGS = -Wall -lrt -lpthread /usr/local/lib/libmodbus.so.5.1.0
 
 FILES :=           main.c init.c time.c confparse.c argparse.c read.c log.c control.c
-FILES_TEST :=      init.c time.c confparse.c argparse.c read.c log.c
+FILES_TEST :=      control.c init.c time.c confparse.c argparse.c read.c log.c
 
 SRCFILES =         $(FILES:%=$(SRC)/%)
 SRCFILES_TEST =    $(FILES_TEST:%=$(SRC)/%)

@@ -13,20 +13,43 @@
 #define RUN_OFF1_MASK             0x0001
 #define RUN_OFF2_MASK             0x0002
 #define RUN_OFF3_MASK             0x0004
-#define INHIBIT_OPERATION_MASK    0x0008
+#define ENABLE_OP_MASK            0x0008
 #define RAMP_NORMAL_MASK          0x0010
 #define ENABLE_RAMP_MASK          0x0020
-#define RFG_INPUT_ENABLE_MASK     0x0040
+#define ENABLE_RFG_MASK           0x0040
 #define FAULT_RESET_MASK          0x0080
 #define FIELDBUS_ENABLED_MASK     0x0400
-#define EXT1_EXT2_SELECT_MASK     0x0800
-
-#define CMD_WORD_ADDR             0
+#define EXT2_SELECT_MASK          0x0800
 
 #define START_TOKEN               "start"
 #define STOP_TOKEN                "stop"
 
-int do_write (mbdport *mp, mbdinfo *mip, logging *lp, uint16_t and, uint16_t or)
+#define CMD_WORD_ADDR             0
+
+int init_drive_ready (mbdport *mp, mbdinfo *mip, logging *lp)
+{
+	int ret = 0;
+#ifndef NOMODBUS
+	int mret;
+	uint16_t init_ctl_word = 0x000;
+
+	init_ctl_word = RUN_OFF2_MASK | RUN_OFF3_MASK | ENABLE_OP_MASK |
+	                RAMP_NORMAL_MASK | ENABLE_RAMP_MASK | ENABLE_RFG_MASK |
+	                FIELDBUS_ENABLED_MASK | EXT2_SELECT_MASK;
+
+	mret = modbus_write_register(mp->port, CMD_WORD_ADDR, init_ctl_word);
+
+	if (mret < 0) {
+		ret = errno;
+		err("Error writing drive command word", lp, mip, ret);
+	}
+#endif
+
+	return ret;
+}
+
+int ctl_word_write_mask (mbdport *mp, mbdinfo *mip, logging *lp, uint16_t and,
+                         uint16_t or)
 {
 	int ret;
 	int status;
@@ -48,26 +71,18 @@ int do_write (mbdport *mp, mbdinfo *mip, logging *lp, uint16_t and, uint16_t or)
 int perform_action (mbdport *mp, mbdinfo *mip, logging *lp, char *cmd)
 {
 	int ret;
-	uint16_t and;
-	uint16_t or;
-
-	ret = 0;
 
 	if (strcmp(cmd, START_TOKEN) == 0) {
-		and = ~RUN_OFF1_MASK;
-		or = RUN_OFF1_MASK;
+		ret = ctl_word_write_mask(mp, mip, lp, ~RUN_OFF1_MASK,
+		                          RUN_OFF1_MASK);
 	} else if (strcmp(cmd, STOP_TOKEN) == 0) {
-		and = ~RUN_OFF1_MASK;
-		or = ~RUN_OFF1_MASK;
+		ret = ctl_word_write_mask(mp, mip, lp, ~RUN_OFF1_MASK,
+		                          ~RUN_OFF1_MASK);
 	} else {
 		logger("Unrecognised command written to " CONTROL_FIFO_PATH,
 		       lp, mip);
 		ret = -1;
 	}
-
-
-	if (ret == 0)
-		ret = do_write(mp, mip, lp, and, or);
 
 	return ret;
 }
