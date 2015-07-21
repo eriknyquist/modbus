@@ -26,6 +26,7 @@
 #include <string.h>
 #include <pthread.h>
 #include "init.h"
+#include "control.h"
 #include "confparse.h"
 #include "shared.h"
 #include "read.h"
@@ -221,25 +222,14 @@ void ile_aip_init(logging *lp, mbdinfo *mip)
 	}
 }
 
-element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
+element *modbus_mem_alloc (mbdport *mp, logging *lp, mbdinfo *mip)
 {
+	int pos;
+	int saved_err;
 	size_t inputs_raw_size;
 	size_t inputs_scaled_size;
 	element *inputs_scaled;
 	char msg[120];
-	int pos;
-	int saved_err;
-
-	/* read the modbus params from conf file, so we know
-	 * how many modbus registers we're reading */
-	get_modbus_params(mp, lp, mip);
-
-	/* initialisation for modbus register data logging */
-	ile_aip_init(lp, mip);
-
-	/* initialisation for daemon logging */
-	if (!mip->monitor && lp->verbosity != LOG_QUIET)
-		log_init(lp, mip);
 
 	inputs_raw_size = mp->read_count * sizeof(uint16_t);
 	inputs_scaled_size = mp->read_count * sizeof(element);
@@ -272,6 +262,28 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 
 		fatal(msg, mp, lp, mip, saved_err);
 	}
+
+	return inputs_scaled;
+}
+
+element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
+{
+	int ret;
+	element *inputs_scaled;
+
+	/* read the modbus params from conf file, so we know
+	 * how many modbus registers we're reading */
+	get_modbus_params(mp, lp, mip);
+
+	/* initialisation for modbus register data logging */
+	ile_aip_init(lp, mip);
+
+	/* initialisation for daemon logging */
+	if (!mip->monitor && lp->verbosity != LOG_QUIET)
+		log_init(lp, mip);
+
+	/* allocate memory for modbus address space */
+	inputs_scaled = modbus_mem_alloc(mp, lp, mip);
 
 	/* read the remainder of conf file, if any, and initiate
 	 * modbus connection */
