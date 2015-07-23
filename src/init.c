@@ -269,6 +269,7 @@ element *modbus_mem_alloc (mbdport *mp, logging *lp, mbdinfo *mip)
 element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 {
 	int ret;
+	int pos;
 	element *inputs_scaled;
 
 	/* read the modbus params from conf file, so we know
@@ -297,8 +298,13 @@ element *mbd_init(mbdport *mp, logging *lp, mbdinfo *mip)
 	}
 
 	/* create FIFO for receiving control data */
-	if (access(CONTROL_FIFO_PATH, F_OK) != 0) {
-		mkfifo(CONTROL_FIFO_PATH, 0777);
+	pos = snprintf(mip->fifo, sizeof(mip->fifo), "%s.%lu", CONTROL_FIFO_PATH,
+	         mip->pid);
+	if ((int) sizeof(mip->fifo) <= pos)
+		mip->fifo[(int) sizeof(mip->fifo) - 1] = '\0';
+
+	if (access(mip->fifo, F_OK) != 0) {
+		mkfifo(mip->fifo, 0777);
 	}
 
 	return inputs_scaled;

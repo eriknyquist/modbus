@@ -52,14 +52,14 @@
 
 typedef struct mbdport
 {
-        modbus_t *port;
-        char port_name[128];
+	modbus_t *port;
+	char port_name[128];
 	uint16_t *inputs_raw;
-        unsigned int rtu_baud;
-        unsigned int station_id;
-        unsigned int read_base;
-        unsigned int read_count;
-        unsigned long msecs;
+	unsigned int rtu_baud;
+	unsigned int station_id;
+	unsigned int read_base;
+	unsigned int read_count;
+	unsigned long msecs;
 	unsigned long long rticks;
 	unsigned long long wticks;
 	unsigned int retries;
@@ -72,33 +72,34 @@ typedef struct logging
 {
 	char sens_logdir[MAX_PATH_LEN];
 	char logdir[MAX_PATH_LEN];
-        char logfile[MAX_PATH_LEN];
-        char errfile[MAX_PATH_LEN];
+	char logfile[MAX_PATH_LEN];
+	char errfile[MAX_PATH_LEN];
 	short verbosity;
 	
 } logging;
 
 typedef struct mbdinfo
 {
-        unsigned long pid;
+	unsigned long pid;
 	unsigned short monitor;
 	char conffile[MAX_PATH_LEN];
-        char uuid[UUID_LENGTH + 1];
-        char dname[32];
+	char uuid[UUID_LENGTH + 1];
+	char dname[MAX_PATH_LEN];
 	char uuidfile[MAX_PATH_LEN];
+	char fifo[MAX_PATH_LEN];
 	int shouldfork;
 
 } mbdinfo;
 
 typedef struct element
 {
-        uint16_t value_raw;
-        float value_scaled;
-        char tag[80];
-        char id[80];
-        float scale;
-        int major;
-        int minor;
+	uint16_t value_raw;
+	float value_scaled;
+	char tag[80];
+	char id[80];
+	float scale;
+	int major;
+	int minor;
 } element;
 
 #endif

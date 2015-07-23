@@ -63,6 +63,7 @@ logging loginfo = {
 mbdinfo minfo = {
 	.uuidfile =        {DEFAULT_UUID_FILE},
 	.conffile =        {DEFAULT_CONF_FILE},
+	.fifo =            {CONTROL_FIFO_PATH},
 	.monitor =         DEFAULT_MONITOR,
 	.shouldfork =      DEFAULT_SHOULDFORK
 };
@@ -154,7 +155,7 @@ int main(int argc, char *argv[])
 		if (gotkillsig == 1) {
 			free(pv);
 			mbd_exit(mbp, lgp, mip);
-			unlink(CONTROL_FIFO_PATH);
+			unlink(mip->fifo);
 			exit(0);
 		}
 

@@ -140,7 +140,7 @@ void send_ctrl_msg (mbdport *mp, mbdinfo *mip, logging *lp)
 	char buf[80];
 	int fd;
 
-	fd = open(CONTROL_FIFO_PATH, O_RDONLY);
+	fd = open(mip->fifo, O_RDONLY);
 	n = read(fd, &buf, sizeof(buf) - 1);
 	close(fd);
 
