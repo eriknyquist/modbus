@@ -21,6 +21,7 @@
 int parse_modbus_params(FILE *fp, mbdport *mp, logging *lp, mbdinfo *mip);
 int get_next_regparam(FILE *fp, element *p);
 void parse_order (FILE *fp, element *v, mbdport *mp);
+int only_has_digits (char *s);
 
 /* For unit testing */
 int only_has_digits(char *s);
