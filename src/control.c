@@ -26,8 +26,8 @@
 #define START_TOKEN               "start"
 #define STOP_TOKEN                "stop"
 
-#define CMD_WORD_ADDR             0
-#define SPEED_CTL_ADDR            1
+#define ABB_CMD_WORD_ADDR         0
+#define ABB_SPEED_CTL_ADDR        2
 
 int init_drive_ready (mbdport *mp, mbdinfo *mip, logging *lp)
 {
@@ -36,11 +36,11 @@ int init_drive_ready (mbdport *mp, mbdinfo *mip, logging *lp)
 	int mret;
 	uint16_t init_ctl_word = 0x000;
 
-	init_ctl_word = RUN_OFF2_MASK | RUN_OFF3_MASK | ENABLE_OP_MASK |
+	init_ctl_word = RUN_OFF1_MASK | RUN_OFF2_MASK | RUN_OFF3_MASK | ENABLE_OP_MASK |
 	                RAMP_NORMAL_MASK | ENABLE_RAMP_MASK | ENABLE_RFG_MASK |
 	                FIELDBUS_ENABLED_MASK | EXT2_SELECT_MASK;
 
-	mret = modbus_write_register(mp->port, CMD_WORD_ADDR, init_ctl_word);
+	mret = modbus_write_register(mp->port, ABB_CMD_WORD_ADDR, init_ctl_word);
 
 	if (mret < 0) {
 		ret = errno;
@@ -59,7 +59,7 @@ int ctl_word_write_mask (mbdport *mp, mbdinfo *mip, logging *lp, uint16_t and,
 
 #ifndef NOMODBUS
 	pthread_mutex_lock(&mp->lock);
-	status = modbus_mask_write_register(mp->port, CMD_WORD_ADDR, and, or);
+	status = modbus_mask_write_register(mp->port, ABB_CMD_WORD_ADDR, and, or);
 	pthread_mutex_unlock(&mp->lock);
 #endif
 
@@ -90,7 +90,7 @@ int write_speed (mbdport *mp, mbdinfo *mip, logging *lp, char *input)
 
 #ifndef NOMODBUS
 		pthread_mutex_lock(&mp->lock);
-		status = modbus_write_register(mp->port, SPEED_CTL_ADDR,
+		status = modbus_write_register(mp->port, ABB_SPEED_CTL_ADDR,
 		                               speed);
 		pthread_mutex_unlock(&mp->lock);
 #endif
