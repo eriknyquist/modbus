@@ -123,8 +123,7 @@ int perform_action (mbdport *mp, mbdinfo *mip, logging *lp, char *cmd)
 		ret = write_speed(mp, mip, lp, cmd);
 		msg = "speed change received";
 	} else {
-		logger("Invalid command written to " CONTROL_FIFO_PATH,
-		       lp, mip);
+		msg = "Invalid command written to " CONTROL_FIFO_PATH;
 		ret = -1;
 	}
 

@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <libgen.h>
 #include <signal.h>
+#include <pthread.h>
 #include <errno.h>
 #include "shared.h"
 #include "init.h"
@@ -153,9 +154,12 @@ int main(int argc, char *argv[])
 		}
 
 		if (gotkillsig == 1) {
-			free(pv);
+			pthread_mutex_lock(&mbp->lock);
 			mbd_exit(mbp, lgp, mip);
+			pthread_mutex_unlock(&mbp->lock);
+
 			unlink(mip->fifo);
+			free(pv);
 			exit(0);
 		}
 
