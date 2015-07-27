@@ -47,7 +47,7 @@ def convert_speed(strspeed):
 	return speed
 
 def get_fifo_name():
-	files = glob.glob(FIFODIR + '/' + FIFONAME + '.*')
+	files = glob.glob("/%s/%s.*" % (FIFODIR, FIFONAME))
 
 	if len(files) == 0:
 		die("fifo '%s/%s.*' not found" % (FIFODIR, FIFONAME))
@@ -59,8 +59,8 @@ def get_fifo_name():
 def send_ctrl_msg(msg):
 	fifo = get_fifo_name()
 	pid = os.path.basename(fifo).split('.')[1]
-	echocmd = 'echo -n \'' + msg + '\' > ' + fifo
-	sigcmd = KILL_CMD + ' ' + pid
+	echocmd = "echo -n '%s' > %s" % (msg, fifo)
+	sigcmd = "%s %s" % (KILL_CMD, pid)
 
 	Popen(echocmd, shell=True)
 	Popen(sigcmd, shell=True)
