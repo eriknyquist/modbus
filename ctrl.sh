@@ -5,9 +5,11 @@
 # respectively.
 
 fifodir=/tmp
+fifoname=mbdfifo
 start_cmd='start'
 stop_cmd='stop'
-num=$(find "$fifodir" -name 'mbdfifo.*' | wc -l)
+
+num=$(ls $fifodir/$fifoname* | wc -l)
 
 if [ $# -ne 1 ]
 then
@@ -25,7 +27,7 @@ then
 	exit 1
 fi
 
-fifo=$(find "$fifodir" -name 'mbdfifo.*')
+fifo=$(ls $fifodir/$fifoname*)
 
 echo -n "$1" > "$fifo" &
 kill -USR1 $(echo -n "$fifo" | awk -F '.' '{print $2}')

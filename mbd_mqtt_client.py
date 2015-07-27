@@ -42,7 +42,7 @@ def convert_speed(strspeed):
 		speed = int(strspeed)
 	except ValueError:
 		print("Error interpreting speed command")
-		speed = 0
+		speed = -1
 
 	return speed
 
@@ -82,9 +82,8 @@ def on_message(client, userdata, msg):
 		if speed >= MINSPEED and speed <= MAXSPEED:
 			send_ctrl_msg(str(speed))
 		else:
-			print("Can't set speed of %d- must be between "
-			      "%d and %d" % (speed, MINSPEED,
-			      MAXSPEED))
+			print("Invalid value '%s' received from %s"
+			      % (received, HOST))
 
 def start_listening():
 	client = mqtt.Client()
