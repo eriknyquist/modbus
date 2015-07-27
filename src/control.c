@@ -36,15 +36,34 @@ int init_drive_ready (mbdport *mp, mbdinfo *mip, logging *lp)
 	int mret;
 	uint16_t init_ctl_word = 0x000;
 
-	init_ctl_word = RUN_OFF1_MASK | RUN_OFF2_MASK | RUN_OFF3_MASK | ENABLE_OP_MASK |
-	                RAMP_NORMAL_MASK | ENABLE_RAMP_MASK | ENABLE_RFG_MASK |
-	                FIELDBUS_ENABLED_MASK | EXT2_SELECT_MASK;
+	init_ctl_word = RUN_OFF2_MASK | RUN_OFF3_MASK;
 
+	/* Enter 'ready to switch on' state */
 	mret = modbus_write_register(mp->port, ABB_CMD_WORD_ADDR, init_ctl_word);
+
+	/* ACH550 fieldbus manual says to wait at least 100ms before proceeding,
+	 * we'll give it 150 to be safe (EN_ACH550_EFB_D, page 34) */
+	usleep(15000);
+
+	/* Enter 'ready to operate' state */
+	mret += modbus_mask_write_register(mp->port, ABB_CMD_WORD_ADDR,
+	                                   ~RUN_OFF1_MASK, RUN_OFF1_MASK);
+
+	/* Enter 'operation enabled' state */
+	mret += modbus_mask_write_register(mp->port, ABB_CMD_WORD_ADDR,
+	                                   ~ENABLE_OP_MASK, ENABLE_OP_MASK);
+
+	/* Enter 'RFG: accelerator enabled' state */
+	mret += modbus_mask_write_register(mp->port, ABB_CMD_WORD_ADDR,
+	                                   ~ENABLE_RAMP_MASK, ENABLE_RAMP_MASK);
+
+	/* Enter 'operating' state- drive will start running */
+	mret += modbus_mask_write_register(mp->port, ABB_CMD_WORD_ADDR,
+	                                   ~ENABLE_RFG_MASK, ENABLE_RFG_MASK);
 
 	if (mret < 0) {
 		ret = errno;
-		err("Error writing drive command word", lp, mip, ret);
+		err("Modbus error initialising drive operation", lp, mip, ret);
 	}
 #endif
 
