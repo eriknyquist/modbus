@@ -63,15 +63,14 @@ int init_drive_ready (mbdport *mp, mbdinfo *mip, logging *lp)
 	return ret;
 }
 
-int ctl_word_write_mask (mbdport *mp, mbdinfo *mip, logging *lp, uint16_t and,
-                         uint16_t or)
+int write_cmd (mbdport *mp, mbdinfo *mip, logging *lp, uint16_t word)
 {
 	int ret;
 	int status = 0;
 
 #ifndef NOMODBUS
 	pthread_mutex_lock(&mp->lock);
-	status = modbus_mask_write_register(mp->port, ABB_CMD_WORD_ADDR, and, or);
+	status = modbus_write_register(mp->port, ABB_CMD_WORD_ADDR, word);
 	pthread_mutex_unlock(&mp->lock);
 #endif
 
@@ -124,12 +123,10 @@ int perform_action (mbdport *mp, mbdinfo *mip, logging *lp, char *cmd)
 	int ret;
 
 	if (strcmp(cmd, START_TOKEN) == 0) {
-		ret = modbus_write_register(mp->port, ABB_CMD_WORD_ADDR,
-		                            start_word);
+		ret = write_cmd(mp, mip, lp, start_word);
 		msg = "start signal received";
 	} else if (strcmp(cmd, STOP_TOKEN) == 0) {
-		ret = modbus_write_register(mp->port, ABB_CMD_WORD_ADDR,
-		                            stop_word);
+		ret = write_cmd(mp, mip, lp, stop_word);
 		msg = "stop signal received";
 	} else if (only_has_digits(cmd) == 1) {
 		ret = write_speed(mp, mip, lp, cmd);
