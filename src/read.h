@@ -19,6 +19,6 @@
 #define READ_H_
 
 int mbd_read (mbdport *mp, element *pv, logging *lp, mbdinfo *mip);
-void write_registers_tofile (mbdport *mp, element *pv, logging *lp, mbdinfo *mip);
+void mbd_write_sensordata (mbdport *mp, element *pv, logging *lp, mbdinfo *mip);
 
 #endif

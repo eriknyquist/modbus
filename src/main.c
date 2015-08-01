@@ -93,7 +93,7 @@ void mbd_tick (void)
 	/* if read was successful, and if not in monitor
 	 * mode, write readings to sensor log file. */
 	if (!mip->monitor && ret == 0)
-		write_registers_tofile(mbp, pv, lgp, mip);
+		mbd_write_sensordata(mbp, pv, lgp, mip);
 }
 
 int main(int argc, char *argv[])

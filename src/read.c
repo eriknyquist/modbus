@@ -130,7 +130,7 @@ int posmatch (int maj, int min, int read_count, element *pv)
 	return -1;
 }
 
-void write_registers_tofile(mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
+void mbd_write_sensordata(mbdport *mp, element *pv, logging *lp, mbdinfo *mip)
 {
 	FILE *fp;
 	int i;
