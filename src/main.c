@@ -118,6 +118,15 @@ int main(int argc, char *argv[])
 
 	int tstatus;
 
+	/* Catch sigint (ctrl-c) */
+	signal(SIGINT, siginthandler);
+
+	/* Catch sigterm (kill) */
+	signal(SIGTERM, siginthandler);
+
+	/* Catch SIGUSR1, for writing control data */
+	signal(SIGUSR1, sigusr1handler);
+
 	/* get executable name, used for logging */
 	dname = basename(argv[0]);
 	strncpy(mip->dname, dname, sizeof(mip->dname));
@@ -129,6 +138,8 @@ int main(int argc, char *argv[])
 	 * up modbus port */
 	pv = mbd_init(mbp, lgp, mip);
 
+	logger("starting", lgp, mip);
+
 	/* kick things off with an initial reading (otherwise
 	 * the first reading won't happen until the first timer
 	 * expires) */
@@ -138,15 +149,6 @@ int main(int argc, char *argv[])
 	if (tstatus != 0)
 		fatal("can't create timer", mbp, lgp, mip, tstatus);
 
-	/* Catch sigint (ctrl-c) */
-	signal(SIGINT, siginthandler);
-
-	/* Catch sigterm (kill) */
-	signal(SIGTERM, siginthandler);
-
-	/* Catch SIGUSR1, for writing control data */
-	signal(SIGUSR1, sigusr1handler);
-
 	while (1) {
 		if (gotsigusr1 == 1) {
 			send_ctrl_msg(mbp, mip, lgp);
@@ -154,10 +156,7 @@ int main(int argc, char *argv[])
 		}
 
 		if (gotkillsig == 1) {
-			pthread_mutex_lock(&mbp->lock);
 			mbd_exit(mbp, lgp, mip);
-			pthread_mutex_unlock(&mbp->lock);
-
 			unlink(mip->fifo);
 			free(pv);
 			exit(0);

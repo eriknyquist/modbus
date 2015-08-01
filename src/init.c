@@ -314,7 +314,11 @@ void mbd_exit(mbdport *mp, logging *lp, mbdinfo *mip)
 {
 	if (lp->verbosity != LOG_QUIET)
 		logger("killed. Closing modbus connection & exiting.", lp, mip);
+
+	pthread_mutex_lock(&mp->lock);
 	modbus_close(mp->port);
 	modbus_free(mp->port);
+	pthread_mutex_unlock(&mp->lock);
+
 	free(mp->inputs_raw);
 }
